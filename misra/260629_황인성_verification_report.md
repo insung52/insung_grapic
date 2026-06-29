@@ -6,11 +6,11 @@
 > **작성자**: insung52  
 >
 > 관련 문서:
-> - [01-background.md](01-background.md) — MISRA / ASIL / ASPICE 기초 개념
-> - [02-tools.md](02-tools.md) — 정적 분석 도구 전체 조사 (상용/무료 비교)
-> - [03-cppcheck-clangtidy-deepdive.md](03-cppcheck-clangtidy-deepdive.md) — Clang-Tidy / Cppcheck 심화 조사
-> - [06-clang-tidy-guide.md](06-clang-tidy-guide.md) — Clang-Tidy 상세 실행 가이드
-> - [08-cppcheck-guide.md](08-cppcheck-guide.md) — Cppcheck 상세 실행 가이드
+> - [01-background.md](../misra/01-background.md) — MISRA / ASIL / ASPICE 기초 개념
+> - [02-tools.md](../misra/02-tools.md) — 정적 분석 도구 전체 조사 (상용/무료 비교)
+> - [03-cppcheck-clangtidy-deepdive.md](../misra/03-cppcheck-clangtidy-deepdive.md) — Clang-Tidy / Cppcheck 심화 조사
+> - [06-clang-tidy-guide.md](../misra/06-clang-tidy-guide.md) — Clang-Tidy 상세 실행 가이드
+> - [07-cppcheck-guide.md](../misra/07-cppcheck-guide.md) — Cppcheck 상세 실행 가이드
 
 ---
 
@@ -28,7 +28,7 @@
 | 활성 체크 | `google-*`, `readability-identifier-naming` |
 | 결과 파일 | `clangtidy_full.txt` |
 
-> 상세 실행 가이드 → [06-clang-tidy-guide.md](06-clang-tidy-guide.md)
+> 상세 실행 가이드 → [06-clang-tidy-guide.md](../misra/06-clang-tidy-guide.md)
 
 ---
 
@@ -202,7 +202,7 @@ grapi-base는 **C++ 프로젝트**이므로 Cppcheck MISRA 기능 적용에 근�
 | 활성 체크 | `--enable=all` |
 | 결과 파일 | `cppcheck_result_v3.txt` |
 
-> 상세 실행 가이드 → [08-cppcheck-guide.md](08-cppcheck-guide.md)
+> 상세 실행 가이드 → [07-cppcheck-guide.md](../misra/07-cppcheck-guide.md)
 
 ---
 
@@ -335,8 +335,8 @@ cppcheck ^
 
 ## 4. 참고 문서
 
-- [06-clang-tidy-guide.md](06-clang-tidy-guide.md) — Clang-Tidy 실행 가이드 (체크 카테고리 전체 목록 포함)
-- [08-cppcheck-guide.md](08-cppcheck-guide.md) — Cppcheck 실행 가이드
-- [03-cppcheck-clangtidy-deepdive.md](03-cppcheck-clangtidy-deepdive.md) — 두 도구 심화 비교
-- [02-tools.md](02-tools.md) — 상용 도구 비교 (MISRA 인증 필요 시)
-- [01-background.md](01-background.md) — MISRA / ASIL / ASPICE 기초 개념
+- [06-clang-tidy-guide.md](../misra/06-clang-tidy-guide.md) — Clang-Tidy 실행 가이드 (체크 카테고리 전체 목록 포함)
+- [07-cppcheck-guide.md](../misra/07-cppcheck-guide.md) — Cppcheck 실행 가이드
+- [03-cppcheck-clangtidy-deepdive.md](../misra/03-cppcheck-clangtidy-deepdive.md) — 두 도구 심화 비교
+- [02-tools.md](../misra/02-tools.md) — 상용 도구 비교 (MISRA 인증 필요 시)
+- [01-background.md](../misra/01-background.md) — MISRA / ASIL / ASPICE 기초 개념
