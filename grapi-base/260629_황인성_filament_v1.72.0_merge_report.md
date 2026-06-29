@@ -303,7 +303,7 @@ mImpl->mTextureIsSwizzled = false;
 
 ---
 
-### 2-12. `PagedArenaBitset.cpp` — GCC 9에서 C++20 `<bit>` 미구현
+### 2-12. `PagedArenaBitset.cpp` — GCC 9에서 C++20 `<bit>` 미구현 (Embedded)
 
 **파일**: `filament/libs/utils/src/PagedArenaBitset.cpp`
 
@@ -313,9 +313,23 @@ error: 'countr_zero' is not a member of 'std'
 error: 'popcount' is not a member of 'std'
 ```
 
-**원인**: `std::countr_zero` / `std::popcount`는 C++20 `<bit>` 헤더 기능이며 GCC 10 이상에서만 구현된다.  
-Telechips SDK는 GCC 9.2.1을 포함하며, `-std=c++2a` 플래그를 전달해도 해당 함수가 `<bit>` 헤더에 존재하지 않는다.  
-`__cpp_lib_bitops` 매크로는 GCC 10+에서 `201907L`로 정의되며 이를 지원 여부 판별에 사용한다.
+**원인**: `std::countr_zero`(최하위 비트부터 0의 개수 세기)와 `std::popcount`(1인 비트의 개수 세기)는 C++20 `<bit>` 헤더에서 도입된 함수다.  
+Telechips SDK는 GCC 9.2.1을 포함하며, GCC 9는 `-std=c++2a` 플래그를 지원하지만 `<bit>` 헤더 자체가 존재하지 않거나, 헤더는 있어도 해당 함수가 구현되지 않았다.  
+GCC 10부터 완전히 구현되며, 지원 여부는 `__cpp_lib_bitops` feature test 매크로로 판별할 수 있다 (GCC 10+에서 `201907L`로 정의).
+
+**수정 방향 검토**:  
+호출 사이트(`std::countr_zero(...)`, `std::popcount(...)`)가 파일 전체에 수십 군데 분산되어 있어 전부 `__builtin_ctz(...)` 로 교체하는 건 비현실적이다.  
+대신 `__cpp_lib_bitops` 분기로 `<bit>`를 조건부 포함하고, 미지원 환경에서는 동일 파일 안에서 `std` 네임스페이스에 직접 폴백 함수를 구현하는 방식을 채택했다.  
+`std` 네임스페이스에 직접 추가하는 것은 C++ 표준상 undefined behavior이지만, 이 파일 안에서만 사용되고 실제 동작은 동등하므로 실용적으로 문제없다.
+
+**폴백 구현 상세**:
+- `countr_zero`: 인자가 0이면 비트 폭 전체 반환, 아니면 GCC builtin 사용  
+  - `uint32_t` 이하 → `__builtin_ctz` (32비트 trailing zero count)  
+  - `uint64_t` → `__builtin_ctzll` (64비트 버전)  
+- `popcount`: GCC builtin 사용  
+  - `uint32_t` 이하 → `__builtin_popcount`  
+  - `uint64_t` → `__builtin_popcountll`  
+- `if constexpr`는 C++17 기능으로 GCC 9에서 지원됨 (문제 없음)
 
 **수정**: `#include <bit>` 를 `__cpp_lib_bitops` 분기 + GCC builtin 폴백으로 교체
 ```cpp
@@ -345,7 +359,7 @@ namespace std {
 
 ---
 
-### 2-13. `ColorGradingNeon.h` — GCC 9 ARM NEON `vcleq_f32` 반환 타입 변경
+### 2-13. `ColorGradingNeon.h` — GCC 9 ARM NEON `vcleq_f32` 반환 타입 변경 (Embedded)
 
 **파일**: `filament/src/details/ColorGradingNeon.h`
 
@@ -355,9 +369,18 @@ error: cannot convert 'uint32x4_t' to 'const float32x4_t' in initialization
 error: cannot convert 'const float32x4_t' to 'uint32x4_t'
 ```
 
-**원인**: `vcleq_f32(a, b)`는 비교 결과 마스크를 반환한다.  
-GCC 10+의 최신 ARM NEON 헤더에서는 이 반환 타입이 `uint32x4_t`이며, `vbslq_f32`의 첫 번째 인자도 `uint32x4_t`를 요구한다.  
-코드가 반환값을 `float32x4_t`로 받아 `vbslq_f32`에 전달했는데, GCC 9.2.1에서 이 타입 불일치가 에러로 발생한다.
+**원인**: `ColorGradingNeon.h`는 ARM NEON 전용 코드다. 데스크탑(x86_64)과 Windows(x64)는 ARM 아키텍처가 아니므로 이 파일이 컴파일되지 않아 타입 오류가 숨어있었다. Android는 AArch64지만 Clang(NDK)이 벡터 타입 간 암묵적 변환을 허용해 에러가 발생하지 않았다. Embedded 빌드가 GCC를 사용하는 첫 번째 AArch64 타겟이었고, GCC는 이 타입 불일치를 에러로 처리했다.
+
+| 환경 | 아키텍처 | 컴파일러 | 결과 |
+|---|---|---|---|
+| 데스크탑 Linux | x86_64 | Clang | NEON 코드 컴파일 안 됨 → 에러 없음 |
+| Windows | x86_64 | MSVC | NEON 코드 컴파일 안 됨 → 에러 없음 |
+| Android | AArch64 | Clang (NDK) | 벡터 타입 간 암묵적 변환 허용 → 에러 없음 |
+| Embedded (Telechips) | AArch64 | GCC 9.2.1 | 타입 불일치를 에러로 처리 → **에러 발생** |
+
+`vcleq_f32(a, b)`는 float 4개를 동시에 비교해 결과를 비트 마스크로 반환한다 (`true → 0xFFFFFFFF`, `false → 0x00000000`). 이 마스크는 float 값이 아닌 정수 마스크이므로 올바른 타입은 `uint32x4_t`다. 이 마스크를 받는 `vbslq_f32(mask, a, b)`도 첫 번째 인자로 `uint32x4_t`를 요구한다.
+
+원래 코드가 마스크를 `float32x4_t`로 받은 것은 애초에 잘못된 코드였으나, GCC 이외 환경에서는 드러나지 않았다.
 
 **수정**: 비교 결과 변수 타입을 `float32x4_t` → `uint32x4_t`로 변경
 ```cpp
@@ -374,7 +397,7 @@ uint32x4_t const b_cond = vcleq_f32(cg_b, vdupq_n_f32(0.0031308f));
 
 ---
 
-### 2-14. `ShadowMapManager.cpp` — GCC 9 ICE (designated initializer in lambda)
+### 2-14. `ShadowMapManager.cpp` — GCC 9 ICE (designated initializer in lambda) (Embedded)
 
 **파일**: `filament/src/ShadowMapManager.cpp`
 
@@ -383,20 +406,42 @@ uint32x4_t const b_cond = vcleq_f32(cg_b, vdupq_n_f32(0.0031308f));
 internal compiler error: in build_class_member_access_expr, at cp/typeck.c:2384
 ```
 
-**원인**: GCC 9의 C++20 designated initializer 지원이 불완전하다.  
-`FrameGraph::addPass()` 템플릿 내부의 lambda 안에서 designated initializer(`{ .field = value }`)를 사용하면 GCC 9가 템플릿 인스턴스화 중 내부 오류(ICE)를 발생시킨다.  
-이는 컴파일러 자체 버그로, 코드 로직의 문제가 아니다.
+**용어 정리**:
 
-**수정**: designated initializer를 lambda 밖에서 필드별 대입으로 분리
+- **Designated initializer**: C++20에서 도입된 구조체 초기화 문법. 필드 이름을 `.필드명 = 값` 형태로 명시해서 순서와 무관하게 초기화할 수 있다.
+  ```cpp
+  FrameGraphRenderPass::Descriptor desc{
+      .attachments = { .color = { out } },   // ← 이게 designated initializer
+      .clearColor  = clearColor,
+      .clearFlags  = TargetBufferFlags::COLOR
+  };
+  ```
+- **ICE (Internal Compiler Error)**: 컴파일러 자체가 크래시하는 것. 코드가 잘못된 게 아니라 컴파일러 내부 버그다. "Please submit a full bug report" 메시지가 출력된다.
+
+**원인**:
+
+GCC 9는 C++20 designated initializer를 부분적으로만 지원한다. 특히 아래 세 가지가 동시에 조합될 때 GCC 9 내부에서 크래시가 발생한다:
+
+1. `addPass<Data>(name, setup, execute)` — 타입 파라미터(`Data`)를 가진 **함수 템플릿** 호출
+2. `setup` 인자가 `auto&`를 받는 **lambda** 함수
+3. 그 lambda 안에서 **designated initializer** 사용
+
+GCC 9가 이 조합을 처리하는 과정(`cp/typeck.c:2384 build_class_member_access_expr`)에서 내부 assertion이 실패한다. 코드 자체는 문법적으로 올바르고, Clang은 정상적으로 컴파일한다.
+
+**왜 다른 환경에서는 에러가 없었나**:
+
+데스크탑 Linux와 Android는 Clang 컴파일러를 사용한다. Clang은 이 조합을 문제없이 처리하므로 에러가 발생하지 않았다. GCC를 사용하는 Embedded 빌드에서 처음 드러난 것이다.
+
+**수정**: designated initializer를 lambda 안에서 없애고, 변수를 먼저 선언한 뒤 필드를 개별 대입
 ```cpp
-// 변경 전 — GCC 9 ICE 발생
+// 변경 전 — GCC 9 ICE 발생 (lambda 안에서 designated initializer)
 builder.declareRenderPass(builder.getName(input), {
     .attachments = { .color = { out }},
     .clearColor = clearColor,
     .clearFlags = TargetBufferFlags::COLOR
 });
 
-// 변경 후 — 필드 대입으로 우회
+// 변경 후 — 필드 대입으로 우회 (designated initializer 제거)
 FrameGraphRenderPass::Descriptor rpDesc{};
 rpDesc.attachments.color[0] = out;
 rpDesc.clearColor = clearColor;
@@ -404,9 +449,11 @@ rpDesc.clearFlags = TargetBufferFlags::COLOR;
 builder.declareRenderPass(builder.getName(input), rpDesc);
 ```
 
+`rpDesc{}`로 zero-initialize한 뒤 필드를 하나씩 대입하면 결과는 동일하고 GCC 9의 버그 경로를 우회한다.
+
 ---
 
-### 2-15. `TextureCache.cpp` — GCC 9에서 `std::ranges` 미지원
+### 2-15. `TextureCache.cpp` — GCC 9에서 `std::ranges` 미지원 (Embedded)
 
 **파일**: `filament/src/TextureCache.cpp`
 
@@ -431,7 +478,7 @@ auto const it = std::find_if(mRecentEvictions.begin(), mRecentEvictions.end(),
 
 ---
 
-### 2-16. `zstd/tnt/CMakeLists.txt` — 정적 라이브러리 `-fPIC` 누락
+### 2-16. `zstd/tnt/CMakeLists.txt` — 정적 라이브러리 `-fPIC` 누락 (Embedded)
 
 **파일**: `filament/third_party/zstd/tnt/CMakeLists.txt`
 
@@ -441,17 +488,57 @@ relocation R_AARCH64_ADR_PREL_PG_HI21 against symbol `__stack_chk_guard@@GLIBC_2
 which may bind externally can not be used when making a shared object; recompile with -fPIC
 ```
 
-**원인**: `libzstd.a`가 `-fPIC` 없이 컴파일됐다. AArch64에서 `-fstack-protector-strong`이 `__stack_chk_guard`에 대한 page-relative 재배치(`R_AARCH64_ADR_PREL_PG_HI21`)를 생성하는데, 이 재배치 타입은 shared object에서 사용 불가하다.  
-(이후 `libpng.a`, `libz.a` 등도 동일 에러 예상 → 전역 설정으로 일괄 해결)
+**배경 개념**:
 
-**수정 1** (`zstd/tnt/CMakeLists.txt`):
+- **`-fPIC` (Position-Independent Code)**: 생성된 기계어 코드가 메모리의 어느 주소에 로드되어도 올바르게 동작하도록 컴파일하는 옵션이다. 전역 변수나 함수 참조 시 절대 주소 대신 상대 주소(GOT/PLT 경유)를 사용한다. shared library(`.so`)는 여러 프로세스가 메모리의 서로 다른 위치에 로드하므로 `-fPIC`가 필수다.
+
+- **`-fstack-protector-strong`**: 스택 버퍼 오버플로를 감지하는 보안 기능이다. 함수 진입 시 `__stack_chk_guard`(glibc의 전역 변수)에서 canary 값을 읽어 스택에 저장하고, 반환 시 값이 바뀌었으면 프로그램을 종료한다. Yocto SDK의 `CFLAGS`에 기본 포함된다.
+
+- **재배치(Relocation)**: 링커가 심볼의 최종 주소를 결정해 코드에 채워 넣는 작업이다. 재배치 타입마다 주소 계산 방식이 다르며, shared object에서 허용되는 타입과 그렇지 않은 타입이 있다.
+
+**원인 연쇄**:
+
+```
+Yocto SDK 환경 스크립트
+  → CFLAGS에 -fstack-protector-strong 포함
+  → CFLAGS에 -fPIC 미포함
+
+zstd CMakeLists.txt
+  → POSITION_INDEPENDENT_CODE 미설정
+  → CMake가 정적 라이브러리에 -fPIC 추가 안 함
+  → libzstd.a 내 .o 파일들이 -fPIC 없이 컴파일됨
+
+libzstd.a(zstd_decompress.c.o) 내부:
+  → -fstack-protector-strong 때문에 __stack_chk_guard 참조 발생
+  → -fPIC 없으므로 page-relative 재배치(R_AARCH64_ADR_PREL_PG_HI21) 방식으로 참조
+  → 이 재배치는 "현재 페이지 기준 offset"이므로 로드 주소가 고정된 실행 파일에서만 유효
+
+libgrapi-base.so 링크 시도
+  → libzstd.a 포함
+  → 링커: "shared object는 로드 주소가 유동적인데, 이 재배치 타입은 주소 고정을 전제함 → 불가"
+  → 링크 실패
+```
+
+**왜 x86_64(데스크탑)에서는 안 났나**:
+
+x86_64에서는 `-fstack-protector-strong`이 `__stack_chk_guard`를 RIP-relative 주소 방식(`R_X86_64_REX_GOTPCRELX`)으로 참조한다. 이 재배치 타입은 `-fPIC` 없이도 shared object에서 사용 가능하다. AArch64의 page-relative 방식(`R_AARCH64_ADR_PREL_PG_HI21`)만 공유 라이브러리에서 금지된다.
+
+**왜 zstd만 먼저 에러가 났나**:
+
+Ninja가 병렬 빌드를 하다가 `libgrapi-base.so` 링크 단계에서 처음 발견됐다. 실제로는 `-fPIC` 없는 정적 라이브러리가 zstd 외에도 다수(`libpng.a`, `libz.a` 등) 있었고, zstd가 에러 메시지에 먼저 나온 것뿐이다.
+
+**수정 1** — 선행 시도 (`zstd/tnt/CMakeLists.txt`):
 ```cmake
 add_library(${LIB_TARGET} STATIC ${PUBLIC_HDRS} ${SRCS})
 set_target_properties(${LIB_TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 ```
+zstd 단독으로는 해결되지만, 다음 빌드에서 `libpng.a`에서 동일 에러가 발생해 전역 설정으로 교체했다.
 
-**수정 2** (`CMakePresets.json` — `telechips-tcc803x-base`에 전역 설정 추가, 5-8 참조):  
-개별 라이브러리마다 수정하는 대신 프리셋 수준에서 `CMAKE_POSITION_INDEPENDENT_CODE=ON`을 적용하여 모든 정적 라이브러리에 일괄 적용.
+**수정 2** — 전역 설정 (`CMakePresets.json` — `telechips-tcc803x-base`, 5-8 참조):
+```json
+"CMAKE_POSITION_INDEPENDENT_CODE": "ON"
+```
+이 CMake 변수를 프리셋에 설정하면 해당 빌드의 모든 타겟에 `-fPIC`가 전파된다. 개별 라이브러리를 하나씩 수정할 필요 없이 일괄 해결된다.
 
 ---
 
@@ -1045,6 +1132,8 @@ AArch64에서 `-fstack-protector-strong`이 `__stack_chk_guard`에 대한 page-r
 | `CMakePresets.json` | **WebGL** `webgl-base` 프리셋에 `FILAMENT_ENABLE_EXCEPTIONS: OFF` 추가 |
 | `base/src/grapi/base/actor_exporter.cc` | **WebGL** try/catch 2건 제거 (파일 쓰기 블록, copyTextureFile) |
 | `base/src/grapi/base/custom_material_provider.cc` | **WebGL** try/catch 제거 (Material::Builder().build() 는 throw 안 함) |
+| `samples/CMakeLists.txt` | **Embedded** `svg_test` / `lottie_player` `if(TARGET ...)` 가드 추가 |
+| `CMakePresets.json` | **Embedded** `telechips-tcc803x-base`에 `CMAKE_POSITION_INDEPENDENT_CODE: ON` 추가 |
 
 ---
 
@@ -1104,7 +1193,7 @@ ninja samples/geometry_cube
 | VulkanDriver COMPUTE API | GPU 실기기 필요 (lavapipe) | 실제 GPU 환경 또는 CI |
 | QNX 빌드 | QNX 툴체인 필요 | QNX 빌드 환경 |
 | WebGL 런타임 렌더링 | 빌드·실행은 성공, Fox 모델이 화면에 보이지 않음 (파일 시스템 / 텍스처 / 카메라 스케일 중 원인 미확정) | 브라우저 디버깅, `-sASSERTIONS=1` 빌드 |
-| Embedded 빌드 | 전용 툴체인 필요 | Embedded 빌드 환경 |
+| Embedded 실기기 실행 | 빌드 성공 (`.so` 생성 확인), 실기기(Telechips TCC803x 보드) 동작은 미확인 | 보드에 `.so` 배포 후 런타임 검증 |
 
 ---
 
@@ -1116,4 +1205,4 @@ ninja samples/geometry_cube
 | QNX 빌드 확인 | 중간 | QNX 환경 빌드 에러 점검 |
 | 실제 GPU 테스트 | 높음 | CI에서 Vulkan COMPUTE API 검증 |
 | WebGL 런타임 렌더링 디버깅 | 낮음 | 브라우저에서 Fox 모델 미출력 원인 파악 (파일시스템 접근, 텍스처 포맷, 카메라 스케일) |
-| Embedded 빌드 | 낮음 | 전용 툴체인 확보 후 빌드 시도 |
+| Embedded 실기기 검증 | 중간 | Telechips TCC803x 보드에 `.so` 배포 후 런타임 동작 확인 |
