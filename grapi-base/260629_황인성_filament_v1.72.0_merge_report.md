@@ -7,7 +7,7 @@
 - **대상**: upstream `rc/1.72.0`
 - **빌드 검증**: WSL Ubuntu / Clang / Mesa llvmpipe + lavapipe (소프트웨어 렌더러)
 - **테스트 바이너리**: `backend_test_linux` (OpenGL + Vulkan 백엔드)
-- **최종 상태**: filament 백엔드 테스트 통과 + grapi-base 전체 빌드 성공 (샘플 포함, 2507/2507) + **전체 샘플 Linux 실행 성공**
+- **최종 상태**: filament 백엔드 테스트 통과 + grapi-base 전체 빌드 성공 (샘플 포함, 2507/2507) + **전체 샘플 Linux 실행 성공** + **WebGL(Emscripten) 빌드 성공 + 브라우저 실행 확인** + **Embedded(Telechips TCC803x) 빌드 성공**
 
 ---
 
@@ -245,6 +245,216 @@ lp[gpuIndex].typeShadow = LightsUib::packTypeShadow(
 
 ---
 
+### 2-10. `GLUtils.h` — WebGL `GL_DRAW_INDIRECT_BUFFER` 미지원
+
+**파일**: `filament/backend/src/opengl/GLUtils.h`
+
+**에러** (`webgl2.txt`):
+```
+error: use of undeclared identifier 'GL_DRAW_INDIRECT_BUFFER'
+```
+
+**원인**: v1.72.0에서 추가된 `BufferObjectBinding::INDIRECT` 케이스(2-4 참조)에 WebGL 가드가 없었음.  
+WebGL 2.0 spec은 `GL_DRAW_INDIRECT_BUFFER`를 정의하지 않아 Emscripten 헤더에 해당 상수가 없음.
+
+**수정**: `#ifdef` 가드 추가
+```cpp
+case BufferObjectBinding::INDIRECT:
+#ifdef GL_DRAW_INDIRECT_BUFFER
+    return GL_DRAW_INDIRECT_BUFFER;
+#else
+    utils::panic(__func__, __FILE__, __LINE__, "INDIRECT not supported");
+    return 0x8F3F;
+#endif
+```
+
+---
+
+### 2-11. `Texture.cpp` — WebGL texture swizzling abort 제거
+
+**파일**: `filament/src/details/Texture.cpp`
+
+**에러** (브라우저 콘솔, 런타임):
+```
+Precondition in build:308 reason: WebGL does not support texture swizzling. Aborted()
+```
+
+**원인**: `Texture::Builder::build()` 내부에서 swizzle 요청 시 `FILAMENT_CHECK_PRECONDITION(!swizzled)` 로 abort.  
+WebGL 2.0 spec section 5.19에서 `glTexParameteriv` 의 `GL_TEXTURE_SWIZZLE_*` 파라미터를 명시적으로 금지한다.  
+DoF(Depth of Field) 패스가 CoC 텍스처에 `.r = CHANNEL_0, .g = CHANNEL_0` swizzle을 요청하는데,  
+grapi-base 에서는 DoF가 기본적으로 비활성(`enabled = false`)이지만 해당 abort가 초기화 중 트리거됨.
+
+**기존 동작**: abort → 브라우저 전체 크래시  
+**수정**: swizzle 요청 시 abort 대신 silent clear로 변경 — WebGL 백엔드는 어차피 swizzle GL 호출을 지원하지 않으므로 무시해도 무방
+
+```cpp
+// 변경 전 (line 307-309)
+#if defined(__EMSCRIPTEN__)
+FILAMENT_CHECK_PRECONDITION(!swizzled) << "WebGL does not support texture swizzling.";
+#endif
+
+// 변경 후
+#if defined(__EMSCRIPTEN__)
+// WebGL 2.0 does not support texture swizzling; clear silently so downstream
+// backend code does not attempt glTexParameteriv swizzle calls.
+mImpl->mTextureIsSwizzled = false;
+#endif
+```
+
+---
+
+### 2-12. `PagedArenaBitset.cpp` — GCC 9에서 C++20 `<bit>` 미구현
+
+**파일**: `filament/libs/utils/src/PagedArenaBitset.cpp`
+
+**에러**:
+```
+error: 'countr_zero' is not a member of 'std'
+error: 'popcount' is not a member of 'std'
+```
+
+**원인**: `std::countr_zero` / `std::popcount`는 C++20 `<bit>` 헤더 기능이며 GCC 10 이상에서만 구현된다.  
+Telechips SDK는 GCC 9.2.1을 포함하며, `-std=c++2a` 플래그를 전달해도 해당 함수가 `<bit>` 헤더에 존재하지 않는다.  
+`__cpp_lib_bitops` 매크로는 GCC 10+에서 `201907L`로 정의되며 이를 지원 여부 판별에 사용한다.
+
+**수정**: `#include <bit>` 를 `__cpp_lib_bitops` 분기 + GCC builtin 폴백으로 교체
+```cpp
+#if defined(__cpp_lib_bitops) && __cpp_lib_bitops >= 201907L
+#  include <bit>
+#else
+#  include <cstdint>
+namespace std {
+    template<class T>
+    constexpr int countr_zero(T x) noexcept {
+        if (x == 0) return (int)(sizeof(T) * 8);
+        if constexpr (sizeof(T) <= sizeof(unsigned int))
+            return __builtin_ctz((unsigned int)x);
+        else
+            return __builtin_ctzll((unsigned long long)x);
+    }
+    template<class T>
+    constexpr int popcount(T x) noexcept {
+        if constexpr (sizeof(T) <= sizeof(unsigned int))
+            return __builtin_popcount((unsigned int)x);
+        else
+            return __builtin_popcountll((unsigned long long)x);
+    }
+}
+#endif
+```
+
+---
+
+### 2-13. `ColorGradingNeon.h` — GCC 9 ARM NEON `vcleq_f32` 반환 타입 변경
+
+**파일**: `filament/src/details/ColorGradingNeon.h`
+
+**에러**:
+```
+error: cannot convert 'uint32x4_t' to 'const float32x4_t' in initialization
+error: cannot convert 'const float32x4_t' to 'uint32x4_t'
+```
+
+**원인**: `vcleq_f32(a, b)`는 비교 결과 마스크를 반환한다.  
+GCC 10+의 최신 ARM NEON 헤더에서는 이 반환 타입이 `uint32x4_t`이며, `vbslq_f32`의 첫 번째 인자도 `uint32x4_t`를 요구한다.  
+코드가 반환값을 `float32x4_t`로 받아 `vbslq_f32`에 전달했는데, GCC 9.2.1에서 이 타입 불일치가 에러로 발생한다.
+
+**수정**: 비교 결과 변수 타입을 `float32x4_t` → `uint32x4_t`로 변경
+```cpp
+// 변경 전
+float32x4_t const r_cond = vcleq_f32(cg_r, vdupq_n_f32(0.0031308f));
+float32x4_t const g_cond = vcleq_f32(cg_g, vdupq_n_f32(0.0031308f));
+float32x4_t const b_cond = vcleq_f32(cg_b, vdupq_n_f32(0.0031308f));
+
+// 변경 후
+uint32x4_t const r_cond = vcleq_f32(cg_r, vdupq_n_f32(0.0031308f));
+uint32x4_t const g_cond = vcleq_f32(cg_g, vdupq_n_f32(0.0031308f));
+uint32x4_t const b_cond = vcleq_f32(cg_b, vdupq_n_f32(0.0031308f));
+```
+
+---
+
+### 2-14. `ShadowMapManager.cpp` — GCC 9 ICE (designated initializer in lambda)
+
+**파일**: `filament/src/ShadowMapManager.cpp`
+
+**에러**:
+```
+internal compiler error: in build_class_member_access_expr, at cp/typeck.c:2384
+```
+
+**원인**: GCC 9의 C++20 designated initializer 지원이 불완전하다.  
+`FrameGraph::addPass()` 템플릿 내부의 lambda 안에서 designated initializer(`{ .field = value }`)를 사용하면 GCC 9가 템플릿 인스턴스화 중 내부 오류(ICE)를 발생시킨다.  
+이는 컴파일러 자체 버그로, 코드 로직의 문제가 아니다.
+
+**수정**: designated initializer를 lambda 밖에서 필드별 대입으로 분리
+```cpp
+// 변경 전 — GCC 9 ICE 발생
+builder.declareRenderPass(builder.getName(input), {
+    .attachments = { .color = { out }},
+    .clearColor = clearColor,
+    .clearFlags = TargetBufferFlags::COLOR
+});
+
+// 변경 후 — 필드 대입으로 우회
+FrameGraphRenderPass::Descriptor rpDesc{};
+rpDesc.attachments.color[0] = out;
+rpDesc.clearColor = clearColor;
+rpDesc.clearFlags = TargetBufferFlags::COLOR;
+builder.declareRenderPass(builder.getName(input), rpDesc);
+```
+
+---
+
+### 2-15. `TextureCache.cpp` — GCC 9에서 `std::ranges` 미지원
+
+**파일**: `filament/src/TextureCache.cpp`
+
+**에러**:
+```
+error: 'std::ranges' has not been declared
+```
+
+**원인**: `std::ranges::find_if`는 C++20 기능으로 GCC 9.2.1에서 지원되지 않는다.
+
+**수정**: `std::ranges::find_if` → `std::find_if`로 교체
+```cpp
+// 변경 전
+auto const it = std::ranges::find_if(mRecentEvictions, [&key](auto const& entry) {
+    return entry.key == key;
+});
+
+// 변경 후
+auto const it = std::find_if(mRecentEvictions.begin(), mRecentEvictions.end(),
+        [&key](auto const& entry) { return entry.key == key; });
+```
+
+---
+
+### 2-16. `zstd/tnt/CMakeLists.txt` — 정적 라이브러리 `-fPIC` 누락
+
+**파일**: `filament/third_party/zstd/tnt/CMakeLists.txt`
+
+**에러** (링크):
+```
+relocation R_AARCH64_ADR_PREL_PG_HI21 against symbol `__stack_chk_guard@@GLIBC_2.17'
+which may bind externally can not be used when making a shared object; recompile with -fPIC
+```
+
+**원인**: `libzstd.a`가 `-fPIC` 없이 컴파일됐다. AArch64에서 `-fstack-protector-strong`이 `__stack_chk_guard`에 대한 page-relative 재배치(`R_AARCH64_ADR_PREL_PG_HI21`)를 생성하는데, 이 재배치 타입은 shared object에서 사용 불가하다.  
+(이후 `libpng.a`, `libz.a` 등도 동일 에러 예상 → 전역 설정으로 일괄 해결)
+
+**수정 1** (`zstd/tnt/CMakeLists.txt`):
+```cmake
+add_library(${LIB_TARGET} STATIC ${PUBLIC_HDRS} ${SRCS})
+set_target_properties(${LIB_TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+```
+
+**수정 2** (`CMakePresets.json` — `telechips-tcc803x-base`에 전역 설정 추가, 5-8 참조):  
+개별 라이브러리마다 수정하는 대신 프리셋 수준에서 `CMAKE_POSITION_INDEPENDENT_CODE=ON`을 적용하여 모든 정적 라이브러리에 일괄 적용.
+
+---
+
 ## 3. filament 수정 파일 전체 목록
 
 | 파일 | 분류 | 변경 내용 |
@@ -263,6 +473,13 @@ lp[gpuIndex].typeShadow = LightsUib::packTypeShadow(
 | `filament/src/details/Scene.cpp` | 머지 아티팩트 3건 수정 | tangents 선언 복구 / TANGENT 쓰기 복구 / GPU 타입 패킹 수동 매핑 복원 |
 | `filament/backend/src/vulkan/VulkanDriver.cpp` | 머지 해결 | COMPUTE API 유지, prepareDraw 채택 |
 | `.github/workflows/presubmit.yml` | 머지 해결 | 회사 runner 유지 |
+| `filament/backend/src/opengl/GLUtils.h` | **WebGL 수정** | `GL_DRAW_INDIRECT_BUFFER` `#ifdef` 가드 추가 (2-4와 동일 파일, 별도 수정) |
+| `filament/src/details/Texture.cpp` | **WebGL 수정** | Emscripten에서 swizzle abort → silent clear |
+| `filament/libs/utils/src/PagedArenaBitset.cpp` | **Embedded 수정** | GCC 9 대응: `std::countr_zero` / `std::popcount` builtin 폴백 |
+| `filament/src/details/ColorGradingNeon.h` | **Embedded 수정** | GCC 9 대응: `vcleq_f32` 반환 타입 `float32x4_t` → `uint32x4_t` |
+| `filament/src/ShadowMapManager.cpp` | **Embedded 수정** | GCC 9 ICE 우회: designated initializer를 lambda 밖 필드 대입으로 분리 |
+| `filament/src/TextureCache.cpp` | **Embedded 수정** | GCC 9 대응: `std::ranges::find_if` → `std::find_if` |
+| `filament/third_party/zstd/tnt/CMakeLists.txt` | **Embedded 수정** | `POSITION_INDEPENDENT_CODE ON` 추가 (AArch64 shared lib 링크 에러) |
 
 ---
 
@@ -628,6 +845,188 @@ endfunction()
 
 ---
 
+### 5-7. WebGL(Emscripten) 빌드 수정
+
+WebGL 타겟(`-p webgl`)은 Emscripten 툴체인으로 빌드한다. 데스크탑·Android 빌드와 다른 4가지 에러가 순서대로 발생했다.
+
+---
+
+#### 에러 1: bluegl x86_64 어셈블리 (`webgl1.txt`)
+
+**에러**:
+```
+Expected label, @type declaration, got: %
+invalid variant 'GOTPCREL'
+```
+bluegl(`libs/bluegl/src/BlueGLCoreLinuxImpl.S`)의 x86_64 ELF 어셈블리를 Emscripten이 컴파일하려 했음.
+
+**원인**: filament은 내부적으로 `WASM` 변수가 설정된 경우 bluegl 등 데스크탑 전용 라이브러리를 제외한다(`if(NOT WASM)`). grapi-base는 `WEBGL=1`을 쓰지만 `WASM`을 설정하지 않아 filament가 bluegl을 포함시킴.
+
+**수정** (`CMakeLists.txt` 루트):
+```cmake
+# filament uses WASM (not WEBGL) to exclude desktop-only libs.
+# Bridge the naming so filament sees the right flag.
+if(WEBGL)
+    set(WASM TRUE)
+endif()
+```
+
+---
+
+#### 에러 2: spirv-cross `throw` 비활성화 (`webgl3.txt`)
+
+**에러**:
+```
+cannot use 'throw' with exceptions disabled
+```
+grapi-base는 WebGL 빌드에서 `-fno-exceptions`를 전역 설정한다. spirv-cross는 기본적으로 `throw`를 사용하며, assertions 모드(`SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=ON`)로 전환해야 한다.
+
+**원인 체인**:
+```
+filament/CMakeLists.txt:135
+  → set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS OFF)  # 무조건
+  → if(NOT FILAMENT_ENABLE_EXCEPTIONS)
+      set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON)  # FILAMENT_ENABLE_EXCEPTIONS=ON(기본)이면 실행 안 됨
+grapi-base: -fno-exceptions 전역 적용
+  → spirv-cross: throw 사용 → 컴파일 에러
+```
+
+**수정** (`CMakePresets.json` — `webgl-base` 프리셋):
+```json
+{
+  "name": "webgl-base",
+  "cacheVariables": {
+    "FILAMENT_ENABLE_EXCEPTIONS": "OFF"
+  }
+}
+```
+`FILAMENT_ENABLE_EXCEPTIONS=OFF` → `SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=ON` 경로 활성화.  
+클린 리빌드 필요 (`rm -rf out/build/linux-webgl-release`).
+
+---
+
+#### 에러 3: `actor_exporter.cc` — try/catch 제거 (`webgl4.txt`)
+
+**에러**:
+```
+cannot use 'try' with exceptions disabled
+```
+
+**파일**: `base/src/grapi/base/actor_exporter.cc`
+
+**수정 1** (line ~2409): 파일 쓰기 블록 — try/catch 제거, 이미 `!file`, `file.good()` 반환값 검사로 처리됨
+```cpp
+// 변경 전: try { ... } catch (const std::exception& e) { ... }
+// 변경 후: 동일 본문을 그냥 블록으로
+{
+    std::ofstream file(...);
+    if (!file) { return false; }
+    // ...
+}
+```
+
+**수정 2** (line ~2463): `copyTextureFile` — try/catch → `std::error_code` 오버로드 사용
+```cpp
+bool ActorExporter::copyTextureFile(const String& src_path, const String& dst_path) {
+    std::error_code ec;
+    fs::copy_file(src_path, dst_path, fs::copy_options::overwrite_existing, ec);
+    if (ec) {
+        if (!options_.quiet) {
+            utils::slog.e << "ActorExporter: Failed to copy texture "
+                          << src_path << ": " << ec.message() << utils::io::endl;
+        }
+        return false;
+    }
+    return true;
+}
+```
+
+---
+
+#### 에러 4: `custom_material_provider.cc` — try/catch 제거 (`webgl5.txt`)
+
+**에러**:
+```
+cannot use 'try' with exceptions disabled
+```
+
+**파일**: `base/src/grapi/base/custom_material_provider.cc`
+
+**원인**: `Material::Builder().build()` 는 실패 시 nullptr을 반환하고 throw하지 않음. try/catch가 불필요했음.
+
+**수정** (line ~63): try/catch 제거, nullptr 검사로 대체
+```cpp
+filament::Material* material = filament::Material::Builder()
+    .package(data, size)
+    .build(engine_);
+if (!material) {
+    std::cerr << "CustomMaterialProvider: Material::Builder failed" << std::endl;
+}
+return material;
+```
+
+---
+
+### 5-8. Embedded(Telechips TCC803x) 빌드 수정
+
+Embedded 타겟(`-p embedded`, 보드: `telechips-tcc803x`)은 Yocto SDK(GCC 9.2.1, AArch64 크로스 컴파일)로 빌드한다. 데스크탑·WebGL과 다른 2가지 에러가 발생했다.
+
+---
+
+#### 에러 1: `samples/CMakeLists.txt` — `svg_test` / `lottie_player` 타겟 미생성 (`embedded1.txt`)
+
+**에러**:
+```
+CMake Error at samples/CMakeLists.txt:63 (target_link_libraries):
+  Cannot specify link libraries for target "svg_test" which is not built by this project.
+```
+
+**원인**: `add_demo()` 함수는 `FILAMENT_EMBEDDED_BUILD`가 설정된 경우 `return()`으로 타겟 생성을 건너뛴다. 그러나 `svg_test`와 `lottie_player`에 대한 `target_link_libraries` / `add_custom_command` 호출은 `add_demo()` 밖에 조건 없이 존재해, 타겟이 없는 상태에서 CMake 오류가 발생한다.
+
+**수정**: 두 블록을 `if(TARGET ...)` 가드로 감싸기
+```cmake
+add_demo(svg_test)
+if(TARGET svg_test)
+  target_link_libraries(svg_test PRIVATE grapi-vector)
+  add_custom_command(TARGET svg_test POST_BUILD ...)
+endif()
+
+add_demo(lottie_player)
+if(TARGET lottie_player)
+  target_link_libraries(lottie_player PRIVATE grapi-vector)
+  add_custom_command(TARGET lottie_player POST_BUILD ...)
+endif()
+```
+
+---
+
+#### 에러 2: 정적 라이브러리 `-fPIC` 누락 — 전역 설정 (`embedded5.txt`, `embedded6.txt`)
+
+**에러**:
+```
+relocation R_AARCH64_ADR_PREL_PG_HI21 against symbol `__stack_chk_guard@@GLIBC_2.17'
+which may bind externally can not be used when making a shared object; recompile with -fPIC
+```
+
+**원인**: Yocto SDK 환경 스크립트(`environment-setup-aarch64-telechips-linux`)가 설정하는 `CFLAGS`에 `-fPIC`가 포함되지 않는다. CMake는 shared library 타겟 자체에는 `-fPIC`를 추가하지만, 그 안에 링크되는 정적 라이브러리에는 별도 설정이 없으면 추가하지 않는다.  
+AArch64에서 `-fstack-protector-strong`이 `__stack_chk_guard`에 대한 page-relative 재배치를 생성하므로, `-fPIC` 없이 컴파일된 정적 라이브러리를 shared object에 링크할 수 없다.  
+`libzstd.a`(embedded5)에서 처음 발생했고, 이후 `libpng.a`(embedded6)에서도 동일하게 발생함 → 더 나올 것이 예상되어 전역 설정으로 해결.
+
+**수정** (`CMakePresets.json` — `telechips-tcc803x-base` 프리셋):
+```json
+{
+  "name": "telechips-tcc803x-base",
+  "cacheVariables": {
+    ...
+    "CMAKE_POSITION_INDEPENDENT_CODE": "ON"
+  }
+}
+```
+`CMAKE_POSITION_INDEPENDENT_CODE=ON`은 해당 프리셋으로 빌드되는 모든 타겟에 `-fPIC`를 전파한다.  
+`filament/third_party/zstd/tnt/CMakeLists.txt`에는 선행 시도로 `set_target_properties(... POSITION_INDEPENDENT_CODE ON)`이 추가되어 있으나, 프리셋 전역 설정으로 동일 효과를 얻으므로 중복이다.
+
+---
+
 ## 6. grapi-base 수정 파일 전체 목록
 
 | 파일 | 변경 내용 |
@@ -642,6 +1041,10 @@ endfunction()
 | `assets/materials/car_paint.filamat` | matc v72로 재컴파일 |
 | `assets/materials/sky.filamat` | matc v72로 재컴파일 |
 | `assets/materials/water.filamat` | matc v72로 재컴파일 |
+| `CMakeLists.txt` (루트) | **WebGL** `if(WEBGL) set(WASM TRUE)` — filament WASM 플래그 브리지 |
+| `CMakePresets.json` | **WebGL** `webgl-base` 프리셋에 `FILAMENT_ENABLE_EXCEPTIONS: OFF` 추가 |
+| `base/src/grapi/base/actor_exporter.cc` | **WebGL** try/catch 2건 제거 (파일 쓰기 블록, copyTextureFile) |
+| `base/src/grapi/base/custom_material_provider.cc` | **WebGL** try/catch 제거 (Material::Builder().build() 는 throw 안 함) |
 
 ---
 
@@ -700,90 +1103,17 @@ ninja samples/geometry_cube
 |---|---|---|
 | VulkanDriver COMPUTE API | GPU 실기기 필요 (lavapipe) | 실제 GPU 환경 또는 CI |
 | QNX 빌드 | QNX 툴체인 필요 | QNX 빌드 환경 |
-| Windows 빌드 | 미수행 | Windows 환경 |
+| WebGL 런타임 렌더링 | 빌드·실행은 성공, Fox 모델이 화면에 보이지 않음 (파일 시스템 / 텍스처 / 카메라 스케일 중 원인 미확정) | 브라우저 디버깅, `-sASSERTIONS=1` 빌드 |
+| Embedded 빌드 | 전용 툴체인 필요 | Embedded 빌드 환경 |
 
 ---
 
-## 9. 커밋 가이드
-
-### 9-1. filament 서브모듈 커밋 (`~/grapi-base/external/filament`, 브랜치: `merge_v1.72`)
-
-> **참고**: 빌드 에러 수정(DriverEnums, OpenGLContext, VulkanHandles 등)은 이전 커밋(`fix: resolve build errors from v1.72.0 merge`)에 이미 포함됨.  
-> 현재 미커밋 변경은 `Scene.cpp` 하나 — area_light 렌더링 버그 2건.
-
-```bash
-cd ~/grapi-base/external/filament
-
-git add filament/src/details/Scene.cpp
-
-git commit -m "fix: restore area light rendering broken by v1.72.0 merge
-
-- Restore lightData.elementAt<TANGENT> write lost in auto-merge
-- Restore manual GPU light type mapping (isAreaLight->2, isPoint->0, else->1)
-  Auto-merge introduced static_cast<uint8_t>(lcm.getType(li)) which passes
-  enum value AREA=5 but shader expects LIGHT_TYPE_AREA=2"
-```
-
-### 9-2. grapi-base 커밋
-
-```bash
-cd ~/grapi-base
-
-git add \
-  base/CMakeLists.txt \
-  base/src/grapi/base/providers/ktx2_reader.cc \
-  build.sh \
-  external/CMakeLists.txt \
-  libs/io/src/grapi/io/settings.cc \
-  samples/CMakeLists.txt \
-  samples/script/ai_studio.cc \
-  samples/script/CMakeLists.txt \
-  assets/materials/car_paint.filamat \
-  assets/materials/sky.filamat \
-  assets/materials/water.filamat \
-  external/filament   # 서브모듈 포인터 업데이트
-
-# 수정 확인
-git diff --cached --stat
-
-git commit -m "fix: fix Linux desktop build and sample execution after filament v1.72.0
-
-- base/CMakeLists: compile context.cc with -fno-rtti (VulkanPlatformLinux
-  typeinfo undefined symbol at link time)
-- ktx2_reader: get_format() -> get_basis_tex_format() (basisu API rename)
-- settings: sunAngularRadius -> sunAngularRadiusDeg (LightDefinition rename)
-- ai_studio: add <unistd.h> for STDIN_FILENO on Linux
-- samples/script/CMakeLists: add FILAMENT_SUPPORTS_X11 define to ai_studio
-- samples/CMakeLists: consolidate POST_BUILD copies into single copy_runtime_libs
-  target; 20+ samples copying same .so files in parallel caused 'Error copying
-  file' race on multi-core Android builds
-- samples/script/CMakeLists: same race fix with copy_runtime_script_libs target
-  (grapi-script added; lua file copies kept as POST_BUILD — each target unique)
-- samples/CMakeLists: add custom_materials target to recompile .mat files with
-  current matc; stale v70 filamat crashed debug builds (material version 72 required)
-- assets/materials: recompile car_paint/sky/water filamat to material version 72
-- build.sh: fix CMake version comparison logic
-- external/CMakeLists: disable FILAMENT_BUILD_TESTING
-- external/filament: update submodule pointer"
-```
-
-### 9-3. GitLab MR 생성
-
-```bash
-# filament 미러 MR
-cd ~/grapi-base/external/filament
-git push origin merge_v1.72
-
-# GitLab에서 merge_v1.72 → 내부 main(또는 develop) MR 생성
-```
-
----
-
-## 10. 향후 작업
+## 9. 향후 작업
 
 | 항목 | 우선순위 | 내용 |
 |---|---|---|
-| GitLab MR 생성 | 높음 | filament `merge_v1.72` 브랜치 리뷰 요청 |
 | lua `tmpnam` 경고 수정 | 낮음 | `loslib.c` → `mkstemp` 사용 또는 경고 억제 |
-| Windows/QNX 빌드 확인 | 중간 | 각 환경별 빌드 에러 점검 |
+| QNX 빌드 확인 | 중간 | QNX 환경 빌드 에러 점검 |
 | 실제 GPU 테스트 | 높음 | CI에서 Vulkan COMPUTE API 검증 |
+| WebGL 런타임 렌더링 디버깅 | 낮음 | 브라우저에서 Fox 모델 미출력 원인 파악 (파일시스템 접근, 텍스처 포맷, 카메라 스케일) |
+| Embedded 빌드 | 낮음 | 전용 툴체인 확보 후 빌드 시도 |

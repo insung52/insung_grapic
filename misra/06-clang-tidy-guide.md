@@ -129,6 +129,29 @@ python "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm
   ".*base\\src\\.*"
 ```
 
+결과를 txt 파일로 저장 (stdout + stderr 동시 캡처):
+```cmd
+python "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\run-clang-tidy" ^
+  -clang-tidy-binary "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe" ^
+  -p out/build/windows-msvc-x64-debug ^
+  -j 4 ^
+  ".*base\\src\\.*" > C:\private\misra\clangtidy_full.txt 2>&1
+```
+
+> `2>&1`: stderr(진행상황/크래시 메시지)도 같은 파일에 합쳐서 저장. 경고만 보고 싶으면 `2>NUL`로 진행 메시지를 버릴 수 있지만, 처음엔 `2>&1`로 전부 남겨두는 게 디버깅에 유리함.
+> **주의**: `> file.txt 2>&1` 리다이렉트 시 터미널에 아무것도 안 뜨는 게 정상 — 모든 출력이 파일로 감. 작업 관리자에서 `clang-tidy.exe` 프로세스가 돌고 있으면 실행 중.
+
+화면에 진행 상황을 보면서 동시에 파일도 저장 (PowerShell 전용):
+```powershell
+python "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\run-clang-tidy" `
+  -clang-tidy-binary "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe" `
+  -p out/build/windows-msvc-x64-debug `
+  -j 4 `
+  ".*base\\src\\.*" 2>&1 | Tee-Object C:\private\misra\clangtidy_full.txt
+```
+
+> CMD(`^` 연속)와 달리 PowerShell은 `` ` ``(백틱)으로 줄 이음. `Tee-Object`는 PowerShell 내장 명령어라 별도 설치 불필요.
+
 - **`-clang-tidy-binary` 필수**: 미지정 시 스크립트가 PATH에서 `clang-tidy`를 찾는데 `Llvm\bin\` (32비트) 버전을 먼저 집어듦. 32비트 프로세스는 가상 주소 공간 2GB 제한으로 헤더 파싱 도중 Access Violation(0xC0000005)으로 전 파일 크래시. 반드시 `x64\bin\clang-tidy.exe` 명시.
 - `-j 4`: CPU 코어 수에 맞게 조정
 - 마지막 인자: 분석할 파일을 정규식으로 필터
