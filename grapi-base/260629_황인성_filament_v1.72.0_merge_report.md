@@ -7,7 +7,7 @@
 - **대상**: upstream `rc/1.72.0`
 - **빌드 검증**: WSL Ubuntu / Clang / Mesa llvmpipe + lavapipe (소프트웨어 렌더러)
 - **테스트 바이너리**: `backend_test_linux` (OpenGL + Vulkan 백엔드)
-- **최종 상태**: filament 백엔드 테스트 통과 + grapi-base 전체 빌드 성공 (샘플 포함, 2507/2507) + **전체 샘플 Linux 실행 성공** + **WebGL(Emscripten) 빌드 성공 + 브라우저 실행 확인** + **Embedded(Telechips TCC803x) 빌드 성공**
+- **최종 상태**: Windows / Linux Desktop / WebGL 빌드 + 샘플 실행 성공, Android / Embedded 빌드 성공 (섹션 7 표 참조)
 
 ---
 
@@ -1139,6 +1139,19 @@ AArch64에서 `-fstack-protector-strong`이 `__stack_chk_guard`에 대한 page-r
 
 ## 7. 최종 빌드 및 실행 결과
 
+### 플랫폼별 검증 현황
+
+| 플랫폼 | 빌드 | 샘플 / 런타임 테스트 | 비고 |
+|--------|:----:|:--------------------:|------|
+| Filament 단독 (Linux, Clang) | ✅ | ✅ OpenGL + Vulkan 백엔드 테스트 통과 | `backend_test_linux` |
+| Windows (MSVC x64) | ✅ | ✅ 샘플 실행 성공 | |
+| Linux Desktop (Clang) | ✅ | ✅ 샘플 실행 성공 | lavapipe 소프트웨어 렌더러 |
+| Android (arm64 / arm / x64 / x86) | ✅ | — | `.so` 생성 확인, 실기기 테스트 미실시 |
+| WebGL (Emscripten) | ✅ | ✅ 브라우저 실행 확인 | |
+| Embedded (Telechips TCC803x) | ✅ | — | `.so` 생성 확인, 실기기 테스트 미실시 |
+
+---
+
 ### 빌드 환경
 
 - OS: WSL Ubuntu / Clang
@@ -1192,7 +1205,7 @@ ninja samples/geometry_cube
 |---|---|---|
 | VulkanDriver COMPUTE API | GPU 실기기 필요 (lavapipe) | 실제 GPU 환경 또는 CI |
 | QNX 빌드 | QNX 툴체인 필요 | QNX 빌드 환경 |
-| WebGL 런타임 렌더링 | 빌드·실행은 성공, Fox 모델이 화면에 보이지 않음 (파일 시스템 / 텍스처 / 카메라 스케일 중 원인 미확정) | 브라우저 디버깅, `-sASSERTIONS=1` 빌드 |
+| WebGL 콘텐츠 호환성 | 빌드·브라우저 실행 성공, 특정 에셋(Fox 모델 등) 표시 여부는 콘텐츠별 검증 필요 | 브라우저 디버깅, `-sASSERTIONS=1` 빌드 |
 | Embedded 실기기 실행 | 빌드 성공 (`.so` 생성 확인), 실기기(Telechips TCC803x 보드) 동작은 미확인 | 보드에 `.so` 배포 후 런타임 검증 |
 
 ---
@@ -1201,8 +1214,8 @@ ninja samples/geometry_cube
 
 | 항목 | 우선순위 | 내용 |
 |---|---|---|
-| lua `tmpnam` 경고 수정 | 낮음 | `loslib.c` → `mkstemp` 사용 또는 경고 억제 |
+| lua `tmpnam` 등 여러가지 경고 (warning) 수정 | 낮음 | `loslib.c` → `mkstemp` 사용 또는 경고 억제 |
 | QNX 빌드 확인 | 중간 | QNX 환경 빌드 에러 점검 |
 | 실제 GPU 테스트 | 높음 | CI에서 Vulkan COMPUTE API 검증 |
-| WebGL 런타임 렌더링 디버깅 | 낮음 | 브라우저에서 Fox 모델 미출력 원인 파악 (파일시스템 접근, 텍스처 포맷, 카메라 스케일) |
+| WebGL 콘텐츠별 렌더링 검증 | 낮음 | 에셋 포함 샘플의 브라우저 표시 여부 개별 확인 |
 | Embedded 실기기 검증 | 중간 | Telechips TCC803x 보드에 `.so` 배포 후 런타임 동작 확인 |
