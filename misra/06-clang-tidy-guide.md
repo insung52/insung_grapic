@@ -135,7 +135,7 @@ python "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm
   -clang-tidy-binary "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe" ^
   -p out/build/windows-msvc-x64-debug ^
   -j 4 ^
-  ".*base\\src\\.*" > C:\private\misra\clangtidy_full.txt 2>&1
+  ".*base\\src\\.*" > clangtidy_full.txt 2>&1
 ```
 
 > `2>&1`: stderr(진행상황/크래시 메시지)도 같은 파일에 합쳐서 저장. 경고만 보고 싶으면 `2>NUL`로 진행 메시지를 버릴 수 있지만, 처음엔 `2>&1`로 전부 남겨두는 게 디버깅에 유리함.
@@ -147,7 +147,7 @@ python "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm
   -clang-tidy-binary "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe" `
   -p out/build/windows-msvc-x64-debug `
   -j 4 `
-  ".*base\\src\\.*" 2>&1 | Tee-Object C:\private\misra\clangtidy_full.txt
+  ".*base\\src\\.*" 2>&1 | Tee-Object clangtidy_full.txt
 ```
 
 > CMD(`^` 연속)와 달리 PowerShell은 `` ` ``(백틱)으로 줄 이음. `Tee-Object`는 PowerShell 내장 명령어라 별도 설치 불필요.
