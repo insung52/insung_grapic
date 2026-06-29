@@ -469,16 +469,33 @@ target_compile_options(grapi-base PRIVATE -fno-rtti)
 
 ### 5-4. `ai_studio.cc` + `samples/script/CMakeLists.txt` — SDL 타입 누락
 
-**원인**: `ai_studio` 타겟이 `FILAMENT_SUPPORTS_X11` 없이 컴파일됨. SDL의 `SDL_config.h`는 이 define이 없을 경우 `SDL_config_minimal.h`를 사용하는데, minimal config에는 `intptr_t` 미정의 + `SDL_SysWMinfo.info.x11` 멤버 없음.
+> SDL / X11 / ImGui 역할 및 관계 상세: [`c++/sdl_x11_imgui.md`](../c++/sdl_x11_imgui.md)
 
-**수정 1**: `samples/script/ai_studio.cc`에 `<unistd.h>` 추가 (STDIN_FILENO)
+**배경**:
+
+`ai_studio`는 Lua 스크립트 실시간 실행 샘플이다. SDL로 창 두 개(3D 뷰 + ImGui 패널)를 생성하며, filament에 렌더링 대상 창의 네이티브 핸들(X11 `Window`)을 넘겨줘야 한다. filament가 번들링한 SDL2는 `SDL_config.h`를 커스터마이징해서 Linux 창 시스템(X11 또는 Wayland)을 빌드 define으로 선택하게 되어 있다.
+
+**원인**:
+
+`ai_studio` CMake 타겟에 `FILAMENT_SUPPORTS_X11` define이 없었다. 이 define이 없으면 `SDL_config.h`가 `SDL_config_minimal.h`를 선택하고, minimal config에는 `SDL_VIDEO_DRIVER_X11`가 정의되지 않는다. 그 결과 `SDL_syswm.h`의 `SDL_SysWMinfo` 구조체에서 `info.x11` 멤버가 조건부 컴파일로 제외된다.
+
 ```cpp
-#if !defined(_WIN32)
-#  include <unistd.h>
+// SDL_syswm.h — SDL_VIDEO_DRIVER_X11 없으면 이 블록 전체 제외
+#if defined(SDL_VIDEO_DRIVER_X11)
+    struct { Display* display; Window window; } x11;
 #endif
 ```
 
-**수정 2**: `samples/script/CMakeLists.txt`의 `ai_studio` 타겟에 Linux 전용 define 추가
+`ai_studio.cc`는 filament에 창 핸들을 넘기기 위해 `wmi.info.x11.window`를 참조하는데, 해당 멤버가 없어 컴파일 에러가 발생했다. 추가로 `<unistd.h>` include가 빠져 Linux에서 `STDIN_FILENO`를 찾지 못하는 에러도 함께 발생했다.
+
+**수정 1**: `samples/script/ai_studio.cc`에 `<unistd.h>` 추가
+```cpp
+#if !defined(_WIN32)
+#  include <unistd.h>  // STDIN_FILENO
+#endif
+```
+
+**수정 2**: `samples/script/CMakeLists.txt`의 `ai_studio` 타겟에 Linux 창 시스템 define 추가
 ```cmake
 if(GRAPI_USE_WAYLAND)
   target_compile_definitions(ai_studio PRIVATE FILAMENT_SUPPORTS_WAYLAND)
@@ -486,6 +503,8 @@ else()
   target_compile_definitions(ai_studio PRIVATE FILAMENT_SUPPORTS_X11)
 endif()
 ```
+
+이 define으로 `SDL_config_linux_x11.h`가 선택되고 → `SDL_VIDEO_DRIVER_X11` 정의 → `info.x11` 멤버 복원.
 
 ---
 
@@ -547,6 +566,68 @@ endif()
 
 ---
 
+### 5-6. `samples/CMakeLists.txt` — 병렬 빌드 복사 레이스 컨디션
+
+**파일**: `samples/CMakeLists.txt`
+
+**증상**: Android 빌드 시 Ninja 병렬 빌드 과정에서 간헐적 에러 발생
+```
+Error copying file ".../libgrapi-assist.so" to ".../samples"
+```
+멀티코어 환경에서 재현성이 높고, `-j1` (단일 스레드 빌드)에서는 발생하지 않음.
+
+**원인**: 기존 `add_demo()` 함수가 각 샘플 타겟에 개별 `POST_BUILD` 복사 명령을 붙였다. 샘플이 20개 이상이므로 Ninja가 병렬 링크 완료 시 20개 이상의 `cmake -E copy` 프로세스가 동시에 동일한 파일(`libgrapi-assist.so`, `libgrapi-base.so`, `libgrapi-io.so`)을 동일한 `samples/` 디렉토리에 쓰려고 경쟁.
+
+```
+libgeometry_cube.so    --POST_BUILD--> copy assist.so, base.so, io.so → samples/
+libgeometry_capsule.so --POST_BUILD--> copy assist.so, base.so, io.so → samples/  ← 동시 충돌
+libgeometry_curve.so   --POST_BUILD--> copy assist.so, base.so, io.so → samples/  ← 동시 충돌
+...
+```
+
+**이 버그가 이제야 나타난 이유**: 기존 버전에서도 잠재적으로 존재했으나 빌드 속도나 코어 수 차이로 증상이 드러나지 않았던 pre-existing 버그. v1.72.0 머지 변경과는 무관.
+
+**수정**: 파일당 하나의 `copy_runtime_libs` 커스텀 타겟으로 통합. 모든 샘플이 이 타겟에만 의존하므로 복사는 한 번만 일어난다.
+
+```cmake
+if(ANDROID)
+  add_custom_target(copy_runtime_libs
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:grapi-assist>
+      $<TARGET_FILE:grapi-base>
+      $<TARGET_FILE:grapi-io>
+      $<TARGET_FILE:xeniagear-engine-jni-adapter>
+      ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Copying runtime libraries to samples directory"
+  )
+  add_dependencies(copy_runtime_libs
+    grapi-assist grapi-base grapi-io xeniagear-engine-jni-adapter)
+else()
+  add_custom_target(copy_runtime_libs
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:grapi-assist>
+      $<TARGET_FILE:grapi-base>
+      $<TARGET_FILE:grapi-io>
+      ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Copying runtime libraries to samples directory"
+  )
+  add_dependencies(copy_runtime_libs grapi-assist grapi-base grapi-io)
+endif()
+
+function(add_demo NAME)
+  ...
+  add_dependencies(${NAME} copy_runtime_libs)  # POST_BUILD 대신 단순 의존성
+endfunction()
+```
+
+`copy_if_different`를 사용하여 파일이 변경되지 않은 경우 복사를 건너뛰므로 증분 빌드 성능도 개선된다.
+
+**플랫폼별 이진 경로**: 모든 프리셋(Linux, Windows, Android)이 Ninja(단일 config) 제너레이터를 사용하므로 실행 파일은 `${CMAKE_CURRENT_BINARY_DIR}` 직접 하위에 위치한다 (multi-config 제너레이터처럼 `Release/`, `Debug/` 서브폴더가 없음).
+
+**동일 버그 — `samples/script/CMakeLists.txt`**: `add_script_demo()` 함수도 동일한 패턴이었다. `script_editor_demo`와 `lua_host` 두 타겟이 각각 `grapi-assist`, `grapi-base`, `grapi-io`, `grapi-script` 4개의 `.so`를 `samples/script/`에 복사하는 POST_BUILD 명령을 가지고 있어 race 발생. → `copy_runtime_script_libs` 타겟으로 동일하게 수정 (`grapi-script` 추가 포함). `.lua` 파일 복사는 타겟마다 서로 다른 파일을 복사하므로 race가 없어 POST_BUILD 유지.
+
+---
+
 ## 6. grapi-base 수정 파일 전체 목록
 
 | 파일 | 변경 내용 |
@@ -556,7 +637,8 @@ endif()
 | `base/CMakeLists.txt` | `context.cc`에 `-fno-rtti` 추가 |
 | `samples/script/ai_studio.cc` | `<unistd.h>` 추가 |
 | `samples/script/CMakeLists.txt` | `ai_studio`에 `FILAMENT_SUPPORTS_X11` define 추가 |
-| `samples/CMakeLists.txt` | `custom_materials` 타겟 추가 (`.mat` → `.filamat` 자동 재컴파일) |
+| `samples/CMakeLists.txt` | ① `copy_runtime_libs` 단일 타겟으로 병렬 복사 레이스 수정 ② `custom_materials` 타겟으로 `.mat` → `.filamat` 자동 재컴파일 |
+| `samples/script/CMakeLists.txt` | `copy_runtime_script_libs` 단일 타겟으로 병렬 복사 레이스 수정 (ai_studio define 수정도 포함) |
 | `assets/materials/car_paint.filamat` | matc v72로 재컴파일 |
 | `assets/materials/sky.filamat` | matc v72로 재컴파일 |
 | `assets/materials/water.filamat` | matc v72로 재컴파일 |
@@ -661,6 +743,9 @@ git add \
   assets/materials/water.filamat \
   external/filament   # 서브모듈 포인터 업데이트
 
+# 수정 확인
+git diff --cached --stat
+
 git commit -m "fix: fix Linux desktop build and sample execution after filament v1.72.0
 
 - base/CMakeLists: compile context.cc with -fno-rtti (VulkanPlatformLinux
@@ -669,6 +754,11 @@ git commit -m "fix: fix Linux desktop build and sample execution after filament 
 - settings: sunAngularRadius -> sunAngularRadiusDeg (LightDefinition rename)
 - ai_studio: add <unistd.h> for STDIN_FILENO on Linux
 - samples/script/CMakeLists: add FILAMENT_SUPPORTS_X11 define to ai_studio
+- samples/CMakeLists: consolidate POST_BUILD copies into single copy_runtime_libs
+  target; 20+ samples copying same .so files in parallel caused 'Error copying
+  file' race on multi-core Android builds
+- samples/script/CMakeLists: same race fix with copy_runtime_script_libs target
+  (grapi-script added; lua file copies kept as POST_BUILD — each target unique)
 - samples/CMakeLists: add custom_materials target to recompile .mat files with
   current matc; stale v70 filamat crashed debug builds (material version 72 required)
 - assets/materials: recompile car_paint/sky/water filamat to material version 72
