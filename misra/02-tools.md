@@ -128,23 +128,83 @@
 
 | 도구 | 유형 | MISRA C | MISRA C++ 2008 | MISRA C++ 2023 | AUTOSAR C++14 | ASIL 인증(TÜV/exida) | 가격모델 |
 |---|---|---|---|---|---|---|---|
-| Polyspace | A+C | ✅ | ✅ | ✅ | — | ✅ | 상용/견적 |
-| Coverity | A | ✅ | ✅ | (확인필요) | ✅ | ✅ | 상용/견적 |
-| Klocwork | A | ✅ | ✅ | (확인필요) | ✅ | ✅ | 상용/견적 |
-| Parasoft C/C++test | A | ✅ | ✅ | (확인필요) | ✅ | (확인필요) | 상용/견적 |
-| Helix QAC | A | ✅ | ✅ | (확인필요) | ✅ | ✅(TCL1) | 상용/견적(상대적 저가) |
-| LDRA | A | ✅ | ✅ | (확인필요) | ✅ | ✅ | 상용/견적(고가) |
-| Axivion | A | ✅ | ✅ | (확인필요) | ✅ | ✅ | 상용/견적(고가) |
-| CodeSonar | A | ✅ | — | ✅ | ✅ | (확인필요) | 상용/견적 |
-| PC-lint Plus | B | ✅ | — | ✅ | ✅ | ✅(exida) | 상용/견적 |
-| Astrée | C | 부분 | 부분 | (확인필요) | — | ✅ | 상용/견적(고가) |
-| TrustInSoft | C | 부분 | — | — | — | (확인필요) | 상용/견적 |
-| Cppcheck(Premium) | D | ✅(Premium) | 제한적 | 제한적 | △(Premium) | — | 무료(제한)/유료 |
-| Clang-Tidy | D | ❌(공식無) | ❌ | ❌ | ❌ | — | 완전무료 |
-| PVS-Studio | D/A | ✅ | ✅ | (확인필요) | ✅ | — | OSS무료/상용견적 |
-| SonarQube/Cloud | D/A | — | — | ✅(2024~ EA) | — | (확인필요) | Community무료/Enterprise유료 |
+| Polyspace | A+C | ✅ | ✅ | ✅ | ? | ✅ | 상용/견적 |
+| Coverity | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적 |
+| Klocwork | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적 |
+| Parasoft C/C++test | A | ✅ | ✅ | ? | ✅ | ? | 상용/견적 |
+| Helix QAC | A | ✅ | ✅ | ? | ✅ | ✅(TCL1) | 상용/견적(상대적 저가) |
+| LDRA | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적(고가) |
+| Axivion | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적(고가) |
+| CodeSonar | A | ✅ | ? | ✅ | ✅ | ? | 상용/견적 |
+| PC-lint Plus | B | ✅ | ? | ✅ | ✅ | ✅(exida) | 상용/견적 |
+| Astrée | C | 부분 | 부분 | ? | ? | ✅ | 상용/견적(고가) |
+| TrustInSoft | C | 부분 | ? | ? | ? | ? | 상용/견적 |
+| Cppcheck(Premium) | D | ✅(위반 룰 번호만 알려줌) | 제한적 | 제한적 | △(Premium) | ❌ | 무료(제한)/유료 |
+| Clang-Tidy | D | ❌(공식無) | ❌ | ❌ | ❌ | ❌ | 완전무료(VS에 포함) |
+| PVS-Studio | D/A | ✅ | ✅ | ? | ✅ | ❌ | OSS무료/상용견적 |
+| SonarQube/Cloud | D/A | ? | ? | ✅(2024~ EA) | ? | ? | Community무료/Enterprise유료 |
 
-`(확인필요)` 표시는 이번 웹조사에서 명확한 출처를 찾지 못한 항목 — 실제 도입 검토 시 벤더에 직접 확인 필요.
+**범례** (표기 의도를 명확히 구분):
+- `✅` 지원 확인됨 (출처 있음)
+- `❌` 미지원/해당없음 확인됨 (예: Clang-Tidy는 공식 MISRA 체커가 없다는 근거가 명확함, Cppcheck/PVS-Studio는 ASIL Tool Qualification 인증 자체를 받지 않은 무료/일반 SAST 도구라 해당 없음)
+- `부분` / `△` 일부만 지원하거나 간접적으로만 해당 (예: Astrée는 MISRA를 직접 타겟하지 않고 더 강한 정형검증 결과로 일부 겹침)
+- `?` **이번 웹조사로는 명확한 출처를 찾지 못함** — "미지원"이 아니라 "확인 안 됨"이라는 뜻. 실제 도입 검토 시 반드시 벤더에 직접 확인 필요.
+
+---
+
+## 3-1. MISRA 공식 문서(가이드라인 PDF) 자체의 가격
+
+위 도구들은 "MISRA 규칙을 검사해주는 소프트웨어"이고, 이와 별개로 **MISRA 규칙 원문이 적힌 문서 자체**도 MISRA(misra.org.uk)에서 유료로 판매한다. 도구를 사더라도 규칙의 정확한 근거/문구를 보려면 이 문서가 따로 필요한 경우가 많다.
+
+| 문서 | 가격(GBP, 단일 사용자 PDF 기준) |
+|---|---|
+| **MISRA C:2025** (최신 C 표준) | £15 부터 |
+| **MISRA C++:2023** (최신 C++ 표준, AUTOSAR C++14 통합) | £15 부터 |
+| MISRA C:2023 (3rd Ed, 2nd Revision) | £15 부터 |
+| MISRA AC SLSF:2023 (Simulink/Stateflow 가이드라인) | £15 부터 |
+| MISRA AC GMG:2023 | £10 부터 |
+| MISRA TR 시리즈 (Technical Reports) | £10 부터 |
+| MISRA DG (Deviation Guidance 등) | £10 부터 |
+
+- misra.org.uk 공식 웹스토어 기준이며 모든 가격은 **"From(부터)"** 표기 — 정확한 최종가는 라이선스 유형에 따라 달라짐.
+- 라이선스 구분: **PDF(단일 사용자용, 인쇄 불가, 구매자 이름이 워터마크로 박힘)** vs **종이책(하드카피, print-on-demand)** vs **기업/사이트 라이선스(다인원, 별도 견적 — 정확한 인원별 단가는 페이지에 비공개)**.
+- 개인/단일 사용자 기준으로는 문서당 약 £15(~2만 5천원대)로 저렴한 편이지만, 회사에서 여러 명이 봐야 한다면 기업 라이선스 견적을 별도로 문의해야 함.
+- 일부 보조 문서(Amendment/TC 정정판)는 무료로 풀려있는 경우도 있음(예: MISRA C:2012 Amendment 2/4 PDF는 무료 다운로드 확인됨).
+
+출처: [MISRA Webstore](https://misra.org.uk/shop/), [MISRA C++:2023 product page](https://misra.org.uk/product/misra-cpp2023/)
+
+---
+
+## 3-2. ISO 26262(ASIL 근거 표준) 및 AUTOSAR 문서 가격
+
+### ISO 26262 (ASIL의 근거가 되는 표준 본문)
+ASIL은 MISRA처럼 단일 문서가 아니라 **ISO 26262 표준 전체(파트 1~12)**의 일부로 정의되어 있다. ISO 공식 스토어(iso.org) 또는 각국 표준기관 리셀러(ANSI, BSI/Techstreet 등)에서 **파트별로 개별 구매**하는 구조다.
+
+| 문서 | 가격(CHF, iso.org 기준) |
+|---|---|
+| ISO 26262-1:2018 (Vocabulary, 분량 적음) | CHF 67 |
+| ISO 26262-2:2018 (Management of functional safety) | CHF 196 |
+| ISO 26262-12:2018 (Adaptation for motorcycles) | CHF 177 |
+| ISO 26262-3~11 (HARA, 제품개발, SW/HW 요구사항 등 — ASIL 산정/소프트웨어 개발에 실질적으로 가장 중요한 파트들) | 파트당 대략 CHF 150~250 수준으로 추정(분량에 비례) |
+
+- 가격은 **파트(분량)별로 다름** — 분량이 적은 Part 1(용어집)은 CHF 67로 저렴하지만, 실무에 중요한 Part 6(소프트웨어 개발) 등은 분량이 많아 더 비쌀 가능성이 높음(개별 확인 필요).
+- **전체 12개 파트 풀세트**를 사면 ANSI 등 리셀러가 "Package" 형태로 묶어 팔며 정가 대비 할인(예: ANSI는 최대 40% 할인 언급)을 제공하는 경우가 있음 — 풀세트 합산 시 대략 **CHF 1,500~2,500 (한화 약 230만~380만원)** 규모로 추정됨(추정치, 정확한 합산가는 미확인).
+- 구매처: [iso.org](https://www.iso.org/standard/68383.html) 직접 구매, 또는 [ANSI Webstore](https://webstore.ansi.org/standards/iso/iso26262roadvehiclesfunctional)(미국), [Techstreet](https://www.techstreet.com/standards/iso-26262-1-2018?product_id=2031380)/BSI(영국) 같은 공인 리셀러.
+- MISRA PDF(£15~)와 비교하면 **ISO 26262는 훨씬 비싼 편** — MISRA는 민간 컨소시엄이 박리다매로 푸는 가이드라인 문서인 반면, ISO 26262는 국제표준기구(ISO)가 정가 정책으로 판매하는 정식 국제표준이라 가격 체계 자체가 다름.
+
+### AUTOSAR C++14 / AUTOSAR 가이드라인
+- **AUTOSAR 사양 문서는 전부 무료** — autosar.org에서 누구나 PDF를 직접 다운로드 가능 (예: `AUTOSAR_RS_CPP14Guidelines.pdf`).
+- AUTOSAR는 자동차 OEM/Tier1 컨소시엄이 만든 표준이고, 자사 생태계 표준화 확산이 목적이라 ISO나 MISRA와 달리 **수익화를 위한 유료 판매 모델이 없음**.
+- 단, "AUTOSAR 가이드라인을 검사해주는 도구"는 위 1~2절의 상용 SAST 도구들이 여전히 유료(견적제)임 — **문서는 공짜, 검증 도구는 유료**라는 구조.
+
+### 요약
+| | MISRA | ISO 26262 (ASIL) | AUTOSAR |
+|---|---|---|---|
+| 발행 주체 | 민간 컨소시엄(MISRA) | 국제표준기구(ISO) | 자동차 OEM/Tier1 컨소시엄 |
+| 문서 가격 | 저가 (£15~/문서, 개인 기준) | 고가 (파트당 CHF 60~250, 풀세트 CHF 1,500+) | **무료** |
+| 검증 도구 가격 | 유료(견적제, 도구 별도) | 유료(견적제, Tool Qualification 패키지 별도) | 유료(견적제, 도구 별도) |
+
+출처: [ISO 26262-1:2018](https://www.iso.org/standard/68383.html), [ISO 26262-2:2018](https://www.iso.org/standard/68384.html), [ISO 26262-12:2018](https://www.iso.org/standard/69605.html), [ANSI Webstore - ISO 26262 Package](https://webstore.ansi.org/standards/iso/iso26262roadvehiclesfunctional), [AUTOSAR_RS_CPP14Guidelines.pdf](https://www.autosar.org/fileadmin/standards/R22-11/AP/AUTOSAR_RS_CPP14Guidelines.pdf)
 
 ---
 
