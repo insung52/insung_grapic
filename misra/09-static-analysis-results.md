@@ -484,15 +484,35 @@ vint skin_index = node.skin - &src_asset->skins[0];  // 포인터 차이는 ptrd
 
 **④ `double → float` (cgltf 카메라 파라미터)**
 ```cpp
-// asset_loader.cc:977
-const cgltf_float yfov_degrees = 180.0 / glm::pi<vfloat>() * projection.yfov;
-//                                ^^^^^ double 리터럴 → cgltf_float(float)로 저장
+// asset_loader.cc (A-6 리팩터링 후 행 번호 이동 — 현재 994번)
+const cgltf_float yfov_degrees =
+    180.0 / glm::pi<vfloat>() * projection.yfov;
+//  ^^^^^ double 리터럴 → cgltf_float(float)로 저장
 ```
+```cpp
+// 수정: 리터럴을 float로
+const cgltf_float yfov_degrees =
+    180.0f / glm::pi<vfloat>() * projection.yfov;
+```
+> **수정 시 특이사항**: 이전 세션 요약에서 "977번 setIntensity(light->intensity) — double→float"로 기록됐으나 실제 확인 결과 `cgltf_float = float`이므로 오탐. 진짜 double→float는 카메라 파라미터 코드(994번)였고 A-6 리팩터링으로 행 번호가 이동한 것. 수정 완료.
 
 **⑤ `size_t → int32` 카운트 변환**
 ```cpp
 // custom_material_component.cc:43
-vint count = material_->getParameterCount();  // 반환값이 size_t 계열이면 축소
+vint count = material_->getParameterCount();  // size_t 반환 → vint(int32) 축소
+```
+```cpp
+// 수정
+vint count = static_cast<vint>(material_->getParameterCount());
+```
+
+**⑥ `size_t → float` (catmull_rom_curve.cc:63)**
+```cpp
+const vfloat p = (l - (closed_ ? 0 : 1)) * t;  // l은 size_t → float 암묵적 변환
+```
+```cpp
+// 수정
+const vfloat p = static_cast<vfloat>(l - (closed_ ? 0u : 1u)) * t;
 ```
 
 **공통 수정 방향**: `static_cast`를 명시하거나, `BaseID` → `Entity::import` 타입 체인 전체를 unsigned로 통일.
@@ -556,7 +576,7 @@ glm::vec4* weights = reinterpret_cast<glm::vec4*>(bytes);  // uint8* → vec4*
 // asset_loader.cc:403,408 — 애니메이션 타임라인
 reinterpret_cast<const vfloat*>(timeline_blob + offset)    // uint8* → float*
 
-// asset_loader.cc:1221 — filament LinearColor (float[3]과 동일 레이아웃)
+// asset_loader.cc (A-6 이후 행 이동 — 현재 1237번) — filament LinearColor
 *reinterpret_cast<const filament::LinearColor*>(attenuation_color)
 ```
 gltf 바이너리는 메모리상 float 배열로 들어있어 C++ 구조체로 재해석. 기술적으로 **strict aliasing 위반(UB)** 이지만 MSVC/GCC/Clang 모두 실제로는 올바르게 동작. cgltf 라이브러리 자체도 같은 방식으로 설계됨.
@@ -568,6 +588,14 @@ glm::vec4 weights;
 memcpy(&weights, bytes, sizeof(glm::vec4));  // 표준 준수, 컴파일러도 최적화함
 ```
 단, 포인터가 아닌 값이 필요한 경우에만 적용 가능. **실질 위험도: 기술적 UB이나 실용적으로 안전**
+
+> **수정 시 특이사항 (LinearColor)**: `attenuation_color`는 인덱스로 접근 가능한 `const vfloat*`이므로 reinterpret_cast 없이 명시적 생성이 가능. NOLINT 대신 실제 수정 적용:
+> ```cpp
+> // 수정 — reinterpret_cast 완전 제거
+> const filament::LinearColor attenuation_color_lc{
+>     attenuation_color[0], attenuation_color[1], attenuation_color[2]};
+> filament::Color::absorptionAtDistance(attenuation_color_lc, attenuation_distance);
+> ```
 
 ---
 
@@ -632,10 +660,12 @@ for (StringView uri : resource_uris) {
 `StringView::data()`는 `const char*`를 반환하지만 null 종결 문자(`\0`)를 보장하지 않음. `resource_uris_`에 저장된 포인터를 나중에 C 문자열로 사용하면 오버런 위험. 또한 `uri`가 루프 스코프 내 임시 객체라면 포인터가 댕글링될 수 있음.
 
 ```cpp
-// 수정: std::string으로 복사해서 저장
-asset->resource_uris_.push_back(std::string(uri));
-// (resource_uris_ 타입이 vector<string>이어야 함)
+// 수정: size를 명시해서 null 종단 없이도 안전하게 std::string 생성
+// + D-2(emplace_back) 동시 적용
+asset->resource_uris_.emplace_back(uri.data(), uri.size());
 ```
+
+> **수정 시 특이사항**: 문서상 수정 예시는 `push_back(std::string(uri))` 였으나, D-2(`push_back → emplace_back`) 개선과 합쳐 `emplace_back(uri.data(), uri.size())`로 수정. `uri.size()`를 명시해 null 종단 불필요 + 임시 객체 없이 직접 생성.
 
 ---
 
@@ -666,23 +696,35 @@ void initNonuniformCatmullRom(vfloat x0, vfloat x1, vfloat x2, vfloat x3,
 void Skeleton::setJoint(vsize bone_index, BaseID joint_id)
 ```
 
-| 케이스 | 위험도 | 권장 조치 |
+| 케이스 | 위험도 | 실제 조치 |
 |--------|--------|----------|
-| `initNonuniformCatmullRom` 7개 `vfloat` | 높음 | 구조체로 묶기 |
-| `(x, y)` 좌표 쌍 4건 | 중간 | `glm::ivec2 pos`로 묶기 |
-| `setViewport(width, height)` | 중간 | `glm::ivec2`로 묶기 |
-| `setJoint(vsize, BaseID)` | 낮음 (타입 다름) | NOLINT |
+| `initNonuniformCatmullRom` 7개 `vfloat` | 높음 | `NonuniformParams` 구조체 도입 — 수정 완료 |
+| `_handleMouseWheel`, `_updateZoomParameters` (private) | 중간 | `glm::ivec2 pos`로 묶음 — 수정 완료 |
+| `Controls::setViewport`, `grabBegin` (공개 virtual API) | 중간 | NOLINT — 시그니처 변경 시 외부 사용자 코드 파손 |
+| `Raycaster::setViewport` (공개 API) | 중간 | NOLINT — 동일 이유 |
+| `setJoint(vsize, BaseID)` | 낮음 (타입 다름) | 조치 불필요 (타입이 달라 컴파일러가 잡음) |
 
 ```cpp
-// 좌표 쌍 수정 예시
-void grabBegin(glm::ivec2 pos, vint button);           // 변경 후
-void _handleMouseWheel(vfloat delta_y, glm::ivec2 pos);
+// private 메서드 — 실제 수정 완료
+void _handleMouseWheel(vfloat delta_y, glm::ivec2 pos);  // orbit_controls.h
 void _updateZoomParameters(glm::ivec2 pos);
 
-// initNonuniformCatmullRom 수정 예시
-struct NonuniformParams { vfloat x0, x1, x2, x3, dt0, dt1, dt2; };
+// 호출부 (orbit_controls.cc)
+_handleMouseWheel(-scroll_delta * 100.0f, {x, y});
+_updateZoomParameters({x, y});
+
+// initNonuniformCatmullRom — 실제 수정 완료 (catmull_rom_curve.cc)
+struct NonuniformParams { vfloat x0, x1, x2, x3; vfloat dt0, dt1, dt2; };
 void initNonuniformCatmullRom(const NonuniformParams& p);
+// 호출부
+px.initNonuniformCatmullRom({p0.x, p1.x, p2.x, p3.x, dt0, dt1, dt2});
+
+// 공개 API — NOLINT 처리 (controls.h, raycaster.h)
+void setViewport(vint width, vint height);  // NOLINT(bugprone-easily-swappable-parameters)
+virtual void grabBegin(vint x, vint y, vint button) = 0;  // NOLINT(bugprone-easily-swappable-parameters)
 ```
+
+> **수정 시 특이사항**: 문서 권장 조치는 `grabBegin`을 포함한 모든 좌표 쌍을 `glm::ivec2`로 변경하는 것이었으나, `grabBegin`은 가상 함수(base + 3개 override)이고 라이브러리 공개 API이므로 외부 호출자 코드가 깨짐. 공개 API는 NOLINT, private 메서드만 실제 수정 적용.
 
 ---
 
@@ -800,6 +842,12 @@ CapsuleGeometry* CapsuleGeometry::create(const String& name, vfloat radius,
 
 헤더와 호출부도 함께 수정 필요.
 
+> **수정 시 특이사항**: 문서에는 `capsule_geometry.cc`와 헤더(`capsule_geometry.h`)만 언급됐으나, 실제 수정 시 `createCapsuleGeometry` 구현 체인도 파라미터 이름을 통일해야 했음. 총 4개 파일 수정:
+> - `capsule_geometry.h` — public API 선언, 주석
+> - `capsule_geometry.cc` — 구현
+> - `object_factory.h` — `createCapsuleGeometry` 선언
+> - `object_factory.cc` — `createCapsuleGeometry` 구현 + `geometries::Capsule` 생성자 인자
+
 ---
 
 ## 6. D등급 — 성능 / 스타일 개선
@@ -842,14 +890,15 @@ for (StringView uri : resource_uris) {
   asset->resource_uris_.push_back(uri.data());  // uri.data()로 임시 std::string 생성 후 push
 }
 
-// 수정
+// 수정 — B-5(null 종단 미보장)와 동시 적용
 for (StringView uri : resource_uris) {
-  asset->resource_uris_.emplace_back(uri.data());  // 컨테이너 내부에서 직접 생성
+  asset->resource_uris_.emplace_back(uri.data(), uri.size());  // 직접 생성 + 길이 명시
 }
 ```
 
-`push_back`은 임시 `std::string` 객체를 먼저 만든 후 이동. `emplace_back`은 생성자 인자를 전달해 컨테이너 내부에서 직접 생성하므로 이동 1회 절감.  
-※ B-5(`uri.data()` null 종단 미보장) 이슈와 함께 `std::string(uri.data(), uri.size())`로 수정하는 것이 더 안전.
+`push_back`은 임시 `std::string` 객체를 먼저 만든 후 이동. `emplace_back`은 생성자 인자를 전달해 컨테이너 내부에서 직접 생성하므로 이동 1회 절감.
+
+> **수정 시 특이사항**: B-5(`uri.data()` null 종단 미보장) 이슈와 합쳐 `emplace_back(uri.data(), uri.size())`로 수정 완료. `uri.size()`를 명시해 null 종단 없이도 올바른 길이로 `std::string`이 생성됨. (B-5 섹션 참고)
 
 ---
 
@@ -973,6 +1022,14 @@ for (cgltf_size i = 0, n = data->count; i < n; ++i, bytes += data->stride) {
 
 cgltf는 glTF 바이너리 버퍼를 `void*` 기반으로 제공하고, 오프셋·스트라이드로 탐색하는 것이 공식 사용 패턴. `std::span` 등으로 대체 불가. NOLINT 처리가 맞음.
 
+```cpp
+// 적용 완료 — asset_loader.cc 4곳
+bytes += data->offset + data->buffer_view->offset;  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+for (..., bytes += data->stride) {                  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+src_buffer = bytes + src_matrices->offset;          // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+bytes + src_matrices->offset + ...->offset;         // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+```
+
 ---
 
 ### F-2. `pro-bounds-array-to-pointer-decay` (확인됨)
@@ -992,6 +1049,15 @@ filament::Material::Builder()
 ```
 
 `base_materials.h`는 filament 빌드 시스템이 자동 생성하는 파일. 직접 수정 불가. Filament의 `.package()` API가 `const void*`를 요구하므로 이 패턴이 필수. NOLINT 처리가 맞음.
+
+```cpp
+// 적용 완료 — context.cc 5곳 (.package() 호출마다)
+.package(BASE_MATERIALS_BLIT_DATA, BASE_MATERIALS_BLIT_SIZE)          // NOLINT(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+.package(BASE_MATERIALS_IMAGE_DATA, BASE_MATERIALS_IMAGE_SIZE)         // NOLINT(...)
+.package(BASE_MATERIALS_PARTICLE_DATA, BASE_MATERIALS_PARTICLE_SIZE)   // NOLINT(...)
+.package(BASE_MATERIALS_EXTENDED_DATA, BASE_MATERIALS_EXTENDED_SIZE)   // NOLINT(...)
+createUbershaderProvider(engine_, UBERARCHIVE_DEFAULT_DATA, ...)        // NOLINT(...)
+```
 
 ---
 
@@ -1027,7 +1093,17 @@ const glm::vec3 car_wheel_scale[] = {
 };
 ```
 
-기술적으로는 `std::array<BaseID, 4>`로 교체 가능하지만, 이니셜라이저 목록을 그대로 쓸 수 있는 C 배열 패턴이 여기서 더 간결. 실질적 위험 없음. NOLINT 또는 `std::array`로 교체 중 팀 컨벤션에 따라 결정.
+기술적으로는 `std::array<BaseID, 4>`로 교체 가능하지만, 이니셜라이저 목록을 그대로 쓸 수 있는 C 배열 패턴이 여기서 더 간결. 실질적 위험 없음.
+
+> **수정 시 특이사항**: `std::array` 교체 대신 NOLINT 적용으로 결정. 두 함수(`simulateWheel`, `updateWheelPhysics`) 내 배열 10개 전체에 적용 완료.
+> ```cpp
+> const BaseID car_wheel_entities[] = {     // NOLINT(cppcoreguidelines-avoid-c-arrays)
+> const BaseID motor_wheel_entities[] = {   // NOLINT(cppcoreguidelines-avoid-c-arrays)
+> const glm::quat car_wheel_matrics[] = {  // NOLINT(cppcoreguidelines-avoid-c-arrays)
+> const glm::quat mortor_wheel_matrics[] = { // NOLINT(...)
+> const glm::vec3 car_wheel_scale[] = {    // NOLINT(...)  ← 첫 번째 함수에만 존재
+> const glm::vec3 mortor_wheel_scale[] = { // NOLINT(...)  ← 첫 번째 함수에만 존재
+> ```
 
 ---
 
@@ -1050,6 +1126,13 @@ class Camera : public Actor {
 ```
 
 이는 런타임 타입 식별(RTTI 대체) 패턴 — 각 클래스가 자신만의 `TypeInfo`를 가지고, 부모 `kTypeInfo`를 체인으로 연결해 `isA<T>()` 등의 타입 검사를 구현하는 의도적 설계. Cppcheck가 이 패턴을 이해하지 못하는 오탐. Cppcheck suppress 처리.
+
+> **수정 시 특이사항**: 헤더가 55개 이상이라 파일마다 inline suppress(`// cppcheck-suppress duplInheritedMember`) 추가 대신 suppressions 파일 방식 적용.
+> - `cppcheck-suppressions.txt` 신규 생성 (`grapi-base/` 루트)
+> - Cppcheck 실행 명령에 `--suppressions-list=cppcheck-suppressions.txt` 추가 (verification_report.md 업데이트 완료)
+> ```
+> duplInheritedMember
+> ```
 
 ---
 

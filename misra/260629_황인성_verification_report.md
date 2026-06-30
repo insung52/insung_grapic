@@ -216,6 +216,7 @@ cppcheck ^
   "--file-filter=*\grapi-base\base\*" ^
   --enable=all ^
   --suppress=missingIncludeSystem ^
+  --suppressions-list=cppcheck-suppressions.txt ^
   --inline-suppr ^
   --template=vs ^
   -j 4 ^
