@@ -21,6 +21,8 @@
 
 ## W-1 — MSVC D9002: `-fno-rtti` (Windows)
 
+> 관련 개념 → [`rtti_and_fno_rtti.md`](../c++/rtti_and_fno_rtti.md), [`compilers_gcc_clang_msvc.md`](../c++/compilers_gcc_clang_msvc.md)
+
 **경고 메시지**
 ```
 cl : 명령줄 warning D9002 : 알 수 없는 '-fno-rtti' 옵션을 무시합니다.
@@ -29,14 +31,36 @@ cl : 명령줄 warning D9002 : 알 수 없는 '-fno-rtti' 옵션을 무시합니
 **발생 빈도**: 수백 회 (빌드 타겟 수만큼 반복)  
 **발생 위치**: filament 서드파티 라이브러리들의 CMakeLists.txt
 
-**원인**:  
-`-fno-rtti`는 GCC/Clang 전용 플래그 (RTTI 비활성화). MSVC에서는 `/GR-`에 해당.  
-filament 내 여러 서드파티 라이브러리가 `target_compile_options`에 `-fno-rtti`를 하드코딩.  
-MSVC는 이 플래그를 인식하지 못해 경고 후 무시 → 빌드 결과에는 영향 없음.
+**원인**:
 
-**영향**: 없음 (MSVC가 플래그를 무시하고 컴파일 계속)  
-**수정 방법**: 서드파티 CMakeLists.txt에서 컴파일러별 분기 처리 필요 (upstream 이슈)  
-**권고**: 수정 불필요 (third-party 코드, upstream에서 관리)
+`-fno-rtti`는 **GCC/Clang 전용** 컴파일러 플래그로, RTTI(Runtime Type Information)를 비활성화한다.  
+MSVC에서 같은 기능은 `/GR-`이며, `-fno-rtti`는 MSVC가 아예 인식하지 못하는 플래그다.
+
+filament 서드파티 라이브러리들의 CMakeLists.txt에 MSVC 분기 없이 하드코딩:
+```cmake
+# filament 서드파티 CMakeLists.txt (예시)
+target_compile_options(${LIB_TARGET} PRIVATE -fno-rtti)
+```
+
+| 컴파일러 | 처리 방식 | 결과 |
+|---------|----------|------|
+| GCC / Clang | 플래그 정상 처리 | RTTI 비활성화됨 |
+| MSVC | D9002 경고 → 무시 | RTTI가 **활성화된 채로** 컴파일됨 |
+
+MSVC 빌드에서는 filament 서드파티가 RTTI on 상태로 컴파일된다.  
+그러나 filament는 `dynamic_cast`/`typeid`를 직접 사용하지 않으므로 런타임 동작에 영향 없음.
+
+**올바른 수정 방법** (upstream에서 해야 할 일):
+```cmake
+if(NOT MSVC)
+    target_compile_options(${LIB_TARGET} PRIVATE -fno-rtti)
+else()
+    target_compile_options(${LIB_TARGET} PRIVATE /GR-)
+endif()
+```
+
+**영향**: 없음 (런타임 동작 차이 없음)  
+**권고**: 수정 불필요 (filament upstream CMakeLists.txt 이슈, grapi-base 소유 코드 아님)
 
 ---
 
