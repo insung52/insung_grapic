@@ -24,12 +24,12 @@
 
 | 등급 | 항목 수 | 설명 |
 |------|--------|------|
-| **A. 잠재적 버그** | 8건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 |
-| **B. 타입/안전성 문제** | ~30건 | 타입 변환 오류·부호 비트 연산·미초기화 등 |
-| **C. 코드 설계 문제** | ~15건 | API 설계·재귀·Rule of Five 등 |
-| **D. 성능/스타일 개선** | ~10건 | `std::endl`, `emplace_back`, `= default` 등 |
+| **A. 잠재적 버그** | 14건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 |
+| **B. 타입/안전성 문제** | ~50건 | 타입 변환 오류·부호 비트 연산·C 스타일 캐스트·다중 포인터 변환 등 |
+| **C. 코드 설계 문제** | ~20건 | API 설계·재귀·Rule of Five·virtual 소멸자 등 |
+| **D. 성능/스타일 개선** | ~50건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷 등 |
 | **E. 대량 스타일 (노이즈)** | 100건+ | `misc-const-correctness` 위주 — 기계적으로 수정 가능 |
-| **F. 인프라 패턴 (오탐)** | 다수 | C API/매크로 사용으로 인한 불가피한 경고 |
+| **F. 인프라 패턴 (오탐)** | 400건+ | pointer-arithmetic 278건, `malloc`/C API 74건 등 불가피한 경고 |
 
 ---
 
@@ -351,10 +351,56 @@ bool error_;     // 초기화 없음
 bool error_ = false;
 ```
 
-**`ktx2_provider.cc:63` — `QueueItem::state_`**
+**`ktx2_provider.cc:61` — `QueueItem` 멤버 4개 + `decoder_root_job_`**
 ```cpp
-// 수정 (타입에 맞는 초기값으로)
-StateType state_ = StateType::kInitial;  // 실제 타입 확인 후 적용
+// 수정 — 실제 타입에 맞는 default member initializer 추가
+struct QueueItem {
+  Ktx2Reader::Async* async_ = nullptr;
+  QueueItemState state_ = QueueItemState::kTranscoding;
+  std::atomic<TranscoderState> transcoder_state_{TranscoderState::kNotStarted};
+  utils::JobSystem::Job* job_ = nullptr;
+};
+
+// 동일 클래스의 decoder_root_job_(line 74)도 같은 패턴
+utils::JobSystem::Job* decoder_root_job_ = nullptr;
+```
+
+**`ktx2_reader.cc:170` — `level_info`**
+```cpp
+// 수정: 값 초기화
+basist::ktx2_image_level_info level_info{};
+transcoder.get_image_level_info(level_info, level_index, layer_index, face_index);
+```
+
+**`ktx2_reader.cc:782` — 내부 `info` (line 765의 outer `info`와 별개)**
+```cpp
+// 수정: 값 초기화 (outer FinalFormatInfo info와 별개 지역변수)
+basist::ktx2_image_level_info info{};
+if (!transcoder->get_image_level_info(info, level_index, layer_index, face_index)) {
+```
+
+**`physics_context.cc:57` — `mObjectToBroadPhase`**
+C 배열이라 선언부 초기화 불가 → 생성자 이니셜라이저 목록에 추가.
+```cpp
+// 수정: MIL에서 값 초기화
+BPLayerInterfaceImpl::BPLayerInterfaceImpl() : mObjectToBroadPhase{} {
+  mObjectToBroadPhase[layers::kNonMoving] = broad_phase_layers::kNonMoving;
+  // ...
+}
+```
+
+**`nine_patch_component.h:143` — `vertices_`**
+`std::array<Vertex, 16>` — 헤더 선언부에 `{}` 추가.
+```cpp
+// 수정 (nine_patch_component.h)
+std::array<Vertex, 16> vertices_{};
+```
+
+**`image.h:295` — `vertices_`**
+`std::array<Vertex, 4>` — 헤더 선언부에 `{}` 추가.
+```cpp
+// 수정 (image.h)
+std::array<Vertex, 4> vertices_{};
 ```
 
 ---
@@ -445,6 +491,134 @@ FT_Load_Glyph(ft_face_, ft_index, FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING);
 ```cpp
 // 처리: NOLINT 주석
 FT_Load_Glyph(ft_face_, ft_index, FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING);  // NOLINT(hicpp-signed-bitwise)
+```
+
+---
+
+### A-9. 소멸자에서 예외 탈출 가능성 (확인됨)
+**도구**: Clang-Tidy `bugprone-exception-escape`  
+**위치**: `asset_impl.cc:16` (`~AssetImpl`)
+
+소멸자 내에서 예외가 발생할 수 있는 코드가 존재. C++ 표준상 소멸자에서 예외가 탈출하면 `std::terminate()` 호출로 프로세스가 즉시 종료됨.
+
+**수정**: 소멸자를 `noexcept`로 선언하고, 내부에서 예외가 발생할 가능성이 있는 코드를 `try/catch`로 감싸 삼킴:
+```cpp
+AssetImpl::~AssetImpl() noexcept {
+  try {
+    // 예외 발생 가능한 정리 코드
+  } catch (...) {
+    // 소멸자에서 예외 탈출 방지
+  }
+}
+```
+
+---
+
+### A-10. 변환 순서 오류 — 확장 전 캐스트 (확인됨)
+**도구**: Clang-Tidy `bugprone-misplaced-widening-cast`  
+**위치**: `curve.cc:42`
+
+```
+경고: "either cast from 'int' to 'vsize' (aka 'unsigned long long') is ineffective,
+      or there is loss of precision before the conversion"
+```
+
+`int`에서 `vsize`(uint64)로의 캐스트가 산술 연산 *후*에 적용되어 int 범위에서 먼저 오버플로가 발생하거나, 캐스트 결과가 실제로 쓰이지 않는 패턴. 두 경우 모두 의도와 다른 동작 가능.
+
+**수정**: 산술 연산 전에 한쪽 피연산자를 `static_cast<vsize>(...)`로 먼저 확장해 64비트 연산으로 수행:
+```cpp
+// 변경 전 (int 범위에서 연산 후 vsize로 캐스트)
+vsize n = (int)a * b;
+
+// 변경 후 (먼저 확장 후 연산)
+vsize n = static_cast<vsize>(a) * b;
+```
+
+---
+
+### A-11. `sscanf` 변환 오류 미보고 (확인됨)
+**도구**: Clang-Tidy `cert-err34-c`  
+**위치**: `ibl.cc:194`
+
+```cpp
+sscanf(str, "%f", &value);  // 변환 실패 시 오류를 보고하지 않음 — value가 쓰레기값
+```
+
+`sscanf`는 변환 실패 시 반환값으로 성공 항목 수를 주지만, 호출부에서 반환값을 확인하지 않으면 조용히 실패. `value`가 초기화되지 않은 채로 이후 코드에서 사용될 위험.
+
+**수정**: `sscanf` 반환값 확인 또는 `strtof`/`std::from_chars` 사용:
+```cpp
+// 방법 1: 반환값 확인
+if (sscanf(str, "%f", &value) != 1) { /* 오류 처리 */ }
+
+// 방법 2: strtof (C++ 권장)
+char* end;
+value = strtof(str, &end);
+if (end == str) { /* 변환 실패 */ }
+```
+
+> **참고**: 같은 위치(`ibl.cc:194`)에서 B-9(`pro-type-vararg`)도 함께 발생 — `sscanf`가 C 가변 인자 함수이기 때문.
+
+---
+
+### A-12. `switch`에 `default` 케이스 없음 (확인됨)
+**도구**: Clang-Tidy `bugprone-switch-missing-default-case`  
+**위치**: `first_person_controls.cc:19`, `fly_controls.cc:22`
+
+int(또는 non-enum) 값에 대한 switch문에 `default` 케이스가 없어, 예상 범위를 벗어난 입력 값이 들어올 경우 조용히 처리되지 않고 통과.
+
+```cpp
+// 예시 패턴
+switch (key_code) {
+  case KeyW: moveForward(); break;
+  case KeyS: moveBackward(); break;
+  // default 없음 — 다른 키는 무시되지만 명시적이지 않음
+}
+```
+
+**수정**: `default: break;` 추가로 의도적 무시를 명시:
+```cpp
+switch (key_code) {
+  case KeyW: moveForward(); break;
+  case KeyS: moveBackward(); break;
+  default: break;  // 명시적으로 나머지 무시
+}
+```
+
+---
+
+### A-13. 추가 재귀 함수 (확인됨)
+**도구**: Clang-Tidy `misc-no-recursion`  
+**위치**: `actor_exporter.cc:319` (`traverseActor`), `raycaster.cc:15` (`intersect`)
+
+A-6에서 `asset_loader.cc`의 재귀 함수 2건을 반복 방식으로 전환 완료. 추가 재귀 함수 2건 확인:
+
+- **`traverseActor` (actor_exporter.cc:319)**: 씬 트리를 순회하며 글TF 노드를 내보내는 함수. A-6의 `_recurseEntities`와 동일한 트리 탐색 패턴.
+- **`intersect` (raycaster.cc:15)**: 레이캐스터의 BVH(Bounding Volume Hierarchy) 또는 씬 트리 교차 검사. 트리 깊이에 비례한 스택 사용.
+
+**수정 방향**: A-6과 동일하게 `std::stack<{node, parent}>` 기반 반복 방식으로 전환. `raycaster.cc:15`의 경우 레이-AABB 교차 검사 특성상 재귀 대신 BVH 순회 큐를 사용하는 패턴 적용 검토.
+
+---
+
+### A-14. 중복 분기 본문 (확인됨)
+**도구**: Clang-Tidy `bugprone-branch-clone`  
+**위치**: `joint_component.cc:190`
+
+```cpp
+// 조건 분기의 true/false 브랜치가 동일한 코드 실행
+if (condition) {
+  doSomething();   // ← true 분기
+} else {
+  doSomething();   // ← false 분기 — 동일
+}
+```
+
+A-2(`vehicle_component.cc:144`)와 동일한 복붙 버그 패턴. 조건문이 실질적으로 의미가 없거나, 어느 한 분기가 다른 동작을 해야 하는데 수정되지 않은 것.
+
+**수정**: 각 분기가 다른 동작을 의도했는지 확인 후 수정. 두 분기가 정말 동일해도 됩다면 if/else 전체를 조건 없이 단순 호출로 교체:
+```cpp
+// 조건이 불필요하다면
+doSomething();
 ```
 
 ---
@@ -669,6 +843,92 @@ asset->resource_uris_.emplace_back(uri.data(), uri.size());
 
 ---
 
+### B-6. C 스타일 캐스트 사용 (확인됨)
+**도구**: Clang-Tidy `google-readability-casting`  
+**건수**: 19건  
+**파일별**: `extended_material_component.cc`(16건), `ktx2_reader.cc`(2건), `actor_exporter.cc`(1건)
+
+```cpp
+// extended_material_component.cc — 22,25,31,38,45,52,59,66,73,80,87,94,101,108,117,125번 줄
+(float)value   // C 스타일 캐스트 — 경고 발생
+
+// ktx2_reader.cc:681 (2건)
+(SomeType)value
+
+// actor_exporter.cc:2784 — redundant cast (같은 타입으로 캐스트)
+(SameType)same_type_value
+```
+
+**수정**: `static_cast<T>(value)`로 교체. `extended_material_component.cc` 16건은 일괄 수정 가능. `actor_exporter.cc:2784`의 redundant cast는 캐스트 자체를 제거:
+```cpp
+// 변경 후
+static_cast<float>(value)
+```
+
+---
+
+### B-7. 정수 → 포인터 변환 최적화 저해 (확인됨)
+**도구**: Clang-Tidy `performance-no-int-to-ptr`  
+**건수**: 6건  
+**위치**: `scene_impl.cc:540`, `physics_context.cc:140,141,175,176`, `vehicle_component.cc:1081`
+
+```cpp
+// Jolt Physics 패턴 — BodyID(uint32)를 void* 사용자 데이터로 저장
+body_interface.SetUserData(body_id,
+    reinterpret_cast<uint64_t>(ptr));  // int→ptr 변환으로 최적화 저해 경고
+```
+
+Jolt Physics `BodyInterface` API가 `uint64_t` 사용자 데이터를 내부적으로 포인터처럼 취급하는 구조. 정수→포인터 변환 경로를 피할 방법이 없는 외부 라이브러리 API 제약.
+
+**처리**: NOLINT 억제:
+```cpp
+reinterpret_cast<uint64_t>(ptr)  // NOLINT(performance-no-int-to-ptr)
+```
+
+---
+
+### B-8. 다중 포인터 암묵적 변환 (확인됨)
+**도구**: Clang-Tidy `bugprone-multi-level-implicit-pointer-conversion`  
+**건수**: 4건  
+**위치**: `actor_exporter.cc:103`, `114`, `893`, `2694`
+
+```cpp
+// cgltf API 출력 파라미터: T** → void* 암묵적 변환
+cgltf_load_buffers(&options, data_, &out_buffer);
+//                                   ^^^^^^^^^^^
+// 'cgltf_node**' → 'void*' 암묵적 변환 (void* 파라미터로 전달)
+
+// 마찬가지로 'char**' → 'void*'
+```
+
+cgltf C API가 출력 파라미터를 `void*`로 받는 설계이기 때문. 명시적 캐스트로 수정:
+```cpp
+// 수정: 명시적 static_cast 추가
+cgltf_load_buffers(&options, data_, static_cast<void*>(&out_buffer));
+```
+
+또는 의미상 문제가 없다면 NOLINT 억제.
+
+---
+
+### B-9. C 가변 인자 함수 사용 (확인됨)
+**도구**: Clang-Tidy `cppcoreguidelines-pro-type-vararg`  
+**건수**: 2건  
+**위치**: `collider_component.cc:168`, `ibl.cc:194`
+
+```cpp
+// ibl.cc:194 — A-11(cert-err34-c)과 동일 위치
+sscanf(str, "%f", &value);  // sscanf가 C 가변 인자 함수
+
+// collider_component.cc:168
+// C 가변 인자 함수 직접 호출
+```
+
+- `ibl.cc:194`의 `sscanf`는 A-11에서 `strtof`/`std::from_chars`로 대체 시 자동 해소.
+- `collider_component.cc:168`은 실제 코드 확인 후 C++ 대안(`std::format`, variadic templates 등) 또는 NOLINT 처리.
+
+---
+
 ## 5. C등급 — 코드 설계 문제
 
 ### C-1. 인접한 동일 타입 파라미터 (인자 순서 실수 위험, 확인됨)
@@ -769,6 +1029,13 @@ struct VehicleData {
 };
 ```
 
+> **추가 확인된 Rule of Five 미준수** (Clang-Tidy v3, `cppcoreguidelines-special-member-functions`)
+> - `ktx2_provider.cc:20` — `Ktx2Provider`: 소멸자 정의, 복사/이동 연산자 4개 없음
+> - `ktx2_reader.cc:468` — `FAsync`: 소멸자 정의, 복사/이동 연산자 4개 없음 (→ C-6 `virtual-class-destructor` 참고)
+> - `joint_component.cc:23` — `Constraint`: 소멸자 정의, 복사/이동 연산자 4개 없음
+>
+> 세 클래스 모두 리소스를 소유하거나 물리 시스템과 연결된 구조이므로, `VehicleData`와 동일하게 복사 `= delete` + 이동 `= default` 명시 적용 필요.
+
 ---
 
 ### C-3. Rule of Three 미준수 (확인됨)
@@ -847,6 +1114,39 @@ CapsuleGeometry* CapsuleGeometry::create(const String& name, vfloat radius,
 > - `capsule_geometry.cc` — 구현
 > - `object_factory.h` — `createCapsuleGeometry` 선언
 > - `object_factory.cc` — `createCapsuleGeometry` 구현 + `geometries::Capsule` 생성자 인자
+
+---
+
+### C-6. `virtual` 소멸자가 `protected` — 접근 제어 불명확 (확인됨)
+**도구**: Clang-Tidy `cppcoreguidelines-virtual-class-destructor`  
+**위치**: `ktx2_reader.cc:468` (`FAsync`)
+
+```cpp
+class FAsync {
+protected:
+  virtual ~FAsync() { ... }   // ← protected virtual 소멸자
+  // 복사/이동 연산자 없음 (C-2 참고: Rule of Five 미준수)
+};
+```
+
+C++ Core Guidelines: 다형성 기반 클래스의 소멸자는 **`public virtual`** 이거나 **`protected non-virtual`** 이어야 함.
+- `public virtual`: 기반 클래스 포인터를 통해 안전하게 `delete` 가능
+- `protected non-virtual`: 기반 클래스 포인터로 직접 삭제를 컴파일 타임에 차단 (파생 클래스만 삭제 가능)
+
+현재 `protected virtual` 조합은 두 방식의 의도가 섞여 불명확. Jolt Physics 연동 코드에서 `FAsync`가 비동기 작업 기반 클래스로 사용되는 패턴이라면 `public virtual`로 변경이 적합.
+
+```cpp
+// 수정 — public virtual로 변경 + Rule of Five 명시
+class FAsync {
+public:
+  virtual ~FAsync() = default;
+
+  FAsync(const FAsync&) = delete;
+  FAsync& operator=(const FAsync&) = delete;
+  FAsync(FAsync&&) = default;
+  FAsync& operator=(FAsync&&) = default;
+};
+```
 
 ---
 
@@ -968,6 +1268,204 @@ return uvw_difference.x <= std::numeric_limits<vfloat>::epsilon() &&
 
 ---
 
+### D-6. 빈 소멸자 `= default` 대체 — 추가 9건 (확인됨)
+**도구**: Clang-Tidy `modernize-use-equals-default`  
+**건수**: 9건 (D-3의 2건과 별개)  
+**위치**: `fixed_joint.cc:19`, `sixdof_joint.cc:19`, `joint.cc:11`, `hinge_joint.cc:19`, `body.cc:12`, `slider_joint.cc:19`, `distance_joint.cc:18`, `vehicle.cc:13`, `cone_joint.cc:19`
+
+D-3에서 `swing_twist_joint.cc`, `point_joint.cc` 2건 처리 완료. 조인트/바디 관련 파일 전반에 동일 패턴 9건 추가 확인.
+
+```cpp
+// 각 파일 동일 패턴
+FixedJoint::~FixedJoint() {}  →  FixedJoint::~FixedJoint() = default;
+SixDofJoint::~SixDofJoint() {}  →  SixDofJoint::~SixDofJoint() = default;
+// ...
+```
+
+**수정**: D-3과 동일. `clang-tidy --fix`로 자동 수정 가능.
+
+---
+
+### D-7. `[[nodiscard]]` 누락 — 추가 5건 (확인됨)
+**도구**: Clang-Tidy `modernize-use-nodiscard`  
+**건수**: 5건 (D-4의 1건과 별개)  
+**위치**: `ktx2_provider.cc:34,35,37,40,43`
+- `getPushMessage()` (line 34)
+- `getPopMessage()` (line 35)
+- `getPushedCount()` (line 37)
+- `getPoppedCount()` (line 40)
+- `getDecodedCount()` (line 43)
+
+KTX2 텍스처 스트리밍 큐의 상태 조회 함수들. 반환값을 사용하지 않으면 호출 자체가 의미 없음.
+
+```cpp
+// 수정
+[[nodiscard]] Message getPushMessage() const;
+[[nodiscard]] Message getPopMessage() const;
+[[nodiscard]] int getPushedCount() const;
+[[nodiscard]] int getPoppedCount() const;
+[[nodiscard]] int getDecodedCount() const;
+```
+
+---
+
+### D-8. `override` 누락 (확인됨)
+**도구**: Clang-Tidy `modernize-use-override`  
+**건수**: 2건 (C-4의 1건과 별개)  
+**위치**: `ktx2_provider.cc:24`, `ktx2_reader.cc:484`
+
+```cpp
+// 변경 전 — virtual + override 중복 또는 override 없음
+virtual void loadContent(...);
+
+// 변경 후 — override만 사용
+void loadContent(...) override;
+```
+
+C-4(`context.cc`)와 동일한 패턴. `clang-tidy --fix`로 자동 수정 가능.
+
+---
+
+### D-9. `new` 대신 `std::make_unique` 사용 (확인됨)
+**도구**: Clang-Tidy `modernize-make-unique`  
+**건수**: 1건  
+**위치**: `ktx2_provider.cc:250`
+
+```cpp
+// 변경 전
+std::unique_ptr<T> ptr(new T(arg1, arg2));
+
+// 변경 후
+auto ptr = std::make_unique<T>(arg1, arg2);
+```
+
+`make_unique`는 예외 안전성 향상(new와 생성자 호출 사이의 예외 누수 방지)과 코드 간결성을 동시에 제공.
+
+---
+
+### D-10. 값 파라미터 → `const` 참조로 변경 (확인됨)
+**도구**: Clang-Tidy `performance-unnecessary-value-param`  
+**건수**: 2건  
+**위치**: `curve_path.cc:105` (`curve`), `ibl.cc:151` (`path`)
+
+```cpp
+// curve_path.cc:105 — CurveType이 복사 비용이 있는 타입
+void addCurve(CurveType curve)   // 호출마다 복사 발생
+// 수정
+void addCurve(const CurveType& curve)
+
+// ibl.cc:151 — String(std::string) 복사
+void loadSkybox(String path)     // 복사 발생
+// 수정
+void loadSkybox(const String& path)
+```
+
+함수 내에서 파라미터를 수정하지 않는 경우, `const&`로 받아 불필요한 복사 제거.
+
+---
+
+### D-11. enum 크기 최소화 (확인됨)
+**도구**: Clang-Tidy `performance-enum-size`  
+**건수**: 2건  
+**위치**: `ktx2_provider.cc:48` (`QueueItemState`), `ktx2_provider.cc:55` (`TranscoderState`)
+
+```cpp
+// 현재 — 기본 타입 int(4바이트)
+enum QueueItemState { kInitial, kPending, kDone };   // 값 3개 → 4바이트
+enum TranscoderState { kIdle, kRunning, kError };    // 값 3개 → 4바이트
+
+// 수정 — 값 범위에 맞는 최소 타입 (1바이트)
+enum QueueItemState : std::uint8_t { kInitial, kPending, kDone };
+enum TranscoderState : std::uint8_t { kIdle, kRunning, kError };
+```
+
+enum이 구조체 멤버로 쓰일 때 메모리 절약. KTX2 큐 아이템이 많이 생성될수록 효과 커짐.
+
+---
+
+### D-12. boolean 식 단순화 — 추가 5건 (확인됨)
+**도구**: Clang-Tidy `readability-simplify-boolean-expr`  
+**건수**: 5건 (D-5의 1건과 별개)  
+**위치**: `texture_component.cc:121`, `mesh_component.cc:448`, `rigidbody_component.cc:67`, `aabb.cc:110`, `hitbox_2d.cc:8`
+
+두 가지 하위 패턴:
+
+**① redundant boolean literal** (`texture_component.cc`, `mesh_component.cc`, `rigidbody_component.cc`):
+```cpp
+// 변경 전
+return cond ? true : false;
+bool ok = cond && true;
+
+// 변경 후
+return cond;
+bool ok = cond;
+```
+
+**② DeMorgan 단순화** (`aabb.cc`, `hitbox_2d.cc`):
+```cpp
+// 변경 전
+!(A || B)
+// 변경 후
+!A && !B
+```
+
+D-5와 동일하게 `clang-tidy --fix`로 자동 수정 가능.
+
+---
+
+### D-13. TODO 포맷 불일치 (확인됨)
+**도구**: Clang-Tidy `google-readability-todo`  
+**건수**: 6건  
+**위치**: `ktx2_provider.cc:202`, `ktx2_reader.cc:744,753`, `joint_component.cc:144`, `rigidbody_component.cc:218,263`
+
+```cpp
+// 현재 — 담당자/버그 번호 없음
+// TODO: 나중에 처리
+
+// Google 스타일 가이드 권장 형식
+// TODO(username): 설명
+// TODO(b/123456): 버그 번호 포함 설명
+```
+
+코드 리뷰나 버그 추적 시 담당자 불명확. 팀 코딩 표준이 다르다면 `.clang-tidy`에서 `google-readability-todo`를 비활성화하는 것이 현실적.
+
+**처리**: 팀 표준 확인 후 형식 통일 또는 `.clang-tidy`에서 체크 비활성화.
+
+---
+
+### D-14. 미사용 파라미터 (확인됨)
+**도구**: Clang-Tidy `misc-unused-parameters`  
+**건수**: 17건  
+**파일별**:
+
+| 파일 | 줄 | 파라미터 | 건수 |
+|------|-----|---------|------|
+| `line_curve.cc` | 25 | `t` | 1 |
+| `scene_impl.cc` | 1128,1313,1370 | `js`, `parent`(×3) | 4 |
+| `physics_context.cc` | 110,111 | `in_manifold`, `io_settings` | 2 |
+| `ktx2_provider.cc` | 82 | `mime_type` | 1 |
+| `ktx2_reader.cc` | 147 | `userdata` | 1 |
+| `actor_exporter.cc` | 2360 | `tex` | 1 |
+| `first_person_controls.cc` | 13 | `x`, `y` | 2 |
+| `custom_material_component.cc` | 127 | `modulate` | 1 |
+| `body.cc` | 254 | `value` | 1 |
+| `instance_manager.cc` | 354 | `buffer`, `size` | 2 |
+| `custom_material_provider.cc` | 116 | `name` | 1 |
+
+두 가지 원인:
+1. **가상 함수 오버라이드** — 기반 클래스 시그니처 유지를 위해 파라미터가 있어야 하지만 이 구현에서 사용 안 함 (`physics_context.cc`의 Jolt Physics 콜백 등)
+2. **실제 미구현** — 기능이 추가 예정이거나 삭제 예정인 파라미터
+
+**처리**: 가상 함수 오버라이드 케이스는 파라미터 이름 제거로 억제:
+```cpp
+// 이름 제거로 컴파일러 경고 및 linter 경고 제거
+void OnContactAdded(const JPH::Body& /*in_body1*/, const JPH::Body& /*in_body2*/,
+                    const JPH::ContactManifold& /*in_manifold*/,
+                    JPH::ContactSettings& /*io_settings*/) override {}
+```
+
+---
+
 ## 7. E등급 — 대량 스타일 (기계적 적용 가능)
 
 ### E-1. `const` 선언 누락 (misc-const-correctness)
@@ -1029,6 +1527,15 @@ for (..., bytes += data->stride) {                  // NOLINT(cppcoreguidelines-
 src_buffer = bytes + src_matrices->offset;          // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 bytes + src_matrices->offset + ...->offset;         // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 ```
+
+> **잔여 경고**: v3 기준 278건 남음. 적용한 4건 외 나머지는 `freetype_font.cc`, `asset_loader.cc` 내 다른 위치, `ktx2_reader.cc`, `actor_exporter.cc` 등 전반에 걸쳐 분포. 모두 동일한 cgltf/freetype C API 패턴으로 동일한 NOLINT 처리 대상.
+> 
+> | 파일 | 주요 원인 |
+> |------|---------|
+> | `freetype_font.cc` | FreeType 비트맵 버퍼 순회 |
+> | `asset_loader.cc` | cgltf 버퍼/스킨/애니메이션 데이터 접근 |
+> | `actor_exporter.cc` | cgltf 데이터 직렬화 출력 |
+> | `ktx2_reader.cc` | KTX2 레벨 데이터 포인터 탐색 |
 
 ---
 
@@ -1104,6 +1611,8 @@ const glm::vec3 car_wheel_scale[] = {
 > const glm::vec3 car_wheel_scale[] = {    // NOLINT(...)  ← 첫 번째 함수에만 존재
 > const glm::vec3 mortor_wheel_scale[] = { // NOLINT(...)  ← 첫 번째 함수에만 존재
 > ```
+>
+> **잔여 경고**: v3 기준 26건 남음. 10건 처리 후 남은 26건은 `geometry_component.cc`(14건), `collider_component.cc`(1건), `ktx2_reader.cc`(3건), `view_impl.cc`(1건), `asset_loader.cc`(2건), `particles_component.cc`(2건), `ibl.cc`(1건), `mesh_component.cc`(1건), `aabb.cc`(1건) 분포. 각 파일별 판단 후 `std::array` 교체 또는 NOLINT 적용 필요.
 
 ---
 
@@ -1136,6 +1645,33 @@ class Camera : public Actor {
 
 ---
 
+### F-6. `malloc`/`free` 직접 사용 — cgltf C API 패턴 (확인됨)
+**도구**: Clang-Tidy `cppcoreguidelines-no-malloc`  
+**건수**: 74건  
+**파일별**: `actor_exporter.cc`(68건), `ktx2_reader.cc`(5건), `ktx2_provider.cc`(1건)
+
+```cpp
+// actor_exporter.cc — cgltf 데이터 구조 직접 할당 (60~132번 줄 집중)
+cgltf_data* data = (cgltf_data*)malloc(sizeof(cgltf_data));
+cgltf_free(data);   // cgltf 전용 해제 함수
+
+// ktx2_reader.cc — KTX2 레벨 데이터 버퍼 할당 (A-4 관련)
+vuint64* const blocks = static_cast<vuint64*>(malloc(length));
+```
+
+**원인 분석**:
+- `actor_exporter.cc` 68건: cgltf C API 구조체(`cgltf_data`, `cgltf_node`, `cgltf_mesh` 등)를 직접 `malloc`으로 할당하는 glTF 내보내기 코드. cgltf 라이브러리가 `cgltf_free()`를 제공하므로 RAII 패턴으로 전환하려면 커스텀 deleter가 필요.
+- `ktx2_reader.cc` 5건: `malloc` + `memcpy` 패턴으로 KTX2 레벨 버퍼 할당. A-4(null 체크 미비)에서 이미 분석.
+
+**처리**: F등급 — cgltf/KTX2 C API 설계상 불가피. NOLINT 억제 또는 cgltf 전용 allocator 래퍼 구현(overkill):
+```cpp
+cgltf_data* data = (cgltf_data*)malloc(sizeof(cgltf_data));  // NOLINT(cppcoreguidelines-no-malloc)
+```
+
+> **참고**: `actor_exporter.cc` 내 `cgltf_alloc`/`cgltf_free` 블록 전체는 일괄 NOLINT 적용 또는 `.clang-tidy`에서 해당 파일에 대해 `no-malloc` 체크를 비활성화하는 방법이 현실적.
+
+---
+
 ## 9. 도구별 비교
 
 | 항목 | Clang-Tidy v2 | Cppcheck |
@@ -1153,28 +1689,47 @@ class Camera : public Actor {
 ```
 1단계 — 즉시 (A등급)
 ─────────────────────────────────────────────────────────────────
-□ vehicle_component.cc:940 — if 조건 대입 오류 확인 (= vs ==)
-□ vehicle_component.cc:144 — 동일한 true/false 분기 로직 검토
-□ geometry_component.cc:554-555 — 배열 인덱스 범위 guard 추가
-□ ktx2_reader.cc:567,648 — 널 포인터 검사 순서 수정
-□ curve.cc:183~232 — suspiciousCommaInReturn 5건 수정
-□ asset_loader.cc:529,794 — 재귀 함수 반복 방식 전환 또는 깊이 제한
-□ material_component.cc:17 + Cppcheck 3건 — uninit 멤버 초기화 추가
+□ vehicle_component.cc:940 — if 조건 대입 오류 (= vs !=)
+□ vehicle_component.cc:144 — 동일한 true/false 분기 로직 검토 (A-2)
+□ geometry_component.cc:554-555 — 배열 인덱스 범위 guard 추가 (A-3)
+□ ktx2_reader.cc:567,648 — malloc null 체크 추가 (A-4)
+□ asset_loader.cc:529,794 — 재귀 함수 반복 방식 전환 (A-6, 수정 완료)
+□ material_component.cc:17 + 추가 7건 — uninit 멤버 초기화 (A-7)
+□ asset_impl.cc:16 — 소멸자 예외 탈출 방지 noexcept (A-9)
+□ curve.cc:42 — 변환 순서 수정 (A-10)
+□ ibl.cc:194 — sscanf → strtof 교체 (A-11)
+□ first_person_controls.cc:19, fly_controls.cc:22 — switch default 추가 (A-12)
+□ actor_exporter.cc:319, raycaster.cc:15 — 재귀 함수 반복 방식 전환 (A-13)
+□ joint_component.cc:190 — 중복 분기 수정 (A-14)
 
 2단계 — 단기 (B/C등급)
 ─────────────────────────────────────────────────────────────────
-□ hicpp-signed-bitwise 5건 — 비트 연산 타입을 uint로 교체
-□ bugprone-narrowing-conversions 15건 — BaseID→int32_t 타입 통일 검토
-□ typesetter.cc:79,249,250 — 곱셈 전 명시적 캐스트 추가
-□ asset_loader.cc:523 — stringview.data() null-termination 처리
-□ vehicle_component.cc:32 — VehicleData Rule of Five 명시
-□ resource_manager.cc:54 — Rule of Three 적용
+□ hicpp-signed-bitwise 20건 — 비트 연산 타입을 uint로 교체 (A-8)
+□ bugprone-narrowing-conversions 15건 — BaseID→int32_t 타입 통일 검토 (B-1)
+□ typesetter.cc:79,249,250 — 곱셈 전 명시적 캐스트 추가 (B-2)
+□ asset_loader.cc:523 — stringview.data() null-termination 처리 (B-5, 수정 완료)
+□ extended_material_component.cc 16건 + ktx2/exporter 3건 — C 스타일 캐스트 교체 (B-6)
+□ scene_impl/physics_context/vehicle 6건 — int→ptr NOLINT (B-7)
+□ actor_exporter.cc 4건 — 다중 포인터 명시적 캐스트 (B-8)
+□ vehicle_component.cc:32 — VehicleData Rule of Five 명시 (C-2)
+□ ktx2_provider.cc:20, ktx2_reader.cc:468, joint_component.cc:23 — Rule of Five (C-2 추가)
+□ resource_manager.cc:54 — Rule of Three 적용 (C-3)
+□ ktx2_reader.cc:468 — FAsync public virtual 소멸자 + Rule of Five (C-6)
 
 3단계 — 중기 (D등급 + F등급 정리)
 ─────────────────────────────────────────────────────────────────
-□ std::endl → '\n' 5건 (자동 수정 가능)
-□ emplace_back, = default, [[nodiscard]], override 정리 (자동 수정)
-□ NOLINT 주석으로 F등급 인프라 패턴 억제 (cgltf, filament 매크로)
+□ = default 9건 — fixed/sixdof/hinge/slider/distance/cone_joint, body, vehicle (D-6)
+□ [[nodiscard]] 5건 — ktx2_provider.cc Queue 상태 조회 함수 (D-7)
+□ override 2건 — ktx2 files (D-8)
+□ make_unique 1건 — ktx2_provider.cc:250 (D-9)
+□ const& 파라미터 2건 — curve_path.cc, ibl.cc (D-10)
+□ enum 타입 최소화 2건 — ktx2_provider.cc QueueItemState, TranscoderState (D-11)
+□ bool 단순화 5건 — 자동 수정 가능 (D-12)
+□ TODO 포맷 6건 — 팀 표준 확인 후 처리 (D-13)
+□ 미사용 파라미터 17건 — 이름 제거 또는 삭제 (D-14)
+□ F-1 278건 — cgltf/freetype pointer-arithmetic NOLINT 일괄 적용
+□ F-4 26건 — 파일별 std::array 교체 또는 NOLINT
+□ F-6 74건 — cgltf/KTX2 malloc 패턴 NOLINT
 
 4단계 — 일괄 적용 (E등급)
 ─────────────────────────────────────────────────────────────────
