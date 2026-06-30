@@ -501,14 +501,17 @@ FT_Load_Glyph(ft_face_, ft_index, FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING);  // NOL
 
 소멸자 내에서 예외가 발생할 수 있는 코드가 존재. C++ 표준상 소멸자에서 예외가 탈출하면 `std::terminate()` 호출로 프로세스가 즉시 종료됨.
 
-**수정**: 소멸자를 `noexcept`로 선언하고, 내부에서 예외가 발생할 가능성이 있는 코드를 `try/catch`로 감싸 삼킴:
+**수정**: 소멸자 본문 전체를 `try-catch(...)`로 감쌈. 소멸자는 C++11에서 이미 암묵적 `noexcept`이므로 별도 specifier 불필요.
 ```cpp
-AssetImpl::~AssetImpl() noexcept {
+AssetImpl::~AssetImpl() {
   try {
-    // 예외 발생 가능한 정리 코드
-  } catch (...) {
-    // 소멸자에서 예외 탈출 방지
-  }
+    releaseSourceData();
+    if (!detached_) {
+      ObjectFactory* factory = Context::get().getObjectFactory();
+      for (BaseID const actor_id : actors_) { factory->destroy(actor_id); }
+      // ... (나머지 destroy 루프)
+    }
+  } catch (...) {}
 }
 ```
 
@@ -541,20 +544,17 @@ vsize n = static_cast<vsize>(a) * b;
 **위치**: `ibl.cc:194`
 
 ```cpp
-sscanf(str, "%f", &value);  // 변환 실패 시 오류를 보고하지 않음 — value가 쓰레기값
+// ibl.cc:194 — 실제 코드
+vint const n = sscanf(line.c_str(), "(%f,%f,%f)", &band.r, &band.g, &band.b);
+if (n != 3) return false;  // ← 반환값은 이미 체크됨
 ```
 
-`sscanf`는 변환 실패 시 반환값으로 성공 항목 수를 주지만, 호출부에서 반환값을 확인하지 않으면 조용히 실패. `value`가 초기화되지 않은 채로 이후 코드에서 사용될 위험.
+반환값은 이미 `if (n != 3)` 으로 체크하고 있음. `cert-err34-c`가 추가로 경고하는 것은 `%f` 파싱 중 IEEE 754 오버플로 발생 시 `sscanf`가 undefined behavior를 조용히 생성할 수 있다는 점. 그러나 구형 sh 파일 포맷(신뢰된 내부 입력)이므로 실질적 위험 없음.
 
-**수정**: `sscanf` 반환값 확인 또는 `strtof`/`std::from_chars` 사용:
+**처리**: NOLINT (반환값 체크 완료 + 신뢰된 내부 파일 포맷)
 ```cpp
-// 방법 1: 반환값 확인
-if (sscanf(str, "%f", &value) != 1) { /* 오류 처리 */ }
-
-// 방법 2: strtof (C++ 권장)
-char* end;
-value = strtof(str, &end);
-if (end == str) { /* 변환 실패 */ }
+vint const n = sscanf(line.c_str(), "(%f,%f,%f)", &band.r, &band.g, &band.b);  // NOLINT(cert-err34-c)
+if (n != 3) return false;
 ```
 
 > **참고**: 같은 위치(`ibl.cc:194`)에서 B-9(`pro-type-vararg`)도 함께 발생 — `sscanf`가 C 가변 인자 함수이기 때문.
