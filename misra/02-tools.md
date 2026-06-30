@@ -1,8 +1,8 @@
 # 검증 도구 조사 — MISRA / AUTOSAR / ASIL 대응 정적분석 도구
 
 > [01-background.md](01-background.md) 에서 정리한 개념(MISRA, ASIL, TCL, Deviation 등)을 전제로 함.
-> 비용은 대부분 비공개(견적 문의) 정책이라 정확한 금액보다 **"무료/오픈소스 vs 상용(견적제)"** 구분과 **기능 차이**에 초점을 맞춤.
-> (2026-06 기준 웹 조사. 가격/인증 상태는 변동 가능하므로 구매 전 벤더 확인 필요)
+> 비용은 대부분 비공개(견적 문의) 정책. 명시된 가격은 **제3자 리뷰 사이트(PeerSpot, Vendr, G2 등)에서 수집한 참고치**이며 정식 견적이 아님 — 실제 도입 시 반드시 벤더 직접 문의 필요.
+> (2026-06 기준 웹 조사. 가격/인증 상태는 변동 가능)
 
 ---
 
@@ -28,121 +28,129 @@
 - **MISRA**: MISRA C:2012, MISRA C++:2008/2023 지원.
 - **ASIL**: TÜV 인증 보유, ISO 26262 Tool Qualification Kit 제공. ASIL D 프로젝트에서 표준적으로 채택.
 - **특징**: Code Prover는 "오버플로우/배열범위초과/0으로 나누기 등이 없음을 증명"하는 수준까지 감. MATLAB/Simulink 연계 워크플로우와 강하게 결합되어 있어, 모델 기반 개발(MBD) 조직에 특히 유리.
-- **라이선스**: 상용, 견적제 (MathWorks 영업 통한 코드라인/시트 기준 가격).
+- **라이선스**: 상용, 견적제 (MathWorks 영업 통한 코드라인/시트 기준 가격). 공개 정가 없음. 구성 요소(Bug Finder 단독 / Code Prover 단독 / 묶음), 시트 수, 유지보수 패키지에 따라 금액이 달라지며, 고가 상용 SAST 도구군 가격대(연간 수천만 원 이상 규모)에 속하는 것으로 알려짐.
 
 ### 2.2 Synopsys (Black Duck) Coverity
 - **분류**: A.
 - **MISRA/AUTOSAR**: MISRA C/C++, AUTOSAR C++14 지원.
 - **ASIL**: TÜV SÜD 인증 (ISO 26262, IEC 61508).
 - **특징**: 원래 보안(SAST) 쪽으로 유명했고, interprocedural dataflow 분석이 강함. 대규모 코드베이스의 CI 통합(증분 분석)에 강점 — 그래픽 엔진처럼 빌드가 큰 프로젝트에 적합.
-- **라이선스**: 상용, 견적제.
+- **라이선스**: 상용, 연간 구독제. 시트 수 또는 애플리케이션 수 기반 가격. 리뷰 집계 기준 소규모 도입은 **연간 $5만 내외**부터 시작하며, 중규모(개발자 10~100명 규모)는 $7.5만~$40만/년, 대규모 엔터프라이즈는 $50만+/년 범위. PeerSpot 사용자 리뷰에서 "10점 만점에 10점(매우 비쌈)"이라는 평이 일반적. Coverity + Black Duck 묶음 구매 시 20~35% 할인이 가능한 것으로 알려짐.
 
 ### 2.3 Perforce Klocwork
 - **분류**: A.
 - **MISRA/AUTOSAR**: MISRA C/C++, AUTOSAR C++14, CERT 지원. 체커 수가 매우 많음(2,000+ 전체, C/C++ 1,000+).
 - **ASIL**: TÜV SÜD 인증.
 - **특징**: IDE(Visual Studio 등) 통합과 실시간(타이핑 중) 분석에 강점. 대형 임베디드/자동차 조직에서 채택 사례 많음.
-- **라이선스**: 상용, 견적제.
+- **라이선스**: 상용, 견적제. 구독형 + 영구 라이선스 옵션 모두 존재. 시트 수·스캐너 에디션·온프레미스vs호스팅 여부에 따라 달라지며, 공개 단가는 없음. Coverity 대비 상대적으로 낮다는 리뷰 의견이 있으나 여전히 고가 도구군.
 
 ### 2.4 Parasoft C/C++test
 - **분류**: A.
 - **MISRA/AUTOSAR**: MISRA C/C++, AUTOSAR C++14 지원.
 - **특징**: 정적분석뿐 아니라 단위테스트/커버리지(MC/DC 포함) 생성까지 한 제품에 포함 — "검증 단계 1+5"를 한 도구로 커버하려는 포지셔닝.
-- **라이선스**: 상용, 견적제.
+- **라이선스**: 상용, 견적제. Named User 또는 Node-locked(머신 고정) 라이선스 방식 (Floating 라이선스는 폐지됨). Vendr 내부 거래 데이터 기준 평균 도입 비용은 **약 $5.6만/년** 수준.
 
 ### 2.5 Perforce Helix QAC (구 QA-C/QA-C++)
 - **분류**: A.
 - **MISRA**: MISRA C/C++ 커버리지가 업계에서 가장 깊다고 평가받는 축. MISRA 위원회 멤버사 출신 도구라 룰 해석의 "정합성"이 강점.
 - **ASIL**: TCL1 분류 보유(검색 결과 기준), ISO 26262 대응 다수 사례.
 - **특징**: 비교적 합리적인 초기 비용으로 평가됨(타 상용 툴 대비). Helix ALM 등 Perforce 생태계와 연계.
-- **라이선스**: 상용, 견적제 (상대적으로 진입비용 낮은 편이라는 평가).
+- **라이선스**: 상용, 견적제. Desktop 사용자 라이선스 + 서버 빌드 라이선스 구조(2025.1 기준). 공개 단가 없음. 타 상용 MISRA 도구 대비 "진입 비용이 상대적으로 낮다"는 평가가 있으나, 정확한 수치는 비공개라 Perforce 영업 통해 확인 필요.
 
 ### 2.6 LDRA Tool Suite / TBvision
 - **분류**: A (+ 일부 동적분석/커버리지/추적성까지 풀스택).
 - **MISRA/AUTOSAR**: 폭넓게 지원. 요구사항 추적성(traceability)까지 묶어서 "ISO 26262 전 생애주기"를 한 제품군으로 커버하려는 포지셔닝.
 - **ASIL**: 다수 TÜV/인증 사례, 항공(DO-178C) 쪽에도 강함.
 - **특징**: 기능이 매우 광범위한 만큼 도입/설정 비용과 학습곡선이 큰 편이라는 평가가 일반적.
-- **라이선스**: 상용, 견적제 (검색결과 기준 타 도구 대비 셋업 비용 높은 편).
+- **라이선스**: 상용, 견적제. 공개 단가 없음. 기능 범위가 정적분석 + 동적분석 + 커버리지 + 추적성까지 넓은 만큼 도입 비용 자체가 높고, 라이선스 외에 초기 셋업·컨설팅 비용도 유의미한 수준으로 알려짐.
 
 ### 2.7 Axivion Suite (구 Bauhaus Suite, 現 Qt 산하)
 - **분류**: A.
 - **MISRA/AUTOSAR**: MISRA C/C++, AUTOSAR C++14 지원.
 - **ASIL**: TÜV 인증("Dual-Layer Code Quality Analysis"로 마케팅).
 - **특징**: 아키텍처 준수 검사(의존성 규칙, 모듈 경계 위반 탐지)가 강점 — 대규모 엔진처럼 모듈 구조가 복잡한 코드베이스의 "아키텍처 침식" 방지에 유용.
-- **라이선스**: 상용, 견적제 (고기능 대비 셋업비용 높은 편 평가).
+- **라이선스**: 상용, 견적제. Technical Team Member(TTM) 수 기반 Site License 구조. 공개 단가 없음. Qt 그룹 산하 제품군(IDE + QA 도구 묶음) 방식으로 계약하는 경우가 많아 단독 도입보다 번들 쪽으로 더 많이 팔림.
 
 ### 2.8 GrammaTech/CodeSecure CodeSonar
 - **분류**: A.
 - **MISRA**: MISRA-C 2012/2023/2025, MISRA-C++:2023, AUTOSAR C++14, CERT, JSF++(록히드마틴 C++ 가이드라인, 게임/항공 분야에서도 종종 참조됨) 지원.
 - **특징**: 보안취약점(CWE) 탐지와 안전성 분석을 동시 지원하는 포지셔닝. Whole-program 분석.
-- **라이선스**: 상용, 견적제.
+- **라이선스**: 상용, 견적제. 2023년 GrammaTech 소프트웨어 부문 분리 후 CodeSecure Inc.로 독립, 이후 2024~2025년경 AdaCore 산하로 편입. 공개 단가 없음. 과거(2009년) 자료에서는 소규모 프로젝트 기준 $9,600부터 시작한다는 언급이 있으나 현재 가격 구조와 다를 수 있음.
 
 ### 2.9 PC-lint Plus (Vector Informatik 산하)
 - **분류**: B.
 - **MISRA**: MISRA C 2012/2023/2025, MISRA C++:2023, AUTOSAR(17/19), CERT C 지원 — 최신 MISRA C++:2023까지 빠르게 따라가는 편.
 - **ASIL**: exida 인증 (ISO 26262, IEC 61508, IEC 62304).
 - **특징**: 전통적인 "린트" 계열 — 가볍고 빠르며 온프레미스(사내 서버) 분석에 적합. 추가 기능에 별도 과금이 없다는 점을 마케팅 포인트로 내세움(번들형 가격).
-- **라이선스**: 상용, 견적제(Vector를 통한 견적).
+- **라이선스**: 상용, 연간 구독제 (Vector 통해 견적). 팀 라이선스 기준 **€336/개발자/년부터** (최소 인원 제한 없음). 14일 무료 평가판 제공. 추가 기능에 별도 과금이 없는 번들형 가격이라는 점을 Vector가 마케팅 포인트로 강조함.
 
 ### 2.10 Astrée (AbsInt)
 - **분류**: C (순수 정형검증/추상해석).
 - **MISRA**: MISRA 지원하나, 주목적은 "런타임 에러 부재의 수학적 증명"(오버플로우, 배열범위, NULL 역참조, 데이터 레이스 등).
 - **ASIL**: TÜV 인증, ASIL D/원자력/항공/우주 분야에서 최상위 신뢰도 요구 시 채택 (에어버스 A340/A380 비행제어 SW 사례로 유명).
 - **특징**: False negative(누락) 없음을 지향하는 "sound" 분석기라 매우 보수적/엄격함. 대신 대규모 코드 전체에 적용하면 분석 시간/리소스 부담이 크고, 일반적인 애플리케이션 로직보다는 안전 critical 핵심 모듈에 선택적으로 적용하는 경우가 많음.
-- **라이선스**: 상용, 견적제 — 최상위 정형검증 도구군이라 가격대도 높은 편으로 알려짐.
+- **라이선스**: 상용, 견적제. AbsInt 공식 사이트 및 Phaedrus Systems·JORAL Technologies 등 공인 리셀러 통해 구매. 공개 단가 없음. 정형검증 도구군 중에서도 최상위 가격대로 알려져 있으며, 전체 코드베이스보다는 안전 critical 핵심 모듈에만 선택적으로 도입하는 것이 비용 측면에서 현실적.
 
 ### 2.11 TrustInSoft Analyzer
 - **분류**: C. Astrée와 유사하게 형식검증(formal verification) 기반.
 - **특징**: "C 표준의 미정의 동작(UB) 전체를 형식적으로 검증"하는 포지셔닝. 보안(CWE)·안전 양쪽에서 인용됨.
-- **라이선스**: 상용, 견적제.
+- **라이선스**: 상용, 견적제. 공개 단가 없음. 무료 평가판 제공. Astrée보다는 저렴한 편으로 알려지나 역시 고가 도구군에 속함.
 
 ### 2.12 Cppcheck / Cppcheck Premium
 - **분류**: D.
 - **무료(오픈소스) 버전**: 기본 정적분석 체커 제공. MISRA addon 스크립트가 있으나, **MISRA 텍스트(규칙 설명) 자체는 MISRA 라이선스가 있어야 전체 리포트 텍스트를 볼 수 있음** (addon은 규칙 ID만 매핑, 실제 규칙 문구는 별매 MISRA 문서 필요).
 - **유료(Premium) 버전**: MISRA C/C++ 풀 리포트, AUTOSAR, CERT 지원 강화 + 상용 지원.
 - **특징**: 오픈소스라 가볍게 CI에 넣기 좋음. 단, 비교 자료에서 룰 커버리지(특히 MISRA)는 상용 대형 도구 대비 낮게 평가되는 경향(앞서 조사에서 Klocwork 13 : Coverity 11 : Cppcheck 3 비교 사례 — 이 숫자 자체보다 "격차가 있다"는 추세로 참고할 것).
+- **가격**: 오픈소스(무료) 버전은 완전 무료. **Premium 유료 버전**은 Individual / Project(최소 5명) / Enterprise(최소 25명) 3단계로 나뉘며, MISRA C/C++ 풀 리포트·AUTOSAR·CERT 체크는 Project 이상에서만 지원. 단가는 모두 비공개(cppcheck.com 견적 문의). Premium 구매 전 평가 목적으로 **3주 무료 체험(trial)** 제공 — 단, 영업팀과 미팅을 먼저 잡고 신청하는 방식이며, 어느 플랜 기준으로 열어주는지(MISRA 포함 여부)는 페이지에 명시되어 있지 않아 문의 시 확인 필요.
 - **결론**: 비용 없이 1차 필터로 쓰기 좋고, 정식 MISRA 준수 증명이 필요하면 상용 도구 병행 필요.
 
 ### 2.13 Clang-Tidy / Clang Static Analyzer
 - **분류**: D.
 - **무료/오픈소스**: 완전 무료. LLVM 생태계라 최신 C++ 표준(C++20/23) 파싱 정확도가 높음 — 그래픽 엔진의 최신 C++ 기능(컨셉, 코루틴 등) 사용 시 강점.
 - **MISRA**: 공식 MISRA 체커는 없음(LLVM 측은 MISRA 같은 비공개 라이선스 표준의 직접 구현을 꺼리는 입장 — LLVM Discourse 논의 참고). 다만 일부 룰은 일반 체커(`bugprone-*`, `cppcoreguidelines-*` 등)로 우연히 커버되거나, 서드파티/사내 커스텀 체커로 매핑해서 쓰는 경우가 있음.
+- **가격**: 완전 무료. LLVM/VS 번들이라 별도 구매 불필요.
 - **결론**: "MISRA 준수 증명" 용도로는 부적합, "코드 품질/모던 C++ 베스트프랙티스" 용도로는 매우 강력하고 그래픽 엔진 팀에서 일상적으로 쓰기 좋음.
 
 ### 2.14 PVS-Studio
 - **분류**: D(오픈소스 프로젝트 한정 무료) / A(상용).
 - **무료 조건**: 오픈소스 프로젝트, 학생, MVP 등에게 무료 라이선스 제공.
 - **MISRA/AUTOSAR**: C/C++ 한정으로 MISRA, AUTOSAR 룰셋 보유.
-- **상용 가격**: 비공개, 견적 문의(시트/기능별).
+- **가격**: OSS 프로젝트·학생·MVP 등 무료 라이선스 조건 해당 시 무료. 상용 팀/엔터프라이즈 라이선스는 비공개 견적제(단가 공개 안 함, pvs-studio.com 통해 문의). 싱글 유저 라이선스는 판매하지 않음(팀 단위 이상).
 - **특징**: 원래 버그 탐지(패턴 기반) 중심으로 출발해 MISRA/AUTOSAR로 확장한 도구. Windows/Visual Studio 친화적.
 
 ### 2.15 SonarQube / SonarCloud (Sonar)
 - **분류**: D~A 경계 (Community 무료 / Enterprise 유료).
 - **MISRA**: 2024~2025년부터 **MISRA C++:2023** 지원을 Early Access로 추가 발표 (검색 결과: Sonar 공식 블로그). 이전에는 MISRA보다 일반 코드품질/보안(SonarQube 룰셋) 중심이었음.
 - **특징**: 이미 SonarQube를 코드품질 게이트로 쓰고 있는 조직이라면, MISRA 지원 확장이 매력적인 추가 옵션이 될 수 있음. 다만 안전인증(TCL) 레벨의 공식 자료는 상대적으로 신생이라 추가 확인 필요.
-- **라이선스**: Community Edition은 무료(MISRA 등 고급 룰셋은 유료 Edition 한정일 가능성 높음 — 도입 전 에디션별 기능표 확인 필요).
+- **가격**:
+  - **Community Build**: 완전 무료(오픈소스)
+  - **Developer Edition**: **$750~/년** (100K LOC 기준 시작가, 자체 호스팅). MISRA 미포함.
+  - **Enterprise Edition**: 견적제 (1M+ LOC 기준, 영업 문의 필요). **MISRA C++:2023 포함** — 2026.1 LTA 기준 179개 가이드라인 100% 커버. 일반적으로 $1.5만~$25만+/년 범위.
+  - **Data Center Edition**: 견적제 (20M+ LOC, 대규모 분산 팀 대상).
+  - SonarQube Cloud(SaaS 버전)는 공개 레포 무료, private 레포는 별도 플랜.
+  > **중요**: MISRA C++:2023은 Enterprise Edition 이상에서만 지원. Developer Edition으로는 MISRA 불가.
 
 ---
 
 ## 3. 요약 비교표
 
-| 도구 | 유형 | MISRA C | MISRA C++ 2008 | MISRA C++ 2023 | AUTOSAR C++14 | ASIL 인증(TÜV/exida) | 가격모델 |
+| 도구 | 유형 | MISRA C | MISRA C++ 2008 | MISRA C++ 2023 | AUTOSAR C++14 | ASIL 인증(TÜV/exida) | 가격 개요 |
 |---|---|---|---|---|---|---|---|
-| Polyspace | A+C | ✅ | ✅ | ✅ | ? | ✅ | 상용/견적 |
-| Coverity | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적 |
-| Klocwork | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적 |
-| Parasoft C/C++test | A | ✅ | ✅ | ? | ✅ | ? | 상용/견적 |
-| Helix QAC | A | ✅ | ✅ | ? | ✅ | ✅(TCL1) | 상용/견적(상대적 저가) |
-| LDRA | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적(고가) |
-| Axivion | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적(고가) |
-| CodeSonar | A | ✅ | ? | ✅ | ✅ | ? | 상용/견적 |
-| PC-lint Plus | B | ✅ | ? | ✅ | ✅ | ✅(exida) | 상용/견적 |
-| Astrée | C | 부분 | 부분 | ? | ? | ✅ | 상용/견적(고가) |
-| TrustInSoft | C | 부분 | ? | ? | ? | ? | 상용/견적 |
-| Cppcheck(Premium) | D | ✅(위반 룰 번호만 알려줌) | 제한적 | 제한적 | △(Premium) | ❌ | 무료(제한)/유료 |
-| Clang-Tidy | D | ❌(공식無) | ❌ | ❌ | ❌ | ❌ | 완전무료(VS에 포함) |
-| PVS-Studio | D/A | ✅ | ✅ | ? | ✅ | ❌ | OSS무료/상용견적 |
-| SonarQube/Cloud | D/A | ? | ? | ✅(2024~ EA) | ? | ? | Community무료/Enterprise유료 |
+| Polyspace | A+C | ✅ | ✅ | ✅ | ? | ✅ | 상용/견적 (공개 단가 없음) |
+| Coverity | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/연간 구독 · 소규모 ~$5만/년, 중규모 $7.5만~$40만/년 |
+| Klocwork | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적 (공개 단가 없음) |
+| Parasoft C/C++test | A | ✅ | ✅ | ? | ✅ | ? | 상용/견적 · 평균 ~$5.6만/년 (Vendr 데이터) |
+| Helix QAC | A | ✅ | ✅ | ? | ✅ | ✅(TCL1) | 상용/견적 (공개 단가 없음, 상대적 저가 평) |
+| LDRA | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적 (고가, 셋업 비용도 유의미) |
+| Axivion | A | ✅ | ✅ | ? | ✅ | ✅ | 상용/견적 · TTM 수 기반 사이트 라이선스 |
+| CodeSonar | A | ✅ | ? | ✅ | ✅ | ? | 상용/견적 (AdaCore 산하, 공개 단가 없음) |
+| PC-lint Plus | B | ✅ | ? | ✅ | ✅ | ✅(exida) | 상용/연간 구독 · **€336/개발자/년부터** |
+| Astrée | C | 부분 | 부분 | ? | ? | ✅ | 상용/견적 (정형검증 최상위 가격대) |
+| TrustInSoft | C | 부분 | ? | ? | ? | ? | 상용/견적 (공개 단가 없음, 무료 체험 가능) |
+| Cppcheck(Premium) | D | ✅(위반 룰 번호만 알려줌) | 제한적 | 제한적 | △(Premium) | ❌ | OSS **무료** / Premium 견적 (Project: 최소 5명, Enterprise: 최소 25명) |
+| Clang-Tidy | D | ❌(공식無) | ❌ | ❌ | ❌ | ❌ | **완전 무료** (VS·LLVM 번들) |
+| PVS-Studio | D/A | ✅ | ✅ | ? | ✅ | ❌ | OSS **무료** / 상용 팀·엔터프라이즈 견적 |
+| SonarQube/Cloud | D/A | ? | ? | ✅(Enterprise~) | ? | ? | Community **무료** / Developer $750~/년 / Enterprise 견적 (MISRA는 Enterprise~) |
 
 **범례** (표기 의도를 명확히 구분):
 - `✅` 지원 확인됨 (출처 있음)
@@ -243,6 +251,15 @@ ASIL은 MISRA처럼 단일 문서가 아니라 **ISO 26262 표준 전체(파트 
 - [CodeSonar - GrammaTech/CodeSecure](https://www.grammatech.com/learn/latest-version-of-codesonar-improves-on-functional-safety-misra-support-c-parsing-and-visualization/)
 - [CodeSonar - Verifysoft](https://www.verifysoft.com/en_codesonar.html)
 - [MISRA C++:2023 Compliance Early Access - Sonar](https://www.sonarsource.com/blog/misra-c-plus-plus-compliance-early-access)
+- [SonarQube Server Plans & Pricing](https://www.sonarsource.com/plans-and-pricing/sonarqube/)
+- [SonarQube MISRA C++:2023 100% Coverage](https://www.sonarsource.com/knowledge/languages/cpp/misra-cpp-2023/)
+- [Coverity Pricing - TrustRadius](https://www.trustradius.com/products/synopsys-coverity-static-application-security-testing-sast/pricing)
+- [Coverity Cost - Vendr](https://www.vendr.com/buyer-guides/synopsys)
+- [Coverity Pricing Discussion - PeerSpot](https://www.peerspot.com/questions/what-is-your-experience-regarding-pricing-and-costs-for-coverity)
+- [Parasoft C/C++test Cost - Vendr](https://www.vendr.com/buyer-guides/parasoft-com)
+- [PC-lint Plus Cost Overview - Vector](https://vector-softwarequality.com/static-code-analysis/pc-lint-plus/quotation)
+- [Cppcheck Premium Plans & Pricing](https://www.cppcheck.com/plans-pricing)
+- [PVS-Studio License Options](https://pvs-studio.com/en/order/license/)
 - [misra c++ official](https://misra.org.uk/misra-c-plus-plus/)
 - [C++ in Automotive - AUTOSAR C++14 - Parasoft](https://www.parasoft.com/blog/breaking-down-the-autosar-c14-coding-guidelines-for-adaptive-autosar/)
 - [What is MISRA? - Synopsys](https://www.synopsys.com/glossary/what-is-misra.html)
