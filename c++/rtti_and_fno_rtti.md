@@ -4,6 +4,26 @@
 
 **RTTI (Runtime Type Information)** — 프로그램 실행 중에 객체의 실제 타입을 알 수 있게 해주는 C++ 언어 기능이다.
 
+### 왜 필요한가
+
+C++에서는 기반 클래스 포인터에 파생 클래스 객체를 담을 수 있다:
+
+```cpp
+Animal* a = new Dog();
+```
+
+컴파일러는 `a`를 `Animal*`로만 알고 있다. 런타임에 "이게 진짜 `Dog`야, `Cat`이야?"를 알아야 할 때가 있다:
+
+```cpp
+std::vector<Animal*> animals = { new Dog(), new Cat(), new Dog() };
+
+for (Animal* a : animals) {
+    // a가 Dog인지 Cat인지 컴파일 시점엔 모름 → 실행 중에 확인 필요 → RTTI
+}
+```
+
+### 두 가지 언어 구문
+
 C++ 표준에서 RTTI는 두 가지 언어 구문으로 표현된다:
 - `dynamic_cast<T*>(ptr)` — 기반 클래스 포인터를 파생 클래스 포인터로 안전하게 변환. 실패 시 `nullptr` 반환
 - `typeid(expr)` — 표현식의 런타임 타입을 나타내는 `std::type_info` 객체 반환
@@ -16,6 +36,35 @@ Animal* a = new Dog();
 Dog* d = dynamic_cast<Dog*>(a);  // RTTI 사용: 성공, d != nullptr
 typeid(*a).name();               // RTTI 사용: "Dog" (구현체에 따라 다름)
 ```
+
+### `dynamic_cast`를 안 쓰면 RTTI를 안 쓰는 건가?
+
+**반만 맞다.**
+
+`dynamic_cast`와 `typeid` 둘 다 쓰지 않으면 RTTI 기능을 직접 사용하지는 않는 것이다.
+
+그러나 직접 사용 여부와 별개로, 컴파일러는 **virtual 함수가 있는 클래스마다 typeinfo 심볼을 자동으로 생성한다**:
+
+```cpp
+class Animal { virtual ~Animal() {} };
+// → 컴파일러가 "typeinfo for Animal" 심볼을 바이너리에 자동 삽입
+//   dynamic_cast를 쓰든 안 쓰든
+```
+
+`-fno-rtti`는 이 자동 생성을 막는 옵션이다.
+
+따라서 **`dynamic_cast`를 한 번도 쓰지 않아도**, `-fno-rtti`로 컴파일된 클래스를 상속하면 typeinfo 심볼 참조가 발생해 링크 에러가 날 수 있다. 문서 하단의 실제 사례(`VulkanPlatformLinux`)가 정확히 이 케이스다.
+
+### `dynamic`의 의미 — 동적 할당과의 혼동 주의
+
+`dynamic_cast`의 "dynamic"과 동적 할당(`new`/`delete`)의 "dynamic"은 다른 개념이다:
+
+| 용어 | 의미 | 시점 |
+|---|---|---|
+| **동적 할당** (`new Foo()`) | 힙에 메모리 공간 확보 | 런타임 |
+| **`dynamic_cast`** | 타입 변환의 유효성을 검사하며 변환 | 런타임 |
+
+둘 다 런타임에 일어나는 일이라 "dynamic"이라는 단어를 공유하지만, RTTI는 메모리 할당과 관계없다.
 
 ---
 
