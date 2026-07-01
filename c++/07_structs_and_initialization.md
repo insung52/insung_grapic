@@ -382,3 +382,105 @@ virtual void foo() final;
 | 파생 클래스 재정의 | name hiding (오버라이드 아님) | `override`로 진짜 오버라이드 |
 | vptr 비용 | 없음 | 인스턴스당 8바이트 |
 | `Base*`로 호출 시 | Base 버전 호출 | 실제 타입 버전 호출 |
+
+---
+
+## 9. 멤버 이니셜라이저 목록 (MIL, Member Initializer List)
+
+생성자에서 멤버 변수를 초기화하는 방법은 두 가지다.
+
+```cpp
+class Foo {
+    int x;
+    std::string name;
+public:
+    // 방법 1: 생성자 본문에서 대입
+    Foo() {
+        x = 0;
+        name = "foo";  // ← 대입(assignment). 기본 생성 후 덮어씀
+    }
+
+    // 방법 2: MIL (콜론 뒤, 본문 전)
+    Foo() : x(0), name("foo") {}   // ← 초기화(initialization). 바로 값으로 생성
+};
+```
+
+### 생성자 실행 순서
+
+```
+① MIL 처리    ← 멤버 변수들이 여기서 생성됨
+② 본문 실행   ← 이미 생성된 멤버에 대입
+```
+
+방법 1은 멤버가 **기본 생성된 뒤 대입**. 방법 2는 **처음부터 원하는 값으로 생성**.  
+`std::string`처럼 기본 생성자가 있는 타입은 방법 1이 불필요한 기본 생성 + 대입 두 번 실행 → 비효율.
+
+### MIL이 필수인 경우
+
+```cpp
+class Foo {
+    const int id;         // const 멤버 — 선언 후 대입 불가
+    int& ref;             // 레퍼런스 멤버 — 선언 후 대입 불가
+    Bar sub;              // 기본 생성자 없는 타입 — 반드시 MIL에서 생성자 인자 전달
+public:
+    Foo(int id, int& r, int val)
+        : id(id),         // ✅ MIL에서만 초기화 가능
+          ref(r),         // ✅
+          sub(val) {}     // ✅
+};
+```
+
+`const` 멤버와 레퍼런스 멤버는 선언과 동시에 값이 결정돼야 하므로 MIL 외에 방법이 없다.
+
+### C 배열은 in-class 초기화 불가 → MIL 사용
+
+```cpp
+class BPLayerInterfaceImpl {
+    JPH::BroadPhaseLayer mObjectToBroadPhase[3];  // C 배열
+};
+
+// ❌ 불가 — 비정적 C 배열은 헤더에서 = {} 초기화 안 됨
+JPH::BroadPhaseLayer mObjectToBroadPhase[3] = {};
+
+// ✅ MIL에서 {} 로 값 초기화 (0으로 채움)
+BPLayerInterfaceImpl::BPLayerInterfaceImpl() : mObjectToBroadPhase{} {
+    mObjectToBroadPhase[0] = kNonMoving;
+    mObjectToBroadPhase[1] = kMoving;
+    // MIL에서 먼저 0으로 초기화 → 본문에서 실제 값으로 덮어씀
+}
+```
+
+`std::array`는 헤더에서 `= {}` 가능하지만 C 스타일 배열(`T arr[N]`)은 불가.  
+C 배열을 멤버로 쓰면 MIL이 유일한 초기화 수단이다.
+
+### in-class 기본값 (C++11)
+
+MIL 말고 헤더 선언부에서 직접 기본값을 줄 수도 있다.
+
+```cpp
+class Foo {
+    int x = 0;                        // ✅ 기본값 지정
+    std::string name = "foo";         // ✅
+    std::array<int, 4> arr = {};      // ✅ std::array는 가능
+    // int raw[4] = {};               // ❌ C 배열은 불가
+};
+```
+
+MIL이 있으면 in-class 기본값보다 MIL이 우선한다.
+
+### Clang-Tidy `cppcoreguidelines-pro-type-member-init`
+
+이 경고는 "생성자가 모든 멤버를 MIL 또는 in-class 기본값으로 초기화하지 않았다"는 경고.  
+본문에서 대입하더라도 MIL에 없으면 경고를 낸다 — 기본 생성 단계에서 쓰레기값이 들어가는 순간이 존재하기 때문.
+
+```cpp
+// 경고 발생
+Foo::Foo() {
+    x = 0;  // 기본 생성(쓰레기값) 후 대입 — MIL에 없어서 경고
+}
+
+// 경고 해소
+Foo::Foo() : x(0) {}           // MIL에서 초기화
+// 또는
+class Foo { int x = 0; };      // in-class 기본값
+```
