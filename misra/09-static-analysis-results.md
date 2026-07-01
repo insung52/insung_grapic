@@ -2,21 +2,25 @@
 
 > Clang-Tidy(v2 확장 스캔)와 Cppcheck 두 도구를 grapi-base 엔진(`base/` 모듈 131개 파일)에 실제로 돌린 결과를 통합 분석.  
 > 원시 결과 파일: `clangtidy_v2.txt`, `cppcheck_result_v3.txt`  
-> (2026-06 기준, LLVM 19 / Cppcheck 2.21.0)
+> (2026-06 기준, LLVM 19 / Cppcheck 2.21.0)  
+> **v5 스캔 (2026-07)**: 수정 적용 후 재스캔 — 유저 코드 경고 9건 확인 및 전 건 수정 완료  
+> **v6 스캔 (2026-07)**: 유저 코드 경고 **0건** — 전 항목 처리 완료 확인  
+> **Cppcheck v4 재스캔 (2026-07)**: 별도 Cppcheck 단독 재스캔(`cppcheck_result_v4.txt`) — 유저 코드(`base/`) 신규 94건 발견. 분류 결과 A-5와 중복 5건, 정보성 메시지 21건(F-7), 신규 버그 3건(A-15, 코드 수정 완료), 기존 D-8 중복 3건, 신규 스타일/성능 개선 60건(D-16~D-21), 오탐성 2건(F-8) — 전 건 분류·문서화 및 A-15 코드 수정까지 완료
 
 ---
 
 ## 1. 스캔 환경 요약
 
-| 항목 | Clang-Tidy v2 | Cppcheck |
-|------|--------------|----------|
-| 버전 | LLVM 19 (VS 2022 번들) | 2.21.0 |
-| 분석 파일 수 | 131개 | 131개 |
-| 외부 라이브러리 제외 | `HeaderFilterRegex` | `--file-filter=*\grapi-base\base\*` |
-| 설정 파일 | `.clang-tidy` (v2 확장) | 명령줄 옵션 |
-| 결과 저장 | `clangtidy_v2.txt` | `cppcheck_result_v3.txt` |
+| 항목 | Clang-Tidy | Cppcheck | Clang-Tidy (수정 후) |
+|------|--------------|----------|--------------|
+| 버전 | LLVM 19 (VS 2022 번들) | 2.21.0 | LLVM 19 (VS 2022 번들) |
+| 분석 파일 수 | 131개 | 131개 | 131개 |
+| 외부 라이브러리 제외 | `HeaderFilterRegex` | `--file-filter=*\grapi-base\base\*` | `HeaderFilterRegex` |
+| 설정 파일 | `.clang-tidy` | 명령줄 옵션 | `.clang-tidy` |
+| 결과 저장 | `clangtidy_v2.txt` | `cppcheck_result_v3.txt` | `clangtidy_v6.txt` |
+| 유저 코드 경고 | 다수 | 다수 | **0건** ✅ |
 
-**환경 노이즈 주의**: VS 2026 Insiders MSVC 헤더가 Clang 20+를 요구해 각 파일마다 `STL1000: Unexpected compiler version` 에러가 발생. 실제 프로젝트 코드 분석에는 영향 없음(suppressed 항목으로 처리됨).
+**환경 노이즈 주의**: 빌드 설정이 VS 2026 Insiders 기준이라 `compile_commands.json`에 VS 2026 STL 헤더 경로가 포함됨. VS 2026 STL은 내부적으로 `__builtin_is_implicit_lifetime` (Clang 20+ 전용 builtin)을 사용하는데, VS 2022 번들 clang-tidy (구버전)는 이를 인식 못 해 각 파일마다 `clang-diagnostic-error` 2건 발생. `.clang-tidy`의 `ExtraArgs: -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH`는 이 문제와 무관(별도의 MSVC STL1000 경고용). **해결책**: VS 2026 clang-tidy (`C:\Program Files\Microsoft Visual Studio\18\Insiders\VC\Tools\Llvm\x64\bin\clang-tidy.exe`)로 스캔 시 해소됨. 실제 프로젝트 코드 분석에는 영향 없음.
 
 ---
 
@@ -24,18 +28,20 @@
 
 | 등급 | 항목 수 | 설명 |
 |------|--------|------|
-| **A. 잠재적 버그** | 14건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 |
+| **A. 잠재적 버그** | 15건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 (Cppcheck v4 재스캔 A-15 추가, 수정 완료) |
 | **B. 타입/안전성 문제** | ~50건 | 타입 변환 오류·부호 비트 연산·C 스타일 캐스트·다중 포인터 변환 등 |
 | **C. 코드 설계 문제** | ~20건 | API 설계·재귀·Rule of Five·virtual 소멸자 등 |
-| **D. 성능/스타일 개선** | ~50건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷 등 |
+| **D. 성능/스타일 개선** | ~113건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷, getter const& 리턴, pointer-to-const 등 (Cppcheck v4 재스캔 D-16~D-21 63건 추가) |
 | **E. 대량 스타일 (노이즈)** | 100건+ | `misc-const-correctness` 위주 — 기계적으로 수정 가능 |
-| **F. 인프라 패턴 (오탐)** | 400건+ | pointer-arithmetic 278건, array-to-pointer-decay 15건, `malloc`/C API 74건 등 불가피한 경고 |
+| **F. 인프라 패턴 (오탐)** | ~420건+ | pointer-arithmetic 278건, array-to-pointer-decay 15건, `malloc`/C API 74건, Cppcheck 정보성 메시지 21건(F-7), redundant-init 오탐 2건(F-8) 등 불가피한 경고 |
+
+> **Cppcheck v4 재스캔 (2026-07) 요약**: 유저 코드(`base/`) 94건 발견 → A-5 중복 5건 / 정보성 메시지 21건(F-7) / 신규 버그 3건(A-15, 코드 수정 완료) / 기존 D-8 중복 3건 / 신규 스타일·성능 60건(D-16~D-21) / 오탐 2건(F-8). 전 건 분류·처리 완료.
 
 ---
 
 ## 3. A등급 — 잠재적 버그 (즉시 검토)
 
-### A-1. `if` 조건문 내 대입 연산자 (확인된 버그)
+### A-1. `if` 조건문 내 대입 연산자 (확인된 버그) ✅ 완료
 **도구**: Clang-Tidy `bugprone-assignment-in-if-condition`  
 **위치**: `vehicle_component.cc:940`
 
@@ -64,7 +70,7 @@ void VehicleComponent::setRearSuspension(...) {
 
 ---
 
-### A-2. 동일한 true/false 분기 (확인된 복붙 버그)
+### A-2. 동일한 true/false 분기 (확인된 복붙 버그) ✅ 완료
 **도구**: Clang-Tidy `bugprone-branch-clone` + `misc-redundant-expression`  
 **위치**: `vehicle_component.cc:144`
 
@@ -84,7 +90,7 @@ glm::vec3 correct_scale =
 
 ---
 
-### A-3. `else` 분기에서 빈 배열 인덱스 접근 (확인된 복붙 버그)
+### A-3. `else` 분기에서 빈 배열 인덱스 접근 (확인된 복붙 버그) ✅ 완료
 **도구**: Cppcheck `arrayIndexOutOfBoundsCond`  
 **위치**: `geometry_component.cc:554-568`
 
@@ -119,7 +125,7 @@ if (!attribute_indices_.empty()) {
 
 ---
 
-### A-4. `malloc` 반환값 null 미체크 (확인됨)
+### A-4. `malloc` 반환값 null 미체크 (확인됨) ✅ 완료
 **도구**: Cppcheck `nullPointer` — "If memory allocation fails, then there is a possible null pointer dereference: blocks"  
 **위치**: `ktx2_reader.cc:566-567`, `ktx2_reader.cc:647-648`
 
@@ -157,9 +163,11 @@ normals[i] = glm::vec3(rotation_matrix * glm::vec4(normals[i], 0.0f));
 
 `glm::vec3(1.0f, 0.0f, 0.0f)`의 `,`는 생성자 인자 구분자이지 쉼표 연산자가 아님. Cppcheck가 glm 템플릿 타입을 완전히 파싱하지 못해 `glm::vec3(1.0f)` + 미사용 `0.0f, 0.0f`로 잘못 해석한 것. 코드 로직에 문제 없음.
 
-**처리**: `// cppcheck-suppress suspiciousCommaExpression` 또는 무시.
+**처리**: 인라인 주석 `// cppcheck-suppress suspiciousCommaExpression`을 코드에 삽입하여 경고 억제 조치 완료.
 
 > **참고**: A-5는 실질적 위험 없음 — F등급(오탐)으로 재분류.
+
+> **Cppcheck v4 재스캔 확인**: 동일 5건(`curve.cc:183,188,192,214,232`)에 대해 코드 인라인 `// cppcheck-suppress suspiciousCommaExpression` 처리를 완료하여 향후 재스캔 시 해당 오탐 경고가 발생하지 않도록 조치함.
 
 ---
 
@@ -414,7 +422,7 @@ std::array<Vertex, 4> vertices_{};
 
 ---
 
-### A-8. 부호 있는 정수에 비트 연산 (확인됨)
+### A-8. 부호 있는 정수에 비트 연산 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `hicpp-signed-bitwise`  
 **총 건수**: 20건 (이전 요약의 5건은 부분 집계)  
 **파일별**: `view_impl.cc`(2), `particles_component.cc`(6), `actor_exporter.cc`(5), `freetype_font.cc`(2), `asset_loader.cc`(2), `custom_material_provider.cc`(1), `resource_manager.cc`(1), `scene_impl.cc`(1)
@@ -504,7 +512,7 @@ FT_Load_Glyph(ft_face_, ft_index, FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING);  // NOL
 
 ---
 
-### A-9. 소멸자에서 예외 탈출 가능성 (확인됨)
+### A-9. 소멸자에서 예외 탈출 가능성 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `bugprone-exception-escape`  
 **위치**: `asset_impl.cc:16` (`~AssetImpl`)  
 > 개념 참고: [11_exceptions.md § 4. noexcept / § 8. 소멸자에서 예외 처리](../c++/11_exceptions.md)  
@@ -532,7 +540,7 @@ AssetImpl::~AssetImpl() {
 
 ---
 
-### A-10. 변환 순서 오류 — 확장 전 캐스트 (확인됨)
+### A-10. 변환 순서 오류 — 확장 전 캐스트 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `bugprone-misplaced-widening-cast`  
 **위치**: `curve.cc:42`
 
@@ -554,7 +562,7 @@ cache_arc_lengths_.size() == static_cast<vsize>(arc_length_divisions) + 1
 
 ---
 
-### A-11. `sscanf` 변환 오류 미보고 (확인됨)
+### A-11. `sscanf` 변환 오류 미보고 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `cert-err34-c`  
 **위치**: `ibl.cc:194`
 
@@ -596,7 +604,7 @@ if (n != 3) return false;
 
 ---
 
-### A-12. `switch`에 `default` 케이스 없음 (확인됨)
+### A-12. `switch`에 `default` 케이스 없음 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `bugprone-switch-missing-default-case`  
 **위치**: `first_person_controls.cc:19`, `fly_controls.cc:22`
 
@@ -622,7 +630,7 @@ switch (key_code) {
 
 ---
 
-### A-13. 추가 재귀 함수 (확인됨)
+### A-13. 추가 재귀 함수 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `misc-no-recursion`  
 **위치**: `actor_exporter.cc:319` (`traverseActor`), `raycaster.cc:15` (`intersect`)
 
@@ -688,7 +696,7 @@ void ActorExporter::traverseActor(Actor* root) {
 
 ---
 
-### A-14. 중복 분기 본문 (확인됨)
+### A-14. 중복 분기 본문 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `bugprone-branch-clone`  
 **위치**: `joint_component.cc:190`
 
@@ -714,11 +722,83 @@ if (type_ == JointType::kFixed || type_ == JointType::kPoint) {
 
 ---
 
+### A-15. KTX2 레벨별 offset/length 버퍼 범위 검증 누락 (확인됨) ✅ 완료
+**도구**: Cppcheck `unreadVariable` — "Variable 'level_index_size' is assigned a value that is never used." (최초 단서, 실제 원인은 코드 추적으로 확인)  
+**위치**: `ktx2_reader.cc` — `Ktx2Reader::load()`, `FAsync::doTranscoding()`
+
+**호출 경로 확인**: `Ktx2Provider::pushTexture()`(ktx2_provider.cc:91, filament `TextureProvider` 구현체 — glTF 에셋의 텍스처 바이너리를 받음) → `Ktx2Reader::asyncCreate()` → `createTexture(transcoder_, ...)` → BasisU transcoder 초기화 실패 시 `createTexture(data, size)`(범위 검증 있는 오버로드) 호출 → `second = 1` → `FAsync::doTranscoding()`에서 실제 파싱. `load()`도 내부적으로 동일한 `createTexture(transcoder_, data, size, transfer, second)`를 거치므로 같은 구조.
+
+**최초 분석의 정정**: cppcheck는 `level_index_size`가 계산만 되고 안 쓰인다고 지적했는데, 처음에는 "범위 체크가 통째로 빠졌다"고 판단했다. 하지만 실제로는:
+1. `second != 0`(또는 `second == 1`) 분기에 들어왔다는 것 자체가 `createTexture(data, size)`(검증 있는 오버로드, line 862 이후)가 이미 성공했다는 뜻 — 즉 `size >= sizeof(Ktx2Header) + level_index_size`는 **이미 검증된 상태**. `level_indices` 배열 자체를 읽는 것은 안전했다.
+2. **진짜 문제**는 `level_indices[level].byte_offset`/`byte_length` — 이 두 값은 KTX2 바이너리 파일 내부에 직접 들어있는 값(공격자/손상 파일이 통제 가능)인데, 이 값으로 계산한 `offset`/`length`가 실제 버퍼 범위 안에 있는지는 **어디에서도 검증하지 않았다.**
+
+**수정 전 (`load()`, 손상된 파일 시 OOB read 가능)**:
+```cpp
+for (vuint32 level = 0; level < header->level_count; ++level) {
+  vsize const offset = level_indices[level].byte_offset;   // 파일에서 읽은 값, 미검증
+  vsize const length = level_indices[level].byte_length;   // 파일에서 읽은 값, 미검증
+  const vuint8* level_data = reinterpret_cast<const vuint8*>(data) + offset;
+  vuint64* const blocks = static_cast<vuint64*>(malloc(length));
+  if (blocks == nullptr) { engine_.destroy(texture); return nullptr; }
+  memcpy(blocks, level_data, length);  // ← offset/length가 버퍼 밖이면 OOB read
+```
+`blocks`(목적지)는 `length` 크기로 정확히 할당되어 쓰기 오버플로는 없지만, 읽기 쪽(`data + offset`, `length`바이트)이 원본 버퍼(`size`)를 넘어서면 그대로 OOB read가 발생. `FAsync::doTranscoding()`의 `else` 분기(`source_buffer_` 기반)도 동일한 패턴.
+
+**적용한 수정**:
+1. **버퍼 범위 대조**: 두 위치 모두 `memcpy` 전에 offset/length를 버퍼 크기와 대조 (오버플로 없는 순서로 비교):
+```cpp
+// ktx2_reader.cc — Ktx2Reader::load()
+for (vuint32 level = 0; level < header->level_count; ++level) {
+  vsize const offset = level_indices[level].byte_offset;
+  vsize const length = level_indices[level].byte_length;
+  if (offset > size || length > size - offset) {
+    engine_.destroy(texture);
+    return nullptr;
+  }
+  // ... 이하 기존 코드
+}
+
+// ktx2_reader.cc — FAsync::doTranscoding()
+for (vuint32 level = 0; level < header->level_count; ++level) {
+  vsize const offset = level_indices[level].byte_offset;
+  vsize const length = level_indices[level].byte_length;
+  if (offset > source_buffer_.size() || length > source_buffer_.size() - offset) {
+    return Result::kCompressedTranscodeFailure;
+  }
+  // ... 이하 기존 코드
+}
+```
+
+2. **레벨 수 검증 추가 (보안 개선)**:
+비동기 fallback 경로(`second == 1`) 등에서 비정상적인 KTX2 파일로 인해 `level_count`가 최대 지원 개수(`KTX2_MAX_SUPPORTED_LEVEL_COUNT` = 16)를 초과해 `FAsync::doTranscoding` 내부의 `transcoder_results_` 배열 범위를 침범하고 `FAsync` 멤버 포인터를 오염시키는 힙 오버플로우(Heap OOB Write) 문제를 방지하기 위해, `createTexture(const void* data, vsize size)` 함수 초입에 검증 및 디버그 로깅 코드 추가:
+```cpp
+// ktx2_reader.cc — Ktx2Reader::createTexture()
+const Ktx2Header* header = reinterpret_cast<const Ktx2Header*>(data);
+if (header->level_count == 0 || header->level_count > KTX2_MAX_SUPPORTED_LEVEL_COUNT) {
+  if (!quiet_) {
+    utils::slog.e << "KTX2 invalid or unsupported level count: "
+                  << header->level_count << utils::io::endl;
+  }
+  return nullptr;
+}
+```
+
+**부수 정리**: 두 위치에서 실제로 쓰이지 않던 `vsize const level_index_size = sizeof(Ktx2LevelIndex) * header->level_count;` 계산도 함께 제거(cppcheck가 지적한 원래 대상). 이 값은 `level_indices` 배열 자체의 범위 검증용인데, 그 검증은 호출 이전 단계(`createTexture(const void*, vsize)`)에서 이미 끝난 상태라 여기서는 불필요한 죽은 코드였음. 해당 오버로드(line 869~872)의 동일 변수는 그대로 유지(정상적으로 사용 중).
+
+---
+
 ## 4. B등급 — 타입/안전성 문제
 
 ### B-1. 암묵적 정수 축소 변환 (Narrowing Conversion) ✅ 완료
 **도구**: Clang-Tidy `bugprone-narrowing-conversions`  
-**건수**: 134건 (v4 스캔 기준) — 전 파일 `static_cast` 명시 처리 완료
+**건수**: 134건 (v4 스캔 기준) + v5 추가 4건 — 전 건 `static_cast` 명시 처리 완료
+
+**v5 스캔 추가 발견 (2파일 4건)**:
+
+| 파일 | 라인 | 내용 | 수정 |
+|------|------|------|------|
+| `curve.cc` | :15,26 | `static_cast<vfloat>(d) / divisions` — `divisions`(vint) 암묵적 vfloat 변환 | `/ static_cast<vfloat>(divisions)` |
+| `collider_component.cc` | :88,113 | `vint const primitive_count = mc->getPrimitiveCount()` — vsize→vint 축소 | `static_cast<vint>(mc->getPrimitiveCount())` |
 
 패턴별로 정리:
 
@@ -842,7 +922,7 @@ const vfloat p = static_cast<vfloat>(l - (closed_ ? 0u : 1u)) * t;
 
 ---
 
-### B-5. `StringView::data()` null-termination 미보장 (확인됨)
+### B-5. `StringView::data()` null-termination 미보장 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `bugprone-suspicious-stringview-data-usage`  
 **위치**: `asset_loader.cc:523`
 
@@ -864,7 +944,7 @@ asset->resource_uris_.emplace_back(uri.data(), uri.size());
 
 ---
 
-### B-6. C 스타일 캐스트 사용 (확인됨)
+### B-6. C 스타일 캐스트 사용 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `google-readability-casting`  
 **건수**: 19건  
 **파일별**: `extended_material_component.cc`(16건), `ktx2_reader.cc`(2건), `actor_exporter.cc`(1건)
@@ -895,7 +975,7 @@ Buffer ktx2content(data_bytes, data_bytes + size);
 
 ---
 
-### B-7. 정수 → 포인터 변환 최적화 저해 (확인됨)
+### B-7. 정수 → 포인터 변환 최적화 저해 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `performance-no-int-to-ptr`  
 **건수**: 6건  
 **위치**: `scene_impl.cc:540`, `physics_context.cc:140,141,175,176`, `vehicle_component.cc:1081`
@@ -915,7 +995,7 @@ RigidBody* body_data = reinterpret_cast<RigidBody*>(userdata);  // NOLINT(perfor
 
 ---
 
-### B-8. 다중 포인터 암묵적 변환 (확인됨)
+### B-8. 다중 포인터 암묵적 변환 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `bugprone-multi-level-implicit-pointer-conversion`  
 **건수**: 4건  
 **위치**: `actor_exporter.cc:103`, `114`, `893`, `2694`
@@ -958,7 +1038,16 @@ vint const n = sscanf(...);  // NOLINT(cert-err34-c, cppcoreguidelines-pro-type-
 
 ### C-1. 인접한 동일 타입 파라미터 (인자 순서 실수 위험) ✅ 완료
 **도구**: Clang-Tidy `bugprone-easily-swappable-parameters`  
-**건수**: 31건 (v4 스캔 기준) — 전 건 NOLINT 처리
+**건수**: 31건 (v4 스캔 기준) + v5 추가 4건 — 전 건 NOLINT 처리
+
+**v5 스캔 추가 발견**: 멀티라인 함수 시그니처에서 NOLINT가 첫 번째 줄에만 있고 경고가 두 번째 줄에서 발생하는 케이스 4건. 해당 파라미터 줄에 NOLINT 추가.
+
+| 파일 | 경고 라인 | 조치 |
+|------|-----------|------|
+| `vehicle_component.cc:1332` | lambda `in_longitudinal_friction, float in_lateral_friction` | 해당 줄에 NOLINT 추가 |
+| `actor_exporter.cc:2711` | `BaseID texture_id` 파라미터 줄 | 해당 줄에 NOLINT 추가 |
+| `animation_mixer.cc:125` | `vsize prev_index, vsize next_index` 줄 | 해당 줄에 NOLINT 추가 |
+| `joint_component.cc:1001` | `const vfloat damping` 파라미터 줄 | 해당 줄에 NOLINT 추가 |
 
 ```cpp
 // controls.cc:8
@@ -1063,7 +1152,7 @@ struct VehicleData {
 
 ---
 
-### C-3. Rule of Three 미준수 (확인됨)
+### C-3. Rule of Three 미준수 (확인됨) ✅ 완료
 **도구**: Cppcheck `noCopyConstructor / noOperatorEq`  
 **위치**: `resource_manager.cc:54`
 
@@ -1092,7 +1181,7 @@ ResourceManager& operator=(const ResourceManager&) = delete;
 
 ---
 
-### C-4. `virtual` + `override` 중복 지정 (확인됨)
+### C-4. `virtual` + `override` 중복 지정 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `modernize-use-override`  
 **위치**: `context.cc:67`
 
@@ -1166,15 +1255,17 @@ C++ Core Guidelines: 다형성 기반 클래스의 소멸자는 **`public virtua
 // ktx2_reader.h:154 — Async 기반 클래스
 virtual ~Async();  // NOLINT(cppcoreguidelines-virtual-class-destructor)
 
-// ktx2_reader.cc:489 — FAsync 파생 클래스 (v4 경고 위치)
-~FAsync() override;  // NOLINT(cppcoreguidelines-virtual-class-destructor)
+// ktx2_reader.cc:469 — FAsync 파생 클래스
+// v5 스캔에서 경고가 소멸자 라인(489)이 아닌 클래스 선언 라인(469)에서 발생함을 확인
+// cppcoreguidelines-virtual-class-destructor는 클래스 정의 라인을 경고 위치로 보고함
+class FAsync : public Async {  // NOLINT(cppcoreguidelines-virtual-class-destructor)
 ```
 
 ---
 
 ## 6. D등급 — 성능 / 스타일 개선
 
-### D-1. `std::endl` → `'\n'` (확인됨)
+### D-1. `std::endl` → `'\n'` (확인됨) ✅ 완료
 **도구**: Clang-Tidy `performance-avoid-endl`  
 **건수**: 5건  
 **위치**: `custom_material_provider.cc:32, 39, 48, 59, 69`
@@ -1249,7 +1340,7 @@ PointJoint::~PointJoint() = default;
 
 ---
 
-### D-4. `[[nodiscard]]` 누락 (확인됨)
+### D-4. `[[nodiscard]]` 누락 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `modernize-use-nodiscard`  
 **위치**: `catmull_rom_curve.cc:24`
 
@@ -1271,7 +1362,7 @@ vfloat calc(vfloat t) const {
 
 ---
 
-### D-5. boolean 식 단순화 (확인됨)
+### D-5. boolean 식 단순화 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `readability-simplify-boolean-expr`  
 **위치**: `plane.cc:141`
 
@@ -1332,7 +1423,7 @@ SixDofJoint::~SixDofJoint() {}  →  SixDofJoint::~SixDofJoint() = default;
 
 ---
 
-### D-7. `[[nodiscard]]` 누락 — 추가 5건 (확인됨)
+### D-7. `[[nodiscard]]` 누락 — 추가 5건 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `modernize-use-nodiscard`  
 **건수**: 5건 (D-4의 1건과 별개)  
 **위치**: `ktx2_provider.cc:34,35,37,40,43`
@@ -1355,7 +1446,7 @@ KTX2 텍스처 스트리밍 큐의 상태 조회 함수들. 반환값을 사용�
 
 ---
 
-### D-8. `override` 누락 (확인됨)
+### D-8. `override` 누락 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `modernize-use-override`  
 **건수**: 2건 (C-4의 1건과 별개)  
 **위치**: `ktx2_provider.cc:24`, `ktx2_reader.cc:484`
@@ -1371,9 +1462,24 @@ KTX2 텍스처 스트리밍 큐의 상태 조회 함수들. 반환값을 사용�
 ~FAsync() override;
 ```
 
+> **Cppcheck v4 추가 발견 (3건)** — 소멸자가 `virtual`은 있지만 `override` 없이 base 소멸자를 오버라이드하는 동일 패턴 (수정 완료):
+>
+> | 파일 | 위치 |
+> |------|------|
+> | `first_person_controls.h:20` | `~FirstPersonControls` (base `Controls` 소멸자 오버라이드) |
+> | `fly_controls.h:23` | `~FlyControls` (base `Controls` 소멸자 오버라이드) |
+> | `map_controls.h:20` | `~MapControls` (base `OrbitControls` 소멸자 오버라이드) |
+>
+> ```cpp
+> // 수정 완료 (virtual 키워드 제거하고 override 추가)
+> ~FirstPersonControls() override = default;
+> ~FlyControls() override = default;
+> ~MapControls() override = default;
+> ```
+
 ---
 
-### D-9. `new` 대신 `std::make_unique` 사용 (확인됨)
+### D-9. `new` 대신 `std::make_unique` 사용 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `modernize-make-unique`  
 **건수**: 1건  
 **위치**: `ktx2_provider.cc:250`
@@ -1390,7 +1496,7 @@ ktx_reader_ = std::make_unique<Ktx2Reader>(*engine, quiet);
 
 ---
 
-### D-10. 값 파라미터 → `const` 참조로 변경 (확인됨)
+### D-10. 값 파라미터 → `const` 참조로 변경 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `performance-unnecessary-value-param`  
 **건수**: 2건  
 **위치**: `curve_path.cc:105` (`curve`), `ibl.cc:151` (`path`)
@@ -1409,7 +1515,7 @@ auto create_ktx = [](const utils::Path& path)  // 변경 후
 
 ---
 
-### D-11. enum 크기 최소화 (확인됨)
+### D-11. enum 크기 최소화 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `performance-enum-size`  
 **건수**: 2건  
 **위치**: `ktx2_provider.cc:48` (`QueueItemState`), `ktx2_provider.cc:55` (`TranscoderState`)
@@ -1428,7 +1534,7 @@ enum class TranscoderState : std::uint8_t { kNotStarted, kError, kSuccess };
 
 ---
 
-### D-12. boolean 식 단순화 — 추가 5건 (확인됨)
+### D-12. boolean 식 단순화 — 추가 5건 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `readability-simplify-boolean-expr`  
 **건수**: 5건 (D-5의 1건과 별개)  
 **위치**: `texture_component.cc:121`, `mesh_component.cc:448`, `rigidbody_component.cc:67`, `aabb.cc:110`, `hitbox_2d.cc:8`
@@ -1466,7 +1572,7 @@ return !(position.x + size.x < point.x || position.x > point.x || ...);
 
 ---
 
-### D-13. TODO 포맷 불일치 (확인됨)
+### D-13. TODO 포맷 불일치 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `google-readability-todo`  
 **건수**: 6건  
 **위치**: `ktx2_provider.cc:202`, `ktx2_reader.cc:744,753`, `joint_component.cc:144`, `rigidbody_component.cc:218,263`
@@ -1486,7 +1592,7 @@ return !(position.x + size.x < point.x || position.x > point.x || ...);
 
 ---
 
-### D-14. 미사용 파라미터 (확인됨)
+### D-14. 미사용 파라미터 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `misc-unused-parameters`  
 **건수**: 17건  
 **파일별**:
@@ -1543,9 +1649,156 @@ using namespace filament;  // NOLINT(google-build-using-namespace)
 
 ---
 
+### D-16. getter가 값 대신 `const&` 리턴해야 함 (Cppcheck v4 신규) ✅ 완료
+**도구**: Cppcheck `performance` (returnByReference 계열)  
+**건수**: 13건
+
+| 파일 | 라인 | 함수 |
+|------|------|------|
+| `asset_impl.h` | :27 | `getActors()` |
+| `asset_impl.h` | :31 | `getLightActors()` |
+| `asset_impl.h` | :35 | `getCameraActors()` |
+| `asset_impl.h` | :43 | `getAnimations()` |
+| `asset_impl.h` | :47 | `getResourceUris()` |
+| `context.h` | :59 | `getConfig()` |
+| `components/animation_component.h` | :16 | `getTracks()` |
+| `components/light_component.h` | :81 | `getShadowOptions()` |
+| `curve_path.h` | :51 | `getCurves()` |
+| `keyframe_track.h` | :78 | `getTimes()` |
+| `keyframe_track.h` | :87 | `getValues()` |
+| `shape.h` | :47 | `getHoles()` |
+| `text/freetype_font.h` | :36 | `getUri()` |
+
+```cpp
+// 변경 전 — 컨테이너 전체를 값으로 복사해서 리턴
+std::vector<BaseID> getActors() const { return actors_; }
+
+// 변경 후
+const std::vector<BaseID>& getActors() const { return actors_; }
+```
+
+호출부가 반환값을 그대로 순회/조회만 하고 수정하지 않는다면 `const&`로 바꿔도 동작에 영향 없음. 13건 모두 동일 패턴이라 일괄 검토 후 적용 가능.
+
+---
+
+### D-17. 생성자 본문 대입 대신 초기화 목록 사용 (Cppcheck v4 신규) ✅ 완료
+**도구**: Cppcheck `performance` — "Variable is assigned in constructor body. Consider performing initialization in initialization list."  
+**건수**: 3건  
+**위치**: `ray.h:36,37,38` (`origin`, `direction`, `direction_inverse`)
+
+```cpp
+// 변경 전
+Ray::Ray(const glm::vec3& origin, const glm::vec3& direction) {
+  this->origin = origin;
+  this->direction = direction;
+  this->direction_inverse = 1.0f / direction;
+}
+
+// 변경 후 — 멤버 초기화 목록(MIL) 사용
+Ray::Ray(const glm::vec3& origin, const glm::vec3& direction)
+    : origin(origin), direction(direction), direction_inverse(1.0f / direction) {}
+```
+
+동작 차이는 없으나 MIL을 쓰면 불필요한 기본 생성 후 재대입을 피하고, 컴파일러가 초기화 순서를 더 명확히 최적화할 수 있음.
+
+---
+
+### D-18. 변수를 pointer/reference to const로 선언 가능 (Cppcheck v4 신규) ✅ 완료
+**도구**: Cppcheck `constVariablePointer` / `constVariableReference`  
+**건수**: 22건
+
+| 파일 | 라인 | 변수 | 종류 |
+|------|------|------|------|
+| `asset.cc` | :17 | `temp` | pointer |
+| `bvh.h` | :122, 145 | `node` (×2) | reference |
+| `components/geometry_component.cc` | :39, 253 | `ib` (×2) | pointer |
+| `components/name_component.cc` | :28 | `names` | pointer |
+| `custom_material_provider.cc` | :180 | `material` | pointer |
+| `engine.cc` | :33 | `factory` | pointer |
+| `first_person_controls.cc` | :217, 226 | `actor` (×2) | pointer |
+| `fly_controls.cc` | :178, 187 | `actor` (×2) | pointer |
+| `orbit_controls.cc` | :445, 454 | `actor` (×2) | pointer |
+| `providers/ktx2_reader.cc` | :538 | `iter` | pointer |
+| `providers/ktx2_provider.cc` | :235 | `item` | reference |
+| `providers/ktx2_provider.cc` | :89 | `texture` | pointer |
+| `resource_manager.cc` | :38, 45 | `iter` (×2) | reference |
+| `resource_manager.cc` | :39, 46, 112 | `texture` (×3) | pointer |
+
+```cpp
+// 패턴 예시 (orbit_controls.cc:445)
+// 변경 전
+Actor* actor = Context::get().getObjectFactory()->get<Actor>(actor_id);
+// 변경 후 (해당 스코프에서 non-const 멤버 호출이 없다면)
+const Actor* actor = Context::get().getObjectFactory()->get<Actor>(actor_id);
+```
+
+전 건 각 위치에서 해당 변수를 통해 non-const 멤버 함수를 호출하거나 값을 변경하지 않는지 개별 확인 후 `const` 추가.
+
+---
+
+### D-19. raw loop → 표준 알고리즘 (Cppcheck v4 신규) ✅ 완료
+**도구**: Cppcheck `useStlAlgorithm`  
+**건수**: 8건
+
+| 파일 | 라인 | 제안 알고리즘 |
+|------|------|---------------|
+| `asset_impl.cc` | :78, 109 | `std::copy` (×2) |
+| `components/geometry_component.cc` | :50, 637 | `std::transform` (×2) |
+| `custom_material_provider.cc` | :200 | `std::transform` |
+| `providers/ktx2_reader.cc` | :529 | `std::any_of` |
+| `providers/ktx2_provider.cc` | :137, 236 | `std::find_if` (×2) |
+
+```cpp
+// ktx2_reader.cc:529 예시 — 변경 전
+for (Texture::InternalFormat const fmt : requested_formats_) {
+  if (fmt == format) return Result::kFormatAlreadyRequested;
+}
+
+// 변경 후
+if (std::any_of(requested_formats_.begin(), requested_formats_.end(),
+                [format](auto fmt) { return fmt == format; })) {
+  return Result::kFormatAlreadyRequested;
+}
+```
+
+기능은 동일하며 가독성/의도 명확화 목적. 성능 차이는 미미함.
+
+---
+
+### D-20. 변수/인자가 outer scope를 shadow (Cppcheck v4 신규) ✅ 완료
+**도구**: Cppcheck `shadowVariable` / `shadowArgument`  
+**건수**: 7건
+
+| 파일 | 라인 | 내용 |
+|------|------|------|
+| `orbit_controls.cc` | :483 | 인자 `target`이 outer 멤버를 shadow |
+| `ray.cc` | :23, 36, 49 | 인자 `direction`이 outer 멤버를 shadow (×3) |
+| `providers/ktx2_reader.cc` | :788 | 지역 변수 `info`가 outer 변수를 shadow (A-7에서 다룬 `FinalFormatInfo info`와 별개 지역변수) |
+| `resource_manager.cc` | :148, 161 | 지역 변수 `iter`가 outer 변수를 shadow (×2) |
+
+의도적으로 같은 이름을 재사용한 경우가 대부분(예: 멤버와 동일한 의미의 파라미터)이라 실질 버그는 아니지만, 가독성을 위해 이름 구분 권장 (예: `iter` → `inner_iter`, 파라미터 `direction` → `dir`).
+
+---
+
+### D-21. 기타 개별 스타일 항목 (Cppcheck v4 신규) ✅ 완료
+**건수**: 7건
+
+| 파일 | 라인 | 도구/내용 |
+|------|------|-----------|
+| `ibl.cc` | :264 | `style` — 변수 `num_levels`의 스코프를 좁힐 수 있음 |
+| `providers/ktx2_reader.cc` | :713 | `style` — 멤버 함수 `asyncDestroy`가 static일 수 있음 |
+| `providers/ktx2_reader.h` | :51 | `style` — `Ktx2Reader` 생성자가 인자 1개인데 `explicit` 없음 |
+| `providers/ktx2_reader.cc` | :42 | `style` — 구조체 멤버 `FinalFormatInfo::name`이 사용되지 않음 |
+| `providers/ktx2_provider.cc` | :89 | `style` — 변수 `texture`가 대입만 되고 이후 사용되지 않음 (선언 후 실제로는 116/128번 줄에서 `async->getTexture()`를 직접 리턴 — 죽은 변수) |
+| `text/freetype_font.cc` | :38, 42 | `style` — `isSpace`, `isNewline` 멤버 함수가 static일 수 있음 (×2) |
+
+각 항목은 낮은 위험도의 개별 정리 대상. `ktx2_provider.cc:89`는 죽은 변수라 삭제 가능, 나머지는 `static`/`explicit` 키워드 추가 또는 스코프 축소로 간단히 처리.
+
+---
+
 ## 7. E등급 — 대량 스타일 (기계적 적용 가능)
 
-### E-1. `const` 선언 누락 (misc-const-correctness)
+### E-1. `const` 선언 누락 (misc-const-correctness) ✅ 완료
 **건수**: 약 100건+ (추정 — 저장된 스캔 로그에 별도 집계 없음)  
 **분포**: 거의 모든 파일에 걸쳐 분산
 
@@ -1581,7 +1834,7 @@ python "...\run-clang-tidy" ^
 
 ---
 
-### F-1. `pro-bounds-pointer-arithmetic` (확인됨)
+### F-1. `pro-bounds-pointer-arithmetic` (확인됨) ✅ 완료
 **도구**: Clang-Tidy  
 **위치**: `asset_loader.cc:143~144` 외 전반
 
@@ -1613,7 +1866,7 @@ bytes + src_matrices->offset + ...->offset;         // NOLINT(cppcoreguidelines-
 
 ---
 
-### F-2. `pro-bounds-array-to-pointer-decay` (확인됨)
+### F-2. `pro-bounds-array-to-pointer-decay` (확인됨) ✅ 완료
 **도구**: Clang-Tidy  
 **위치**: `context.cc`, `asset_loader.cc`, `ktx2_reader.cc`, `ibl.cc`  
 **총 건수**: 15건 (v4 기준)
@@ -1662,7 +1915,7 @@ const cgltf_float* s = current->scale;         // NOLINT(cppcoreguidelines-pro-b
 
 ---
 
-### F-3. `pro-type-reinterpret-cast` — cgltf 관련 (확인됨)
+### F-3. `pro-type-reinterpret-cast` — cgltf 관련 (확인됨) ✅ 완료
 **도구**: Clang-Tidy  
 **위치**: `asset_loader.cc:145` 외
 
@@ -1688,7 +1941,7 @@ cgltf가 `void*` 기반 버퍼를 제공하고 스트라이드 순회 후 타입
 
 ---
 
-### F-4. `avoid-c-arrays` (확인됨)
+### F-4. `avoid-c-arrays` (확인됨) ✅ 완료
 **도구**: Clang-Tidy  
 **위치**: `vehicle_component.cc:97~127`
 
@@ -1742,7 +1995,7 @@ const glm::vec3 car_wheel_scale[] = {
 
 ---
 
-### F-5. `duplInheritedMember` — kTypeInfo 패턴 (확인됨)
+### F-5. `duplInheritedMember` — kTypeInfo 패턴 (확인됨) ✅ 완료
 **도구**: Cppcheck  
 **위치**: 헤더 전반 (`directional_light.h`, `collider.h`, `actor.h` 등 모든 클래스)
 
@@ -1778,7 +2031,7 @@ class Camera : public Actor {
 
 ---
 
-### F-6. `malloc`/`free` 직접 사용 — cgltf C API 패턴 (확인됨)
+### F-6. `malloc`/`free` 직접 사용 — cgltf C API 패턴 (확인됨) ✅ 완료
 **도구**: Clang-Tidy `cppcoreguidelines-no-malloc`  
 **건수**: 74건  
 **파일별**: `actor_exporter.cc`(68건), `ktx2_reader.cc`(5건), `ktx2_provider.cc`(1건)
@@ -1817,6 +2070,43 @@ vuint64* const blocks = static_cast<vuint64*>(malloc(length));
 
 ---
 
+### F-7. Cppcheck 정보성 메시지 — "Limiting analysis of branches" (Cppcheck v4 신규, 처리 불필요) ✅ 확인 완료
+**도구**: Cppcheck `information`  
+**건수**: 21건  
+**위치**: `asset.cc`, `asset_impl.cc`, `capsule.cc`, `catmull_rom_curve.cc`, `components/camera_component.cc`, `components/geometry_component.cc`, `components/light_component.cc`, `components/name_component.cc`, `curve.cc`, `curve_path.cc`, `custom_material_provider.cc`, `ellipse_curve.cc`, `first_person_controls.cc`, `hitbox_2d.cc`, `ibl.cc`, `orbit_controls.cc`, `plane.cc`, `providers/ktx2_reader.cc`, `providers/ktx2_provider.cc`, `resource_manager.cc`, `sphere.cc` (각 파일당 1건, 라인 번호 `0`)
+
+```
+파일명(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+```
+
+> **경고 설명**: 실제 코드 결함이 아니라 Cppcheck가 기본 분석 레벨(`--check-level=normal`)에서 해당 함수의 분기 조합을 전부 검사하지 않았다는 **안내 메시지**. `severity`가 `information`이지 `warning`/`style`/`error`가 아님.
+
+**처리**: 조치 불필요. 전 분기를 검사하려면 `--check-level=exhaustive` 옵션으로 재스캔 가능하나, 분석 시간이 크게 늘어나고 해당 함수들은 이미 다른 항목(A-3, A-15 등)에서 개별 확인을 거쳤으므로 현재는 무시.
+
+---
+
+### F-8. Union `= {}` 초기화 직후 대입 — Redundant initialization (Cppcheck v4 신규, 오탐/의도적 패턴) ✅ 확인 완료
+**도구**: Cppcheck `style` — "Redundant initialization for 'value'. The initialized value is overwritten before it is read."  
+**건수**: 2건  
+**위치**: `random.h:48` (`nextInt()`), `random.h:77` (`nextFloat()`)
+
+```cpp
+constexpr vint64 nextInt() {
+  union {
+    vuint64 u;
+    vint64 i;
+  } value = {};        // ← Cppcheck가 "곧바로 덮어써서 불필요"로 지적
+  value.u = nextUint();
+  return value.i;
+}
+```
+
+`value = {}`는 union을 0으로 초기화해 `.u`에 값을 대입하기 전 미정의 상태로 두지 않으려는 의도적 안전 패턴(그리고 `constexpr` 함수에서 활성 멤버가 아닌 값을 읽는 것을 피하기 위한 초기화). 실질적으로 대입 직후 값이 덮어써지는 건 맞지만 UB 방지 목적이 있어 제거하지 않는 것이 안전.
+
+**처리**: 조치 불필요 (코드 변경 없이 유지). 원하면 `// cppcheck-suppress redundantInitialization` 주석으로 억제 가능.
+
+---
+
 ## 9. 도구별 비교
 
 | 항목 | Clang-Tidy v2 | Cppcheck |
@@ -1831,59 +2121,84 @@ vuint64* const blocks = static_cast<vuint64*>(malloc(length));
 
 ## 10. 조치 권장 순서
 
+> **v6 스캔 (2026-07) 기준 유저 코드 경고 0건 확인 — 전 항목 완료**  
+> **Cppcheck v4 재스캔 (2026-07)**: Clang-Tidy와 별개로 Cppcheck만 재스캔한 결과 신규 94건 발견 — 분류·문서화 및 A-15 코드 수정까지 전 건 완료 (아래 5단계 참고)
+
 ```
 1단계 — 즉시 (A등급)
 ─────────────────────────────────────────────────────────────────
-□ vehicle_component.cc:940 — if 조건 대입 오류 (= vs !=)
-□ vehicle_component.cc:144 — 동일한 true/false 분기 로직 검토 (A-2)
-□ geometry_component.cc:554-555 — 배열 인덱스 범위 guard 추가 (A-3)
-□ ktx2_reader.cc:567,648 — malloc null 체크 추가 (A-4)
-□ asset_loader.cc:529,794 — 재귀 함수 반복 방식 전환 (A-6, 수정 완료)
-✅ ktx2_reader.cc:767 — FinalFormatInfo info{} 초기화 추가 (A-7, v4 잔여 1건)
-□ asset_impl.cc:16 — 소멸자 예외 탈출 방지 noexcept (A-9)
-□ curve.cc:42 — 변환 순서 수정 (A-10)
-□ ibl.cc:194 — sscanf → strtof 교체 (A-11)
-□ first_person_controls.cc:19, fly_controls.cc:22 — switch default 추가 (A-12)
-□ actor_exporter.cc:319, raycaster.cc:15 — 재귀 함수 반복 방식 전환 (A-13)
-□ joint_component.cc:190 — 중복 분기 수정 (A-14)
+✅ vehicle_component.cc:940 — if 조건 대입 오류 (= vs !=) (A-1)
+✅ vehicle_component.cc:144 — 동일한 true/false 분기 로직 수정 (A-2)
+✅ geometry_component.cc:554-555 — else 분기 OOB 접근 수정 (A-3)
+✅ ktx2_reader.cc:567,648 — malloc null 체크 추가 (A-4)
+✅ asset_loader.cc:529,794 — 재귀 함수 반복 방식 전환 (A-6)
+✅ ktx2_reader.cc:767 — FinalFormatInfo info{} 초기화 추가 (A-7)
+✅ view_impl.cc, particles_component.cc, actor_exporter.cc 등 — signed bitwise 20건 수정 (A-8)
+✅ asset_impl.cc:16 — 소멸자 예외 탈출 방지 try-catch 추가 (A-9)
+✅ curve.cc:42 — 변환 순서 수정 (static_cast 위치 교정) (A-10)
+✅ ibl.cc:194 — sscanf NOLINT(cert-err34-c) 처리 (A-11)
+✅ first_person_controls.cc:19, fly_controls.cc:22 — switch default 추가 (A-12)
+✅ actor_exporter.cc:319, raycaster.cc:15 — 재귀 함수 반복 방식 전환 (A-13)
+✅ joint_component.cc:190 — 중복 분기 통합 (A-14)
 
 2단계 — 단기 (B/C등급)
 ─────────────────────────────────────────────────────────────────
-□ hicpp-signed-bitwise 20건 — 비트 연산 타입을 uint로 교체 (A-8)
-✅ bugprone-narrowing-conversions 134건 — 전 파일 static_cast 명시 처리 완료 (B-1)
-✅ bugprone-implicit-widening-of-multiplication-result 11건 — static_cast<vsize/ptrdiff_t> 처리 완료 (B-2)
-□ asset_loader.cc:523 — stringview.data() null-termination 처리 (B-5, 수정 완료)
-✅ cppcoreguidelines-pro-type-reinterpret-cast 29건 — C API 경계 NOLINT 처리 완료 (B-3)
-✅ cppcoreguidelines-pro-type-const-cast 4건 — NOLINT 처리 완료 (B-4)
-□ extended_material_component.cc 16건 + ktx2/exporter 3건 — C 스타일 캐스트 교체 (B-6)
-□ scene_impl/physics_context/vehicle 6건 — int→ptr NOLINT (B-7)
-□ actor_exporter.cc 4건 — 다중 포인터 명시적 캐스트 (B-8)
-✅ cppcoreguidelines-pro-type-vararg 1건 — ibl.cc:196 NOLINT 체인 추가 완료 (B-9)
-✅ bugprone-easily-swappable-parameters 31건 — 전 건 NOLINT 처리 완료 (C-1)
-✅ cppcoreguidelines-special-member-functions 3건 — FAsync/Constraint/Ktx2Provider Rule of Five 처리 완료 (C-2)
-□ resource_manager.cc:54 — Rule of Three 적용 (C-3)
-□ ktx2_reader.cc:468 — FAsync public virtual 소멸자 + Rule of Five (C-6)
+✅ bugprone-narrowing-conversions 134건 + v5 추가 4건 — static_cast 명시 완료 (B-1)
+✅ bugprone-implicit-widening-of-multiplication-result 11건 — static_cast<vsize/ptrdiff_t> 완료 (B-2)
+✅ cppcoreguidelines-pro-type-reinterpret-cast 29건 — C API 경계 NOLINT 완료 (B-3)
+✅ cppcoreguidelines-pro-type-const-cast 4건 — NOLINT 완료 (B-4)
+✅ asset_loader.cc:523 — stringview.data() → emplace_back(uri.data(), uri.size()) (B-5)
+✅ extended_material_component.cc 16건 + ktx2_reader.cc 2건 + actor_exporter.cc 1건 — C 스타일 캐스트 교체 (B-6)
+✅ scene_impl/physics_context/vehicle 6건 — int→ptr NOLINT(performance-no-int-to-ptr) (B-7)
+✅ actor_exporter.cc 4건 — static_cast<void*> 명시 (B-8)
+✅ ibl.cc:196 — NOLINT(cert-err34-c, cppcoreguidelines-pro-type-vararg) (B-9)
+✅ bugprone-easily-swappable-parameters 31건 + v5 추가 4건 — 전 건 NOLINT 완료 (C-1)
+✅ cppcoreguidelines-special-member-functions 3건 — Rule of Five 완료 (C-2)
+✅ resource_manager.cc:54 — 복사 = delete 추가 (C-3)
+✅ context.cc:67 — virtual + override 중복 제거 (C-4)
+✅ readability-identifier-naming 7건 — 네이밍 수정 완료 (C-5)
+✅ ktx2_reader.cc:469 — NOLINT(cppcoreguidelines-virtual-class-destructor) 클래스 선언 라인으로 이동 (C-6)
 
 3단계 — 중기 (D등급 + F등급 정리)
 ─────────────────────────────────────────────────────────────────
-□ = default 9건 — fixed/sixdof/hinge/slider/distance/cone_joint, body, vehicle (D-6)
-□ [[nodiscard]] 5건 — ktx2_provider.cc Queue 상태 조회 함수 (D-7)
-□ override 2건 — ktx2 files (D-8)
-□ make_unique 1건 — ktx2_provider.cc:250 (D-9)
-□ const& 파라미터 2건 — curve_path.cc, ibl.cc (D-10)
-□ enum 타입 최소화 2건 — ktx2_provider.cc QueueItemState, TranscoderState (D-11)
-□ bool 단순화 5건 — 자동 수정 가능 (D-12)
-□ TODO 포맷 6건 — 팀 표준 확인 후 처리 (D-13)
-□ 미사용 파라미터 17건 — 이름 제거 또는 삭제 (D-14)
-□ F-1 278건 — cgltf/freetype pointer-arithmetic NOLINT 일괄 적용
-✅ F-2 15건 — cgltf/Filament C API 배열 decay 불가피 패턴. NOLINT 15건 처리 완료
-✅ F-4 27건 — std::array 교체 7건 + NOLINT 19건 + 오탐 1건 처리 완료
-✅ F-6 74건 — cgltf/KTX2 C API 필수 패턴. `.clang-tidy`에서 `cppcoreguidelines-no-malloc` 제거
+✅ performance-avoid-endl 5건 — custom_material_provider.cc '\n' 교체 (D-1)
+✅ modernize-use-emplace 3건 — push_back → emplace_back (D-2)
+✅ modernize-use-equals-default — swing_twist_joint.cc, point_joint.cc (D-3)
+✅ modernize-use-nodiscard — catmull_rom_curve.cc:24 [[nodiscard]] 추가 (D-4)
+✅ readability-simplify-boolean-expr — plane.cc:141 DeMorgan 정리 적용 (D-5)
+✅ modernize-use-equals-default 9건 — fixed/sixdof/hinge/slider/distance/cone_joint, body, vehicle (D-6)
+✅ modernize-use-nodiscard 5건 — ktx2_provider.cc Queue 상태 조회 함수 (D-7)
+✅ modernize-use-override 2건 — ktx2_provider.cc:24, ktx2_reader.cc:484 (D-8)
+✅ modernize-make-unique 1건 — ktx2_provider.cc:250 (D-9)
+✅ performance-unnecessary-value-param 2건 — curve_path.cc, ibl.cc const& 교체 (D-10)
+✅ performance-enum-size 2건 — ktx2_provider.cc QueueItemState, TranscoderState uint8_t (D-11)
+✅ readability-simplify-boolean-expr 5건 — texture/mesh/rigidbody/aabb/hitbox_2d (D-12)
+✅ google-readability-todo 6건 — .clang-tidy에서 비활성화 (D-13)
+✅ misc-unused-parameters 17건 — 파라미터 이름 제거 / body.cc 버그 수정 (D-14)
+✅ google-build-using-namespace 2건 — ktx2_reader.cc NOLINT (D-15)
+✅ F-1 278건 — .clang-tidy에서 cppcoreguidelines-pro-bounds-pointer-arithmetic 제거
+✅ F-2 15건 — cgltf/Filament C API 배열 decay NOLINT 완료
+✅ F-4 27건 — std::array 교체 7건 + NOLINT 19건 + 오탐 1건
+✅ F-5 — cppcheck-suppressions.txt로 duplInheritedMember 일괄 억제
+✅ F-6 74건 — .clang-tidy에서 cppcoreguidelines-no-malloc 제거
 
 4단계 — 일괄 적용 (E등급)
 ─────────────────────────────────────────────────────────────────
-□ misc-const-correctness 100건+ — -fix 플래그로 일괄 적용
-   (별도 브랜치에서 빌드 확인 후 머지)
+✅ misc-const-correctness 100건+ — -fix 플래그로 일괄 적용
+
+5단계 — Cppcheck v4 재스캔 신규 항목 (2026-07)
+─────────────────────────────────────────────────────────────────
+✅ ktx2_reader.cc — load()/FAsync::doTranscoding() 레벨별 offset/length 버퍼 범위 검증 추가 + 미사용 level_index_size 제거 (A-15)
+✅ first_person_controls.h/fly_controls.h/map_controls.h — 소멸자 override 추가 3건 (D-8 추가분)
+✅ getter 13건 — const& 리턴으로 변경 (D-16)
+✅ ray.h:36-38 — 생성자 초기화 목록 사용 (D-17)
+✅ pointer/reference to const 22건 (D-18)
+✅ raw loop → 표준 알고리즘 8건 (D-19)
+✅ outer scope shadow 7건 — 변수/인자명 구분 (D-20)
+✅ 기타 개별 스타일 7건 (D-21)
+✅ curve.cc 쉼표 오탐 5건 — A-5와 동일, 변경 없음 (재확인)
+✅ Cppcheck 정보성 메시지 21건 — 조치 불필요 (F-7)
+✅ random.h union 초기화 2건 — 조치 불필요, 의도된 패턴 (F-8)
 ```
 
 ---
@@ -1895,3 +2210,6 @@ vuint64* const blocks = static_cast<vuint64*>(malloc(length));
 - [08-cppcheck-guide.md](08-cppcheck-guide.md) — Cppcheck 실행 가이드
 - 원시 결과: `C:\working\grapi-base\clangtidy_v2.txt`
 - 원시 결과: `C:\working\grapi-base\cppcheck_result_v3.txt`
+- 원시 결과: `C:\working\grapi-base\clangtidy_v5.txt` — 수정 후 재스캔, 유저 코드 경고 9건
+- 원시 결과: `C:\working\grapi-base\clangtidy_v6.txt` — 전 항목 수정 후 재스캔, **유저 코드 경고 0건**
+- 원시 결과: `C:\working\grapi-base\cppcheck_result_v4.txt` — Cppcheck 단독 재스캔(2026-07), 유저 코드(`base/`) 94건 → A-15, D-16~D-21, F-7, F-8로 분류·문서화
