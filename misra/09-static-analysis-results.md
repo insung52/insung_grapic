@@ -716,9 +716,9 @@ if (type_ == JointType::kFixed || type_ == JointType::kPoint) {
 
 ## 4. B등급 — 타입/안전성 문제
 
-### B-1. 암묵적 정수 축소 변환 (Narrowing Conversion, 확인됨)
+### B-1. 암묵적 정수 축소 변환 (Narrowing Conversion) ✅ 완료
 **도구**: Clang-Tidy `bugprone-narrowing-conversions`  
-**건수**: 약 15건
+**건수**: 134건 (v4 스캔 기준) — 전 파일 `static_cast` 명시 처리 완료
 
 패턴별로 정리:
 
@@ -784,131 +784,61 @@ const vfloat p = static_cast<vfloat>(l - (closed_ ? 0u : 1u)) * t;
 
 ---
 
-### B-2. 정수 곱셈 결과 암묵적 확장 (확인됨)
+### B-2. 정수 곱셈 결과 암묵적 확장 ✅ 완료
 **도구**: Clang-Tidy `bugprone-implicit-widening-of-multiplication-result`  
-**위치**: `typesetter.cc:79, 249, 250`
+**건수**: 11건 (v4 스캔 기준)
 
-```cpp
-// typesetter.cc:79 — PixelBufferDescriptor에 크기로 전달
-filament::backend::PixelBufferDescriptor buffer(
-    pixels, width * height,   // width, height 둘 다 vint32 → 곱셈 결과도 int32
-    ...);                     // 인자 타입이 size_t이면 오버플로 후 확장
+| 파일 | 라인 | 패턴 | 수정 |
+|------|------|------|------|
+| particles_component.cc | :531~535 | `4 * max_particles_` (vuint32×int → size_t) | `static_cast<vsize>(4) * max_particles_` |
+| particles_component.cc | :630 | `max_particles_ * 6` (vuint32×int → size_t) | `static_cast<vsize>(max_particles_) * 6` |
+| ktx2_reader.cc | :196 | `bytes_per_pix * width * row_count` (uint32×uint32 → vsize) | `static_cast<vsize>(bytes_per_pix) * ...` |
+| ibl.cc | :55 | `w * h * n * sizeof(vfloat)` (vint×vint → size_t) | `static_cast<vsize>(w) * static_cast<vsize>(h) * static_cast<vsize>(n) * sizeof(...)` |
+| ibl.cc | :64 | `w * h * sizeof(float3)` (vint×vint → size_t) | `static_cast<vsize>(w) * static_cast<vsize>(h) * sizeof(...)` |
+| ibl.cc | :337 | `w * h * sizeof(vuint32)` (vint×vint → size_t) | `static_cast<vsize>(w) * static_cast<vsize>(h) * sizeof(...)` |
+| animation_mixer.cc | :217 | `num_morph_targets * 2` (vint×int → ptrdiff_t) | `static_cast<ptrdiff_t>(num_morph_targets) * 2` |
 
-// typesetter.cc:249,250 — 버퍼 할당 및 초기화
-vbyte* pixels = new vbyte[width * height];   // int32 곱셈 → size_t로 확장
-memset(pixels, 0, width * height);           // 동일
-```
-
-`width * height`가 `int32` 범위에서 먼저 계산됨. 큰 텍스트(예: 2000×2000)면 `4,000,000`으로 `int32` 범위 내지만 더 커지면 오버플로 → 잘못된 크기로 할당.
-
-```cpp
-// 수정: 한쪽을 vsize로 캐스트해서 곱셈 전에 확장
-vbyte* pixels = new vbyte[static_cast<vsize>(width) * height];
-memset(pixels, 0, static_cast<vsize>(width) * height);
-```
+**원인**: 좁은 정수(int/uint32)끼리 곱셈이 32비트에서 먼저 수행된 뒤 size_t/ptrdiff_t로 확장. 결과가 2³²를 넘으면 오버플로 후 확장 → 잘못된 크기로 메모리 접근.  
+**수정 방향**: 곱셈 전에 한쪽 피연산자를 `static_cast<vsize>` 또는 `static_cast<ptrdiff_t>`로 먼저 올려서 64비트 산술로 수행.
 
 ---
 
-### B-3. `reinterpret_cast` 사용 (확인됨)
+### B-3. `reinterpret_cast` 사용 ✅ 완료
 **도구**: Clang-Tidy `cppcoreguidelines-pro-type-reinterpret-cast`  
-**건수**: 9건  
-**위치**: `typesetter.cc:82`, `asset_loader.cc:145,317,402,403,406,408,1221`, `custom_material_provider.cc:46`
+**건수**: 29건 (v4 스캔 기준) — 전 건 NOLINT 처리
 
-세 가지 패턴으로 분류되며 위험도가 다름:
+| 파일 | 라인 | 패턴 |
+|------|------|------|
+| asset_loader.cc | :228 | `vuint8*` → `char*` (istream::read C++ API) |
+| ktx2_reader.cc | :551,553,557,566,637,642,834,868 | raw binary → KTX2 구조체 포인터 파싱 |
+| mesh_component.cc | :228 | `glm::vec3*` → `filament::math::float3*` (동일 레이아웃 type-pun) |
+| geometry_component.cc | :909 | `glm::vec3*` → `const float*` (meshopt C API) |
+| ibl.cc | :59 | `void*` → `image::LinearImage*` (lambda 내 user 포인터 복원) |
+| ibl.cc | :65 | `float*` → `filament::math::float3*` (stbi C API) |
+| ibl.cc | :304 | `void(*)(void*)` → `PixelBufferDescriptor::Callback` (Filament API) |
+| scene_impl.cc | :540 | `uint64` → `RigidBody*` (Jolt UserData 복원, 기존 NOLINT 체인 추가) |
+| rigidbody_component.cc | :126,153 | `RigidBody*` → `uint64` (Jolt UserData 저장) |
+| physics_context.cc | :140,141,175,176 | `uint64` → `RigidBody*` (Jolt UserData 복원, 기존 NOLINT 체인 추가) |
+| vehicle_component.cc | :1081 | `uint64` → `RigidBody*` (Jolt UserData 복원, 기존 NOLINT 체인 추가) |
+| animation_mixer.cc | :142,161,182,259 | `vfloat*` → `float3*/quatf*` (GLTF binary type-pun) |
+| actor_exporter.cc | :2428,2528,2826 | `vuint8*`/`void*` → `char*` (ostream::write/istream::read C++ API) |
 
----
-
-**패턴 A — `void*` ↔ 타입 포인터 (C API 경계)**
-```cpp
-// asset_loader.cc:402,406 — cgltf 버퍼 접근
-reinterpret_cast<const vuint8*>(timeline_accessor->buffer_view->data)
-// cgltf_buffer_view::data 가 void* → 불가피
-
-// typesetter.cc:82 — filament PixelBufferDescriptor 해제 콜백
-[](void* data, vsize, void*) {
-    delete[] reinterpret_cast<vbyte*>(data);  // void*로 받아서 원래 타입 복원
-}
-```
-C API 설계 상 `void*`로 넘어오는 데이터를 복원하는 것. 완전히 피할 방법 없음. **실질 위험도: 낮음**
-
----
-
-**패턴 B — 바이트 버퍼 → 구조체 포인터 (binary data 해석)**
-```cpp
-// asset_loader.cc:145 — gltf 스키닝 가중치
-glm::vec4* weights = reinterpret_cast<glm::vec4*>(bytes);  // uint8* → vec4*
-
-// asset_loader.cc:403,408 — 애니메이션 타임라인
-reinterpret_cast<const vfloat*>(timeline_blob + offset)    // uint8* → float*
-
-// asset_loader.cc (A-6 이후 행 이동 — 현재 1237번) — filament LinearColor
-*reinterpret_cast<const filament::LinearColor*>(attenuation_color)
-```
-gltf 바이너리는 메모리상 float 배열로 들어있어 C++ 구조체로 재해석. 기술적으로 **strict aliasing 위반(UB)** 이지만 MSVC/GCC/Clang 모두 실제로는 올바르게 동작. cgltf 라이브러리 자체도 같은 방식으로 설계됨.
-
-표준을 엄격히 따르려면 `memcpy`로 대체:
-```cpp
-// reinterpret_cast 대신
-glm::vec4 weights;
-memcpy(&weights, bytes, sizeof(glm::vec4));  // 표준 준수, 컴파일러도 최적화함
-```
-단, 포인터가 아닌 값이 필요한 경우에만 적용 가능. **실질 위험도: 기술적 UB이나 실용적으로 안전**
-
-> **수정 시 특이사항 (LinearColor)**: `attenuation_color`는 인덱스로 접근 가능한 `const vfloat*`이므로 reinterpret_cast 없이 명시적 생성이 가능. NOLINT 대신 실제 수정 적용:
-> ```cpp
-> // 수정 — reinterpret_cast 완전 제거
-> const filament::LinearColor attenuation_color_lc{
->     attenuation_color[0], attenuation_color[1], attenuation_color[2]};
-> filament::Color::absorptionAtDistance(attenuation_color_lc, attenuation_distance);
-> ```
+**처리 방침**: 모두 C/C++ API 경계 또는 바이너리 파싱 불가피 패턴. `NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)` 일괄 적용. 이미 `performance-no-int-to-ptr` NOLINT가 있던 경우 콤마로 체인.
 
 ---
 
-**패턴 C — typed* ↔ `char*`/`uint8_t*` (표준 API 인터페이스)**
-```cpp
-// custom_material_provider.cc:46 — 파일 읽기
-file.read(reinterpret_cast<char*>(buffer.data()), size)  // uint8_t* → char*
-
-// asset_loader.cc:317 — memcpy 대상
-memcpy(reinterpret_cast<vuint8*>(inverse_bind_matrices.data()), src, size)
-```
-`std::istream::read()`가 `char*`를 요구하는 C++ 표준 API 설계 때문. `char*`/`unsigned char*` ↔ 다른 포인터 변환은 C++ 표준에서 **명시적으로 허용된 예외** (aliasing rule). **실질 위험도: 없음**
-
----
-
-**처리 방침 요약**
-
-| 패턴 | 건수 | 위험도 | 처리 |
-|------|------|--------|------|
-| A: `void*` 변환 | 3건 | 낮음 | NOLINT |
-| B: 바이트→구조체 타입 펀닝 | 5건 | 기술적 UB | 이상적으론 `memcpy`, 현실적으론 NOLINT |
-| C: `uint8_t*`↔`char*` | 1건 | 없음 | NOLINT |
-
-```cpp
-// 일괄 처리 예시
-reinterpret_cast<glm::vec4*>(bytes);  // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-```
-
----
-
-### B-4. `const_cast` — 문자열 리터럴에 적용 (확인됨, 위험)
+### B-4. `const_cast` 사용 ✅ 완료
 **도구**: Clang-Tidy `cppcoreguidelines-pro-type-const-cast`  
-**위치**: `asset_loader.cc:35`
+**건수**: 4건 (v4 스캔 기준)
 
-```cpp
-static const cgltf_material kDefaultMat = {
-    const_cast<vchar*>("Default GLTF material"),  // 문자열 리터럴의 const 제거
-    ...
-};
-```
+| 파일 | 라인 | 패턴 | 처리 |
+|------|------|------|------|
+| actor.cc | :284 | `const_cast<Actor*>(this)->body()` — const에서 non-const 위임 (Scott Meyers 패턴) | NOLINT |
+| actor.cc | :296 | `const_cast<Actor*>(this)->vehicle()` — 동일 패턴 | NOLINT |
+| scene_impl.cc | :672 | `const_cast<SceneImpl*>(this)->getPhysicsContext()` — 동일 패턴 | NOLINT |
+| asset_impl.cc | :11 | `const_cast<cgltf_data*>(src_asset)` — cgltf C API 경계, SourceAsset이 non-const 요구 | NOLINT |
 
-`cgltf_material.name`이 `char*`(non-const)를 요구하기 때문에 `const_cast`로 우회. 문자열 리터럴은 읽기 전용 메모리에 저장되므로 만약 cgltf 내부에서 `name`에 쓰기 시도 시 UB(크래시).
-
-```cpp
-// 수정: 배열에 복사해서 사용
-static vchar kDefaultMatName[] = "Default GLTF material";
-static const cgltf_material kDefaultMat = { kDefaultMatName, ... };
-```
+`const_cast<T*>(this)` 패턴은 const/non-const 오버로드 간 코드 중복을 제거하는 관용적 C++ 패턴으로 실질 위험 없음.
 
 ---
 
@@ -1009,37 +939,26 @@ free(static_cast<void*>(const_cast<char**>(data_->extensions_used)));      // NO
 
 ---
 
-### B-9. C 가변 인자 함수 사용 (확인됨)
+### B-9. C 가변 인자 함수 사용 ✅ 완료
 **도구**: Clang-Tidy `cppcoreguidelines-pro-type-vararg`  
-**건수**: 2건  
-**위치**: `collider_component.cc:168`, `ibl.cc:194`
+**건수**: 1건 (v4 스캔 기준)
+
+| 파일 | 라인 | 내용 | 처리 |
+|------|------|------|------|
+| ibl.cc | :196 | `sscanf(...)` — 이미 `cert-err34-c` NOLINT 있음 | 체인에 `cppcoreguidelines-pro-type-vararg` 추가 |
 
 ```cpp
-// ibl.cc:194 — A-11과 동일 위치 (NOLINT 처리 완료)
-sscanf(line.c_str(), "(%f,%f,%f)", ...);  // NOLINT(cert-err34-c) 처리됨
-
-// collider_component.cc:168 — snprintf로 에러 메시지 포매팅
-vchar text[1024];
-snprintf(text, sizeof(text), "CreateRigidBodyShape failed, shape_result: %s",
-         shape_result.GetError().c_str());
-utils::slog.e << text;
-```
-
-**수정**:
-- `ibl.cc:194` — A-11에서 NOLINT 처리 완료.
-- `collider_component.cc:168` — `slog`가 `<<` 체이닝을 지원하므로 중간 버퍼 제거:
-```cpp
-utils::slog.e << "CreateRigidBodyShape failed, shape_result: "
-              << shape_result.GetError().c_str();
+// 처리 후
+vint const n = sscanf(...);  // NOLINT(cert-err34-c, cppcoreguidelines-pro-type-vararg)
 ```
 
 ---
 
 ## 5. C등급 — 코드 설계 문제
 
-### C-1. 인접한 동일 타입 파라미터 (인자 순서 실수 위험, 확인됨)
+### C-1. 인접한 동일 타입 파라미터 (인자 순서 실수 위험) ✅ 완료
 **도구**: Clang-Tidy `bugprone-easily-swappable-parameters`  
-**건수**: 6건
+**건수**: 31건 (v4 스캔 기준) — 전 건 NOLINT 처리
 
 ```cpp
 // controls.cc:8
@@ -1094,9 +1013,9 @@ virtual void grabBegin(vint x, vint y, vint button) = 0;  // NOLINT(bugprone-eas
 
 ---
 
-### C-2. Rule of Five 미준수 (확인됨)
+### C-2. Rule of Five 미준수 ✅ 완료
 **도구**: Clang-Tidy `cppcoreguidelines-special-member-functions`  
-**위치**: `vehicle_component.cc:32` (`VehicleData`)
+**건수**: 3건 (v4 스캔 기준)
 
 > **Rule of Five란?**  
 > C++ 클래스가 소멸자(`~T`), 복사 생성자(`T(const T&)`), 복사 대입(`operator=(const T&)`) 중 하나라도 직접 정의하면, 나머지 4개와 이동 생성자(`T(T&&)`) + 이동 대입(`operator=(T&&)`)까지 총 5개를 모두 명시적으로 선언해야 한다는 규칙.  
@@ -1195,35 +1114,33 @@ VulkanPlatform::Customization getCustomization()
 
 ---
 
-### C-5. 네이밍 컨벤션 불일치 (확인됨)
+### C-5. 네이밍 컨벤션 불일치 ✅ 완료
 **도구**: Clang-Tidy `readability-identifier-naming`  
-**위치**: `capsule_geometry.cc:9,10,11`
+**건수**: 7건 (v4 스캔 기준)
 
-```cpp
-// 변경 전 — camelCase
-CapsuleGeometry* CapsuleGeometry::create(const String& name, vfloat radius,
-                                         vfloat height, vint capSegments,
-                                         vint radialSegments,
-                                         vint heightSegments)
+`.clang-tidy` 규칙: `VariableCase: lower_case`, `StaticConstantCase: CamelCase + k prefix`, `ClassMemberSuffix: _` (멤버 변수만)
 
-// 변경 후 — 프로젝트 컨벤션 lower_case
-CapsuleGeometry* CapsuleGeometry::create(const String& name, vfloat radius,
-                                         vfloat height, vint cap_segments,
-                                         vint radial_segments,
-                                         vint height_segments)
-```
+| 파일 | 라인 | 변경 전 | 변경 후 | 이유 |
+|------|------|---------|---------|------|
+| `asset_loader.cc` | :35 | `kDefaultMatName` | `default_mat_name` | 함수 내 지역 상수 → `lower_case` |
+| `extended_material_component.cc` | :17 | `MAX_INDEX` | `max_index` | 함수 내 지역 상수 → `lower_case` |
+| `geometry_component.cc` | :842 | `remapAttribute` | `remap_attribute` | 람다 지역 변수 → `lower_case` |
+| `ibl.cc` | :260 | `face_suffix` | `kFaceSuffix` | `static const` → `k` prefix CamelCase |
+| `scene_impl.cc` | :714 | `dirty_` | `dirty` | 지역 변수 (멤버 아님) → `_` 접미사 제거 |
+| `view_impl.cc` | :1209 | `kDepthFormats` | `depth_formats` | 함수 내 비정적 지역 상수 → `lower_case` |
+| `actor_exporter.cc` | :1946 | `tex_name_path_` | `tex_name_path` | 지역 변수 (멤버 아님) → `_` 접미사 제거 |
 
-헤더와 호출부도 함께 수정 필요.
+**주요 수정 사항**:
+- `scene_impl.cc`: `dirty_` → `dirty` 변환 시 `pending_dirty_`·`dirty_count_` 멤버 변수와 혼동 주의. 지역 변수 `dirty_` 단독 패턴(`bool dirty_ =`, `        dirty_ = true;`, `dirty_ = (dirty_ || `, `if (dirty_)`, `else if (!dirty_`)만 선택적 대체.
+- `extended_material_component.cc`: `MAX_INDEX` → `max_index` replace_all 13건(선언 1 + 사용 12).
+- `geometry_component.cc`: `remapAttribute` → `remap_attribute` replace_all 10건(선언 1 + 호출 9).
 
-> **수정 시 특이사항**: 문서에는 `capsule_geometry.cc`와 헤더(`capsule_geometry.h`)만 언급됐으나, 실제 수정 시 `createCapsuleGeometry` 구현 체인도 파라미터 이름을 통일해야 했음. 총 4개 파일 수정:
-> - `capsule_geometry.h` — public API 선언, 주석
-> - `capsule_geometry.cc` — 구현
-> - `object_factory.h` — `createCapsuleGeometry` 선언
-> - `object_factory.cc` — `createCapsuleGeometry` 구현 + `geometries::Capsule` 생성자 인자
+> **수정 시 특이사항** (capsule_geometry.cc 1건, 이전 세션 완료):  
+> 문서에는 `capsule_geometry.cc`와 헤더만 언급됐으나, `createCapsuleGeometry` 구현 체인도 수정 필요. 총 4개 파일(`capsule_geometry.h`, `capsule_geometry.cc`, `object_factory.h`, `object_factory.cc`) 수정.
 
 ---
 
-### C-6. `virtual` 소멸자가 `protected` — 접근 제어 불명확 (확인됨)
+### C-6. `virtual` 소멸자가 `protected` — 접근 제어 불명확 ✅ 완료
 **도구**: Clang-Tidy `cppcoreguidelines-virtual-class-destructor`  
 **위치**: `ktx2_reader.cc:468` (`FAsync`)
 
@@ -1241,12 +1158,16 @@ C++ Core Guidelines: 다형성 기반 클래스의 소멸자는 **`public virtua
 
 현재 `protected virtual` 조합은 두 방식의 의도가 섞여 불명확. Jolt Physics 연동 코드에서 `FAsync`가 비동기 작업 기반 클래스로 사용되는 패턴이라면 `public virtual`로 변경이 적합.
 
-**처리**: NOLINT 억제 (`ktx2_reader.h:154`)
+**처리**: NOLINT 억제
 
 `Ktx2Reader`가 `friend`로 선언되어 유일한 삭제 경로(`asyncDestroy`)를 가지는 factory 패턴. `protected`로 외부 직접 삭제를 차단하고 `virtual`로 `FAsync::~FAsync()` 호출을 보장하는 의도적 설계이므로 `public virtual` 변경보다 NOLINT가 적합.
 
 ```cpp
+// ktx2_reader.h:154 — Async 기반 클래스
 virtual ~Async();  // NOLINT(cppcoreguidelines-virtual-class-destructor)
+
+// ktx2_reader.cc:489 — FAsync 파생 클래스 (v4 경고 위치)
+~FAsync() override;  // NOLINT(cppcoreguidelines-virtual-class-destructor)
 ```
 
 ---
@@ -1281,29 +1202,30 @@ std::cerr << "CustomMaterialProvider: Failed to open file: "
 
 ---
 
-### D-2. `push_back(T(...))` → `emplace_back(...)` (확인됨)
+### D-2. `push_back(T(...))` → `emplace_back(...)` ✅ 완료
 **도구**: Clang-Tidy `modernize-use-emplace`  
-**위치**: `asset_loader.cc:523`
+**건수**: 3건 (v4 스캔 기준)
+
+| 파일 | 라인 | 수정 |
+|------|------|------|
+| `asset_loader.cc` | :523 | B-5와 동시 적용 — `emplace_back(uri.data(), uri.size())` |
+| `physics_context.cc` | :113 | `push_back(std::pair<...>(id1, id2))` → `emplace_back(id1, id2)` |
+| `physics_context.cc` | :121 | 동일 패턴 — `removed_contacts_` |
 
 ```cpp
-// 현재 코드
-for (StringView uri : resource_uris) {
-  asset->resource_uris_.push_back(uri.data());  // uri.data()로 임시 std::string 생성 후 push
-}
+// physics_context.cc — 변경 전
+added_contacts_.push_back(
+    std::pair<JPH::BodyID, JPH::BodyID>(in_body1.GetID(), in_body2.GetID()));
 
-// 수정 — B-5(null 종단 미보장)와 동시 적용
-for (StringView uri : resource_uris) {
-  asset->resource_uris_.emplace_back(uri.data(), uri.size());  // 직접 생성 + 길이 명시
-}
+// 변경 후
+added_contacts_.emplace_back(in_body1.GetID(), in_body2.GetID());
 ```
 
-`push_back`은 임시 `std::string` 객체를 먼저 만든 후 이동. `emplace_back`은 생성자 인자를 전달해 컨테이너 내부에서 직접 생성하므로 이동 1회 절감.
-
-> **수정 시 특이사항**: B-5(`uri.data()` null 종단 미보장) 이슈와 합쳐 `emplace_back(uri.data(), uri.size())`로 수정 완료. `uri.size()`를 명시해 null 종단 없이도 올바른 길이로 `std::string`이 생성됨. (B-5 섹션 참고)
+`push_back`은 임시 `std::pair` 객체를 먼저 만든 후 이동. `emplace_back`은 생성자 인자를 직접 전달해 불필요한 임시 객체 제거.
 
 ---
 
-### D-3. 빈 소멸자 `= default` 대체 가능 (확인됨)
+### D-3. 빈 소멸자 `= default` 대체 가능 ✅ 완료
 **도구**: Clang-Tidy `modernize-use-equals-default`  
 **위치**: `swing_twist_joint.cc:19`, `point_joint.cc:19`
 
@@ -1369,7 +1291,7 @@ return uvw_difference.x <= std::numeric_limits<vfloat>::epsilon() &&
 
 ---
 
-### D-6. 빈 소멸자 `= default` 대체 — 추가 9건 (확인됨)
+### D-6. 빈 소멸자 `= default` 대체 — 추가 9건 ✅ 완료
 **도구**: Clang-Tidy `modernize-use-equals-default`  
 **건수**: 9건 (D-3의 2건과 별개)  
 **위치**: `fixed_joint.cc:19`, `sixdof_joint.cc:19`, `joint.cc:11`, `hinge_joint.cc:19`, `body.cc:12`, `slider_joint.cc:19`, `distance_joint.cc:18`, `vehicle.cc:13`, `cone_joint.cc:19`
@@ -1386,6 +1308,27 @@ SixDofJoint::~SixDofJoint() {}  →  SixDofJoint::~SixDofJoint() = default;
 **수정 완료**: 9개 파일 모두 `= default` 적용.
 
 > `= default` vs `{}` 차이 → [12_special_member_functions.md § 2](../c++/12_special_member_functions.md)
+
+---
+
+### D-3/D-6 추가. `performance-trivially-destructible` ✅ 완료
+**도구**: Clang-Tidy `performance-trivially-destructible`  
+**건수**: 2건 (v4 스캔 기준)  
+**위치**: `body.h:27`, `vehicle.h:27`
+
+`.cc`에 `= default`가 있어도 헤더 선언이 `~Body()`이면 다른 TU에서 user-defined 소멸자로 보여 trivially destructible로 인식되지 않음. 헤더 선언부에서 직접 `= default` 해야 `std::is_trivially_destructible`이 true가 됨.
+
+```cpp
+// 변경 전 (body.h / vehicle.h)
+~Body();
+~Vehicle();
+
+// 변경 후 — 헤더에서 직접 default
+~Body() = default;
+~Vehicle() = default;
+```
+
+`.cc`의 중복 `= default` 정의는 제거.
 
 ---
 
@@ -1585,6 +1528,18 @@ void OnContactAdded(const JPH::Body& in_body1, const JPH::Body& in_body2,
 // 버그 수정 (body.cc)
 rc->setStartDeactivated(value);  // 기존: true 하드코딩
 ```
+
+### D-15. `using namespace` 전체 네임스페이스 오염 ✅ 완료
+**도구**: Clang-Tidy `google-build-using-namespace`  
+**건수**: 2건 (v4 스캔 기준)  
+**위치**: `ktx2_reader.cc:32,33`
+
+```cpp
+using namespace basist;   // NOLINT(google-build-using-namespace)
+using namespace filament;  // NOLINT(google-build-using-namespace)
+```
+
+`basist` 타입(`ktx2_transcoder`, `ktx2_image_level_info` 등)이 26건 이상 사용되고, 모두 외부 라이브러리 네임스페이스이며 `.cc` 파일(헤더 아님)이라 오염 범위가 해당 TU에 한정됨. 개별 `using` 선언으로 교체하면 코드가 크게 늘어나므로 NOLINT 처리.
 
 ---
 
@@ -1895,14 +1850,17 @@ vuint64* const blocks = static_cast<vuint64*>(malloc(length));
 2단계 — 단기 (B/C등급)
 ─────────────────────────────────────────────────────────────────
 □ hicpp-signed-bitwise 20건 — 비트 연산 타입을 uint로 교체 (A-8)
-□ bugprone-narrowing-conversions 15건 — BaseID→int32_t 타입 통일 검토 (B-1)
-□ typesetter.cc:79,249,250 — 곱셈 전 명시적 캐스트 추가 (B-2)
+✅ bugprone-narrowing-conversions 134건 — 전 파일 static_cast 명시 처리 완료 (B-1)
+✅ bugprone-implicit-widening-of-multiplication-result 11건 — static_cast<vsize/ptrdiff_t> 처리 완료 (B-2)
 □ asset_loader.cc:523 — stringview.data() null-termination 처리 (B-5, 수정 완료)
+✅ cppcoreguidelines-pro-type-reinterpret-cast 29건 — C API 경계 NOLINT 처리 완료 (B-3)
+✅ cppcoreguidelines-pro-type-const-cast 4건 — NOLINT 처리 완료 (B-4)
 □ extended_material_component.cc 16건 + ktx2/exporter 3건 — C 스타일 캐스트 교체 (B-6)
 □ scene_impl/physics_context/vehicle 6건 — int→ptr NOLINT (B-7)
 □ actor_exporter.cc 4건 — 다중 포인터 명시적 캐스트 (B-8)
-□ vehicle_component.cc:32 — VehicleData Rule of Five 명시 (C-2)
-□ ktx2_provider.cc:20, ktx2_reader.cc:468, joint_component.cc:23 — Rule of Five (C-2 추가)
+✅ cppcoreguidelines-pro-type-vararg 1건 — ibl.cc:196 NOLINT 체인 추가 완료 (B-9)
+✅ bugprone-easily-swappable-parameters 31건 — 전 건 NOLINT 처리 완료 (C-1)
+✅ cppcoreguidelines-special-member-functions 3건 — FAsync/Constraint/Ktx2Provider Rule of Five 처리 완료 (C-2)
 □ resource_manager.cc:54 — Rule of Three 적용 (C-3)
 □ ktx2_reader.cc:468 — FAsync public virtual 소멸자 + Rule of Five (C-6)
 

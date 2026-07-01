@@ -1,0 +1,33 @@
+Traceback (most recent call last):
+  File "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\run-clang-tidy", line 626, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 196, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 119, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\run-clang-tidy", line 548, in main
+    file_name_re = re.compile("|".join(args.files))
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\re\__init__.py", line 289, in compile
+    return _compile(pattern, flags)
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\re\__init__.py", line 350, in _compile
+    p = _compiler.compile(pattern, flags)
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\re\_compiler.py", line 748, in compile
+    p = _parser.parse(p, flags)
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\re\_parser.py", line 980, in parse
+    p = _parse_sub(source, state, flags & SRE_FLAG_VERBOSE, 0)
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\re\_parser.py", line 459, in _parse_sub
+    itemsappend(_parse(source, state, verbose, nested + 1,
+                ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                       not nested and not items))
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\re\_parser.py", line 543, in _parse
+    code = _escape(source, this, state)
+  File "C:\Users\insung52\AppData\Local\Programs\Python\Python313\Lib\re\_parser.py", line 442, in _escape
+    raise source.error("bad escape %s" % escape, len(escape))
+re.PatternError: bad escape \p at position 20
