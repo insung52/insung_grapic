@@ -1,0 +1,1055 @@
+external\JoltPhysics\Jolt\Core\Core.h(245): error: #error Unsupported CPU architecture
+external\glm\glm\detail\type_mat3x2.inl(260): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(270): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(280): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(290): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(300): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(310): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(320): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(331): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x2.inl(340): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(263): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(273): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(283): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(293): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(303): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(314): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(331): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(349): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x3.inl(358): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(266): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(276): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(286): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(296): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(306): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(316): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(326): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(337): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat3x4.inl(346): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(279): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(280): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(290): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(291): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(301): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(302): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(312): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(313): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(323): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(324): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(334): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(335): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(345): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(346): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(357): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(358): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(367): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x2.inl(368): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(279): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(280): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(290): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(291): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(301): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(302): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(312): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(313): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(323): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(324): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(334): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(335): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(345): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(346): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(357): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(358): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(367): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x3.inl(368): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(313): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(314): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(324): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(325): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(335): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(336): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(346): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(347): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(357): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(358): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(368): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(369): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(386): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(387): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(405): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(406): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(415): error: Array 'this->value[2]' accessed at index 2, which is out of bounds.
+external\glm\glm\detail\type_mat4x4.inl(416): error: Array 'this->value[2]' accessed at index 3, which is out of bounds.
+external\glm\glm\detail\type_quat.inl(81): warning: The address of variable 'x' might be accessed at non-zero index.
+external\glm\glm\detail\type_quat.inl(92): warning: The address of variable 'x' might be accessed at non-zero index.
+external\glm\glm\detail\type_mat2x2.hpp(39): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat2x3.hpp(40): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat2x4.hpp(40): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat3x2.hpp(40): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat3x3.hpp(39): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat3x4.hpp(40): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat4x2.hpp(40): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat4x3.hpp(40): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat4x4.hpp(39): style: Struct 'mat' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_quat.hpp(110): style: Struct 'qua' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_quat.hpp(111): style: Struct 'qua' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_quat.hpp(112): style: Struct 'qua' has a constructor with 1 argument that is not explicit.
+external\glm\glm\detail\type_mat3x4.inl(110): warning: Function 'mat' argument order different: declaration 'v1, v2, v3' definition 'v0, v1, v2'
+external\glm\glm\detail\type_mat2x2.inl(49): warning: Function 'mat' argument order different: declaration 'x1, y1, x2, y2' definition 'x0, y0, x1, y1'
+external\glm\glm\detail\func_trigonometric.inl(9): style: Argument 'degrees' shadows outer function
+external\glm\glm\detail\func_trigonometric.inl(24): style: Argument 'radians' shadows outer function
+external\glm\glm\ext\quaternion_relational.inl(13): style: Argument 'epsilon' shadows outer function
+external\glm\glm\ext\quaternion_relational.inl(29): style: Argument 'epsilon' shadows outer function
+external\glm\glm\ext\quaternion_trigonometric.inl(30): style: Argument 'angle' shadows outer function
+external\glm\glm\ext\quaternion_transform.inl(4): style: Argument 'angle' shadows outer function
+external\glm\glm\gtc\epsilon.inl(14): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(25): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(32): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(38): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(44): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(50): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(56): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(62): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(68): style: Argument 'epsilon' shadows outer function
+external\glm\glm\gtc\epsilon.inl(75): style: Argument 'epsilon' shadows outer function
+external\glm\glm\detail\func_exponential.inl(61): style: Variable 'ptmp' can be declared as pointer to const
+external\glm\glm\detail\func_common.inl(46): portability: Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+external\glm\glm\detail\type_half.inl(46): portability: Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+external\glm\glm\detail\type_half.inl(74): portability: Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+external\glm\glm\detail\type_half.inl(84): portability: Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+external\glm\glm\detail\type_half.inl(101): portability: Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+external\freetype\include\freetype\freetype.h(1231): warning: Member variable 'FT_FaceRec_::num_faces' has no initializer.
+external\freetype\include\freetype\freetype.h(1232): warning: Member variable 'FT_FaceRec_::face_index' has no initializer.
+external\freetype\include\freetype\freetype.h(1234): warning: Member variable 'FT_FaceRec_::face_flags' has no initializer.
+external\freetype\include\freetype\freetype.h(1235): warning: Member variable 'FT_FaceRec_::style_flags' has no initializer.
+external\freetype\include\freetype\freetype.h(1237): warning: Member variable 'FT_FaceRec_::num_glyphs' has no initializer.
+external\freetype\include\freetype\freetype.h(1239): warning: Member variable 'FT_FaceRec_::family_name' has no initializer.
+external\freetype\include\freetype\freetype.h(1240): warning: Member variable 'FT_FaceRec_::style_name' has no initializer.
+external\freetype\include\freetype\freetype.h(1242): warning: Member variable 'FT_FaceRec_::num_fixed_sizes' has no initializer.
+external\freetype\include\freetype\freetype.h(1243): warning: Member variable 'FT_FaceRec_::available_sizes' has no initializer.
+external\freetype\include\freetype\freetype.h(1245): warning: Member variable 'FT_FaceRec_::num_charmaps' has no initializer.
+external\freetype\include\freetype\freetype.h(1246): warning: Member variable 'FT_FaceRec_::charmaps' has no initializer.
+external\freetype\include\freetype\freetype.h(1248): warning: Member variable 'FT_FaceRec_::generic' has no initializer.
+external\freetype\include\freetype\freetype.h(1253): warning: Member variable 'FT_FaceRec_::bbox' has no initializer.
+external\freetype\include\freetype\freetype.h(1255): warning: Member variable 'FT_FaceRec_::units_per_EM' has no initializer.
+external\freetype\include\freetype\freetype.h(1256): warning: Member variable 'FT_FaceRec_::ascender' has no initializer.
+external\freetype\include\freetype\freetype.h(1257): warning: Member variable 'FT_FaceRec_::descender' has no initializer.
+external\freetype\include\freetype\freetype.h(1258): warning: Member variable 'FT_FaceRec_::height' has no initializer.
+external\freetype\include\freetype\freetype.h(1260): warning: Member variable 'FT_FaceRec_::max_advance_width' has no initializer.
+external\freetype\include\freetype\freetype.h(1261): warning: Member variable 'FT_FaceRec_::max_advance_height' has no initializer.
+external\freetype\include\freetype\freetype.h(1263): warning: Member variable 'FT_FaceRec_::underline_position' has no initializer.
+external\freetype\include\freetype\freetype.h(1264): warning: Member variable 'FT_FaceRec_::underline_thickness' has no initializer.
+external\freetype\include\freetype\freetype.h(1266): warning: Member variable 'FT_FaceRec_::glyph' has no initializer.
+external\freetype\include\freetype\freetype.h(1267): warning: Member variable 'FT_FaceRec_::size' has no initializer.
+external\freetype\include\freetype\freetype.h(1268): warning: Member variable 'FT_FaceRec_::charmap' has no initializer.
+external\freetype\include\freetype\freetype.h(1272): warning: Member variable 'FT_FaceRec_::driver' has no initializer.
+external\freetype\include\freetype\freetype.h(1276): warning: Member variable 'FT_FaceRec_::sizes_list' has no initializer.
+external\freetype\include\freetype\freetype.h(1278): warning: Member variable 'FT_FaceRec_::autohint' has no initializer.
+external\freetype\include\freetype\freetype.h(1279): warning: Member variable 'FT_FaceRec_::extensions' has no initializer.
+external\freetype\include\freetype\freetype.h(1281): warning: Member variable 'FT_FaceRec_::internal' has no initializer.
+external\freetype\include\freetype\freetype.h(2523): warning: Member variable 'FT_Open_Args_::flags' has no initializer.
+external\freetype\include\freetype\freetype.h(2524): warning: Member variable 'FT_Open_Args_::memory_base' has no initializer.
+external\freetype\include\freetype\freetype.h(2525): warning: Member variable 'FT_Open_Args_::memory_size' has no initializer.
+external\freetype\include\freetype\freetype.h(2526): warning: Member variable 'FT_Open_Args_::pathname' has no initializer.
+external\freetype\include\freetype\freetype.h(2528): warning: Member variable 'FT_Open_Args_::driver' has no initializer.
+external\freetype\include\freetype\freetype.h(2529): warning: Member variable 'FT_Open_Args_::num_params' has no initializer.
+external\freetype\include\freetype\freetype.h(2530): warning: Member variable 'FT_Open_Args_::params' has no initializer.
+base\src\grapi\base\asset.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\asset_impl.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(117): style: The class 'bucket_entry_hash < true >' does not declare a constructor although it has private member variables which likely require initialization.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_growth_policy.h(229): style: The member function 'tsl::rh::mod_growth_policy::max_bucket_count' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_growth_policy.h(400): style: The member function 'tsl::rh::prime_growth_policy::max_bucket_count' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(124): style: The member function 'tsl::detail_robin_hash::bucket_entry_hash < true >::set_hash' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < uint8_t , 1 , std :: enable_if_t < std :: is_integral_v < uint8_t > && std :: is_unsigned_v < uint8_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < uint32_t , 1 , std :: enable_if_t < std :: is_integral_v < uint32_t > && std :: is_unsigned_v < uint32_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < uint64_t , 1 , std :: enable_if_t < std :: is_integral_v < uint64_t > && std :: is_unsigned_v < uint64_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < uint64_t , 2 , std :: enable_if_t < std :: is_integral_v < uint64_t > && std :: is_unsigned_v < uint64_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < uint64_t , 4 , std :: enable_if_t < std :: is_integral_v < uint64_t > && std :: is_unsigned_v < uint64_t > > >::size' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1051): style: Either there is a missing 'override', or the member function 'tsl::detail_robin_hash::robin_hash < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , KeySelect , ValueSelect , std :: hash < std :: string > , std :: equal_to < std :: string > , std :: allocator < std :: pair < std :: string , filament :: backend :: BufferDescriptor > > , false , tsl :: rh :: power_of_two_growth_policy < 2 > >::mutable_iterator' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_growth_policy.h(143): style: The member function 'tsl::rh::power_of_two_growth_policy < 2 >::max_bucket_count' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(119): style: The member function 'tsl::detail_robin_hash::bucket_entry_hash < false >::bucket_hash_equal' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(121): style: The member function 'tsl::detail_robin_hash::bucket_entry_hash < false >::truncated_hash' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(124): style: The member function 'tsl::detail_robin_hash::bucket_entry_hash < false >::set_hash' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(119): style: The member function 'tsl::detail_robin_hash::bucket_entry_hash < STORE_HASH >::bucket_hash_equal' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(121): style: The member function 'tsl::detail_robin_hash::bucket_entry_hash < STORE_HASH >::truncated_hash' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(124): style: The member function 'tsl::detail_robin_hash::bucket_entry_hash < STORE_HASH >::set_hash' can be static.
+external\filament\filament\backend\include\backend\BufferDescriptor.h(97): style: Class 'BufferDescriptor' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(450): style: Class 'robin_iterator' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(450): style: Class 'robin_iterator < false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(464): style: Class 'robin_iterator < false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(467): style: Class 'robin_iterator < false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(468): style: Class 'robin_iterator < false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(450): style: Class 'robin_iterator < true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(464): style: Class 'robin_iterator < true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(467): style: Class 'robin_iterator < true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(468): style: Class 'robin_iterator < true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < const cgltf_buffer_view * , std :: unique_ptr < DracoMesh > > , STORE_HASH >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < std :: string , filament :: backend :: BufferDescriptor > , STORE_HASH >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\bitset.h(172): style: Condition 'i<(unsigned long long)1' is always false
+external\filament\libs\utils\include\utils\bitset.h(192): style: Condition 'i<(unsigned long long)1' is always false
+external\filament\libs\utils\include\utils\bitset.h(216): style: Condition 'i<(unsigned long long)1' is always false
+external\filament\libs\utils\include\utils\bitset.h(237): style: Condition 'i<(unsigned long long)1' is always false
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1116): style: Condition 'm_buckets[ibucket].bucket_hash_equal(hash)' is always true
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1172): style: Condition 'm_buckets[ibucket].bucket_hash_equal(hash)' is always true
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1367): style: Local variable 'bucket_count' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1370): style: Local variable 'min_load_factor' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1373): style: Local variable 'max_load_factor' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1422): style: Local variable 'min_load_factor' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1423): style: Local variable 'max_load_factor' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(270): style: Argument 'dist_from_ideal_bucket' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(284): style: Argument 'dist_from_ideal_bucket' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(285): style: Argument 'value' shadows outer function
+external\filament\third_party\robin-map\include\tsl\robin_map.h(247): performance: Function parameter 'hint' should be passed by const reference.
+external\filament\third_party\robin-map\include\tsl\robin_map.h(257): performance: Function parameter 'hint' should be passed by const reference.
+external\filament\third_party\robin-map\include\tsl\robin_map.h(348): performance: Function parameter 'pos' should be passed by const reference.
+external\filament\third_party\robin-map\include\tsl\robin_map.h(719): performance: Function parameter 'pos' should be passed by const reference.
+external\filament\third_party\robin-map\include\tsl\robin_growth_policy.h(192): style: Parameter 'min_bucket_count_in_out' can be declared as reference to const
+external\filament\third_party\robin-map\include\tsl\robin_map.h(105): style: Parameter 'key_value' can be declared as reference to const
+external\filament\third_party\robin-map\include\tsl\robin_map.h(119): style: Parameter 'key_value' can be declared as reference to const
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1238): performance: Prefer prefix ++/-- operators for non-primitive types.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1257): performance: Prefer prefix ++/-- operators for non-primitive types.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1317): performance: Prefer prefix ++/-- operators for non-primitive types.
+base\src\grapi\base\capsule.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\catmull_rom_curve.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\libs\math\include\math\quat.h(74): warning: The address of variable 'x' might be accessed at non-zero index.
+external\filament\libs\math\include\math\quat.h(79): warning: The address of variable 'x' might be accessed at non-zero index.
+external\filament\libs\math\include\math\quat.h(91): warning: Member variable 'TQuaternion < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\quat.h(91): warning: Member variable 'TQuaternion < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\quat.h(91): warning: Member variable 'TQuaternion < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\quat.h(91): warning: Member variable 'TQuaternion < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\half.h(49): warning: Member variable 'fp32::bits' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::v' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < float >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < float >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < float >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < float >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < float >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < float >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < float >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(53): warning: Member variable '::x' has no initializer.
+external\filament\libs\math\include\math\vec4.h(53): warning: Member variable '::s' has no initializer.
+external\filament\libs\math\include\math\vec4.h(53): warning: Member variable '::r' has no initializer.
+external\filament\libs\math\include\math\vec4.h(58): warning: Member variable '::y' has no initializer.
+external\filament\libs\math\include\math\vec4.h(58): warning: Member variable '::t' has no initializer.
+external\filament\libs\math\include\math\vec4.h(58): warning: Member variable '::g' has no initializer.
+external\filament\libs\math\include\math\vec4.h(61): warning: Member variable '::z' has no initializer.
+external\filament\libs\math\include\math\vec4.h(61): warning: Member variable '::w' has no initializer.
+external\filament\libs\math\include\math\vec4.h(62): warning: Member variable '::p' has no initializer.
+external\filament\libs\math\include\math\vec4.h(62): warning: Member variable '::q' has no initializer.
+external\filament\libs\math\include\math\vec4.h(63): warning: Member variable '::b' has no initializer.
+external\filament\libs\math\include\math\vec4.h(63): warning: Member variable '::a' has no initializer.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::v' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(86): warning: Member variable 'TVec4 < double >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(90): warning: Member variable 'TVec4 < double >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(94): warning: Member variable 'TVec4 < double >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(98): warning: Member variable 'TVec4 < double >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(101): warning: Member variable 'TVec4 < double >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(105): warning: Member variable 'TVec4 < double >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::w' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::q' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(108): warning: Member variable 'TVec4 < double >::a' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::v' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < float >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(54): warning: Member variable '::x' has no initializer.
+external\filament\libs\math\include\math\vec3.h(55): warning: Member variable '::s' has no initializer.
+external\filament\libs\math\include\math\vec3.h(56): warning: Member variable '::r' has no initializer.
+external\filament\libs\math\include\math\vec3.h(59): warning: Member variable '::y' has no initializer.
+external\filament\libs\math\include\math\vec3.h(59): warning: Member variable '::z' has no initializer.
+external\filament\libs\math\include\math\vec3.h(60): warning: Member variable '::t' has no initializer.
+external\filament\libs\math\include\math\vec3.h(60): warning: Member variable '::p' has no initializer.
+external\filament\libs\math\include\math\vec3.h(61): warning: Member variable '::g' has no initializer.
+external\filament\libs\math\include\math\vec3.h(61): warning: Member variable '::b' has no initializer.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::v' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(85): warning: Member variable 'TVec3 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(89): warning: Member variable 'TVec3 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(93): warning: Member variable 'TVec3 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(96): warning: Member variable 'TVec3 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::z' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::p' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec3.h(99): warning: Member variable 'TVec3 < double >::b' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < double >::v' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < double >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < double >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < double >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < double >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < double >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < double >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\TMatHelpers.h(669): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < float > , float >::getColumnSize' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(670): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < float > , float >::getRowSize' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(671): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < float > , float >::getColumnCount' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(672): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < float > , float >::getRowCount' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(673): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < float > , float >::size' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(669): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < double > , double >::getColumnSize' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(670): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < double > , double >::getRowSize' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(671): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < double > , double >::getColumnCount' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(672): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < double > , double >::getRowCount' can be static.
+external\filament\libs\math\include\math\TMatHelpers.h(673): style: The member function 'filament::math::details::TMatHelpers < filament :: math :: details :: TMat44 < double > , double >::size' can be static.
+external\filament\libs\math\include\math\vec4.h(70): style: Either there is a missing 'override', or the member function 'filament::math::details::TVec4 < float >::size' can be static.
+external\filament\libs\math\include\math\vec4.h(70): style: Either there is a missing 'override', or the member function 'filament::math::details::TVec4 < U >::size' can be static.
+external\filament\libs\math\include\math\vec4.h(70): style: Either there is a missing 'override', or the member function 'filament::math::details::TVec4 < double >::size' can be static.
+external\filament\libs\math\include\math\vec3.h(69): style: Either there is a missing 'override', or the member function 'filament::math::details::TVec3 < float >::size' can be static.
+external\filament\libs\math\include\math\vec3.h(69): style: Either there is a missing 'override', or the member function 'filament::math::details::TVec3 < double >::size' can be static.
+external\filament\libs\math\include\math\vec2.h(57): style: Either there is a missing 'override', or the member function 'filament::math::details::TVec2 < double >::size' can be static.
+external\filament\libs\math\include\math\half.h(155): style: Class 'half' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\quat.h(98): style: Class 'TQuaternion < double >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec4.h(90): style: Class 'TVec4 < float >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec4.h(108): style: Class 'TVec4 < float >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec4.h(90): style: Class 'TVec4 < U >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec4.h(108): style: Class 'TVec4 < U >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec4.h(90): style: Class 'TVec4 < double >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec4.h(108): style: Class 'TVec4 < double >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec3.h(89): style: Class 'TVec3 < float >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec3.h(99): style: Class 'TVec3 < float >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec3.h(89): style: Class 'TVec3 < double >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec3.h(99): style: Class 'TVec3 < double >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec2.h(77): style: Class 'TVec2 < double >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec2.h(83): style: Class 'TVec2 < double >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\TQuatHelpers.h(216): performance: Function 'imaginary()' should return member 'xyz' by const reference.
+external\glm\glm\gtx\component_wise.inl(116): style: Condition 'i<n' is always false
+external\glm\glm\gtx\component_wise.inl(125): style: Condition 'i<n' is always false
+external\glm\glm\gtx\component_wise.inl(134): style: Condition 'i<n' is always false
+external\glm\glm\gtx\component_wise.inl(143): style: Condition 'i<n' is always false
+external\filament\libs\math\include\math\TMatHelpers.h(211): style: The scope of the variable 'colCount' can be reduced.
+external\filament\libs\math\include\math\scalar.h(91): style: Argument 'min' shadows outer function
+external\filament\libs\math\include\math\scalar.h(91): style: Argument 'max' shadows outer function
+external\filament\libs\math\include\math\TMatHelpers.h(86): style: Local variable 't' shadows outer variable
+external\filament\libs\math\include\math\TMatHelpers.h(467): style: Local variable 'trace' shadows outer function
+external\filament\libs\math\include\math\TVecHelpers.h(563): style: Argument 'min' shadows outer function
+external\filament\libs\math\include\math\TVecHelpers.h(563): style: Argument 'max' shadows outer function
+external\filament\libs\math\include\math\TVecHelpers.h(570): style: Argument 'min' shadows outer function
+external\filament\libs\math\include\math\TVecHelpers.h(570): style: Argument 'max' shadows outer function
+external\filament\libs\math\include\math\TVecHelpers.h(419): performance: Function parameter 'v' should be passed by const reference.
+external\filament\libs\math\include\math\TVecHelpers.h(531): performance: Function parameter 'p' should be passed by const reference.
+external\filament\libs\math\include\math\TVecHelpers.h(570): performance: Function parameter 'min' should be passed by const reference.
+external\filament\libs\math\include\math\TVecHelpers.h(570): performance: Function parameter 'max' should be passed by const reference.
+external\filament\libs\math\include\math\TVecHelpers.h(622): performance: Function parameter 'v' should be passed by const reference.
+external\filament\libs\math\include\math\TVecHelpers.h(634): performance: Function parameter 'edge' should be passed by const reference.
+external\filament\libs\math\include\math\TMatHelpers.h(211): style: Variable 'colCount' is assigned a value that is never used.
+base\src\grapi\base\components\camera_component.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\components\geometry_component.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\filament\backend\include\backend\Platform.h(129): warning: Member variable 'CompositorTiming::compositeInterval' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(135): warning: Member variable 'CompositorTiming::compositeDeadlineLatency' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(141): warning: Member variable 'CompositorTiming::compositeToPresentLatency' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(146): warning: Member variable 'CompositorTiming::expectedPresentLatency' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(160): warning: Member variable 'FrameTimestamps::requestedPresentTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(165): warning: Member variable 'FrameTimestamps::acquireTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(171): warning: Member variable 'FrameTimestamps::latchTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(178): warning: Member variable 'FrameTimestamps::firstCompositionStartTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(185): warning: Member variable 'FrameTimestamps::lastCompositionStartTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(192): warning: Member variable 'FrameTimestamps::gpuCompositionDoneTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(197): warning: Member variable 'FrameTimestamps::displayPresentTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(204): warning: Member variable 'FrameTimestamps::dequeueReadyTime' has no initializer.
+external\filament\filament\backend\include\backend\Platform.h(210): warning: Member variable 'FrameTimestamps::releaseTime' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(515): warning: Member variable 'DescriptorSetLayoutDescriptor::type' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(516): warning: Member variable 'DescriptorSetLayoutDescriptor::stageFlags' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(517): warning: Member variable 'DescriptorSetLayoutDescriptor::binding' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1569): warning: Member variable '::culling' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1572): warning: Member variable '::blendEquationRGB' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1574): warning: Member variable '::blendEquationAlpha' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1577): warning: Member variable '::blendFunctionSrcRGB' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1579): warning: Member variable '::blendFunctionSrcAlpha' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1581): warning: Member variable '::blendFunctionDstRGB' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1583): warning: Member variable '::blendFunctionDstAlpha' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1586): warning: Member variable '::depthWrite' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1591): warning: Member variable '::colorWrite' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1594): warning: Member variable '::alphaToCoverage' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1597): warning: Member variable '::inverseFrontFaces' has no initializer.
+external\filament\filament\backend\include\backend\DriverEnums.h(1600): warning: Member variable '::depthClamp' has no initializer.
+external\filament\filament\include\filament\Engine.h(476): warning: Member variable 'FeatureFlag::name' has no initializer.
+external\filament\filament\include\filament\Engine.h(477): warning: Member variable 'FeatureFlag::description' has no initializer.
+external\filament\filament\include\filament\Engine.h(478): warning: Member variable 'FeatureFlag::value' has no initializer.
+external\filament\libs\utils\include\utils\CString.h(557): style: The member function 'std::hash < utils :: CString >::compute_hash' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < std :: uint8_t , 1 , std :: enable_if_t < std :: is_integral_v < std :: uint8_t > && std :: is_unsigned_v < std :: uint8_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < std :: uint32_t , 1 , std :: enable_if_t < std :: is_integral_v < std :: uint32_t > && std :: is_unsigned_v < std :: uint32_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < std :: uint64_t , 1 , std :: enable_if_t < std :: is_integral_v < std :: uint64_t > && std :: is_unsigned_v < std :: uint64_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < std :: uint64_t , 2 , std :: enable_if_t < std :: is_integral_v < std :: uint64_t > && std :: is_unsigned_v < std :: uint64_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\bitset.h(116): style: The member function 'utils::bitset < std :: uint64_t , 4 , std :: enable_if_t < std :: is_integral_v < std :: uint64_t > && std :: is_unsigned_v < std :: uint64_t > > >::size' can be static.
+external\filament\libs\utils\include\utils\StaticString.h(45): style: Class 'StaticString' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\ImmutableCString.h(55): style: Class 'ImmutableCString' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\ImmutableCString.h(79): style: Class 'ImmutableCString' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\CString.h(95): style: Class 'CString' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\CString.h(107): style: Class 'CString' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Invocable.h(74): style: Class 'Invocable' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Mutex.h(87): style: Class 'UniqueLock' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Mutex.h(111): style: Class 'LockGuard' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\tribool.h(33): style: Class 'tribool' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\tribool.h(34): style: Class 'tribool' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Slice.h(57): style: Class 'Slice < const FeatureFlag >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\FixedCapacityVector.h(472): style: Class 'SizeTypeWrapper < std :: uint32_t >' has a constructor with 1 argument that is not explicit.
+external\filament\filament\include\filament\ToneMapper.h(149): style: The function 'isOneDimensional' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(150): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(167): style: The function 'isOneDimensional' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(168): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(186): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(202): style: The function 'isOneDimensional' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(203): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(218): style: The function 'isOneDimensional' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(219): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(248): style: The function 'isOneDimensional' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(249): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(298): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(361): style: The function 'isOneDimensional' overrides a function in a base class but is identical to the overridden function
+external\filament\filament\include\filament\ToneMapper.h(362): style: The function 'isLDR' overrides a function in a base class but is identical to the overridden function
+external\filament\libs\utils\include\utils\Hash.h(70): style: C-style pointer casting
+external\filament\libs\utils\include\utils\Hash.h(129): warning: Potentially invalid type conversion in old-style C cast, clarify/fix with C++ cast
+external\filament\filament\include\filament\FilamentAPI.h(79): style: Local variable 'name' shadows outer function
+external\filament\filament\backend\include\backend\DriverEnums.h(1396): style: int result is returned as long long value. If the return value is long long to avoid loss of information, then you have loss of information.
+external\filament\filament\include\filament\Box.h(178): style: The member function 'filament::Aabb::Corners::size' can be static.
+external\filament\third_party\meshoptimizer\src\meshoptimizer.h(929): style: Variable 'index_size_valid' is not assigned a value.
+external\filament\third_party\meshoptimizer\src\meshoptimizer.h(946): style: Variable 'index_size_valid' is not assigned a value.
+base\src\grapi\base\components\light_component.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < float >::v' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < float >::x' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < float >::y' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < float >::s' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < float >::t' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < float >::r' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec2.h(73): warning: Member variable 'TVec2 < float >::g' is not initialized in the constructor.
+external\filament\libs\math\include\math\vec4.h(70): style: The member function 'filament::math::details::TVec4 < float >::size' can be static.
+external\filament\libs\math\include\math\vec4.h(70): style: The member function 'filament::math::details::TVec4 < double >::size' can be static.
+external\filament\libs\math\include\math\vec2.h(57): style: Either there is a missing 'override', or the member function 'filament::math::details::TVec2 < float >::size' can be static.
+external\filament\libs\utils\include\utils\EntityInstance.h(83): style: Class 'EntityInstance < LightManager , false >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec2.h(77): style: Class 'TVec2 < float >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec2.h(83): style: Class 'TVec2 < float >' has a constructor with 1 argument that is not explicit.
+base\src\grapi\base\components\name_component.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(645): error: Array 'alignments[1]' accessed at index 1, which is out of bounds.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(648): error: Array 'alignments[1]' accessed at index 1, which is out of bounds.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(519): warning: Member variable 'Field::soa' has no initializer.
+external\filament\libs\utils\include\utils\SingleInstanceComponentManager.h(105): warning: Member variable 'CallbackInfo::token' has no initializer.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(775): style: 'operator=' should return reference to 'this' instance.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(784): style: 'operator=' should return reference to 'this' instance.
+external\filament\libs\utils\include\utils\memalign.h(91): style: The member function 'utils::STLAlignedAllocator::allocate' can be static.
+external\filament\libs\utils\include\utils\memalign.h(95): style: The member function 'utils::STLAlignedAllocator::deallocate' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(126): style: The member function 'utils::LinearAllocator::free' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(159): style: The member function 'utils::HeapAllocator::alloc' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(163): style: The member function 'utils::HeapAllocator::free' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(173): style: The member function 'utils::HeapAllocator::swap' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(213): style: The member function 'utils::LinearAllocatorWithFallback::free' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(397): style: The member function 'utils::PoolAllocator::getSize' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(568): style: The member function 'utils::AreaPolicy::NullArea::data' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(569): style: The member function 'utils::AreaPolicy::NullArea::size' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(581): style: The member function 'utils::LockingPolicy::NoLock::lock' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(582): style: The member function 'utils::LockingPolicy::NoLock::unlock' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(598): style: The member function 'utils::TrackingPolicy::Untracked::onAlloc' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(601): style: The member function 'utils::TrackingPolicy::Untracked::onFree' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(602): style: The member function 'utils::TrackingPolicy::Untracked::onReset' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(603): style: The member function 'utils::TrackingPolicy::Untracked::onRewind' can be static.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(594): style: The member function 'utils::StructureOfArraysBase::for_each' can be static.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(605): style: The member function 'utils::StructureOfArraysBase::for_each_index' can be static.
+external\filament\libs\utils\include\utils\SingleInstanceComponentManager.h(175): style: The member function 'utils::SingleInstanceComponentManager < CString >::getComponentCount' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1051): style: Either there is a missing 'override', or the member function 'tsl::detail_robin_hash::robin_hash < std :: pair < Entity , EntityInstanceBase :: Type > , KeySelect , ValueSelect , Entity :: Hasher , std :: equal_to < Entity > , std :: allocator < std :: pair < Entity , EntityInstanceBase :: Type > > , false , tsl :: rh :: power_of_two_growth_policy < 2 > >::mutable_iterator' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1067): style: Either there is a missing 'override', or the member function 'tsl::detail_robin_hash::robin_hash < std :: pair < Entity , EntityInstanceBase :: Type > , KeySelect , ValueSelect , Entity :: Hasher , std :: equal_to < Entity > , std :: allocator < std :: pair < Entity , EntityInstanceBase :: Type > > , false , tsl :: rh :: power_of_two_growth_policy < 2 > >::hash_key' can be static.
+external\filament\libs\utils\include\utils\Allocator.h(949): style: Class 'STLAllocator' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(176): style: Class 'IteratorValue' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\StructureOfArrays.h(178): style: Class 'IteratorValue' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Slice.h(57): style: Class 'Slice < const PagedArenaBitset * const >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Slice.h(57): style: Class 'Slice < const Entity >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\EntityInstance.h(83): style: Class 'EntityInstance < NameComponentManager , false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < Entity , EntityInstanceBase :: Type > , STORE_HASH >' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Allocator.h(798): style: C-style pointer casting
+external\filament\libs\utils\include\utils\Allocator.h(896): style: C-style pointer casting
+external\filament\libs\utils\include\utils\StructureOfArrays.h(296): style: Argument 'capacity' shadows outer function
+external\filament\libs\utils\include\utils\StructureOfArrays.h(322): style: Local variable 'capacity' shadows outer function
+external\filament\libs\utils\include\utils\StructureOfArrays.h(676): style: Argument 'capacity' shadows outer function
+external\filament\libs\utils\include\utils\StructureOfArrays.h(680): style: Local variable 'size' shadows outer function
+external\filament\libs\utils\include\utils\SingleInstanceComponentManager.h(305): style: Argument 'removeComponent' shadows outer function
+external\filament\libs\utils\include\utils\SingleInstanceComponentManager.h(311): style: Argument 'removeComponent' shadows outer function
+external\filament\libs\utils\include\utils\NameComponentManager.h(99): style: Parameter 'em' can be declared as reference to const
+external\filament\libs\utils\include\utils\Allocator.h(215): style: Parameter 'p' can be declared as pointer to const
+external\filament\libs\utils\include\utils\Allocator.h(457): style: Parameter 'p' can be declared as pointer to const
+base\src\grapi\base\curve.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\curve.cc(183): warning: Found suspicious operator ',', result is not used.
+base\src\grapi\base\curve.cc(188): warning: Found suspicious operator ',', result is not used.
+base\src\grapi\base\curve.cc(192): warning: Found suspicious operator ',', result is not used.
+base\src\grapi\base\curve.cc(214): warning: Found suspicious operator ',', result is not used.
+base\src\grapi\base\curve.cc(232): warning: Found suspicious operator ',', result is not used.
+base\src\grapi\base\curve_path.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\include\grapi\base\curve_path.h(51): performance: Function 'getCurves()' should return member 'curves_' by const reference.
+base\src\grapi\base\custom_material_provider.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\filament\include\filament\Material.h(98): warning: Member variable 'ParameterInfo::name' has no initializer.
+external\filament\filament\include\filament\Material.h(100): warning: Member variable 'ParameterInfo::isSampler' has no initializer.
+external\filament\filament\include\filament\Material.h(102): warning: Member variable 'ParameterInfo::isSubpass' has no initializer.
+external\filament\filament\include\filament\Material.h(112): warning: Member variable 'ParameterInfo::count' has no initializer.
+external\filament\filament\include\filament\Material.h(114): warning: Member variable 'ParameterInfo::precision' has no initializer.
+external\filament\libs\math\include\math\TVecHelpers.h(297): style: Unused private function: 'TVecComparisonOperators::equal'
+external\filament\libs\math\include\math\TVecHelpers.h(307): style: Unused private function: 'TVecComparisonOperators::notEqual'
+external\filament\libs\math\include\math\TVecHelpers.h(317): style: Unused private function: 'TVecComparisonOperators::lessThan'
+external\filament\libs\math\include\math\TVecHelpers.h(327): style: Unused private function: 'TVecComparisonOperators::lessThanEqual'
+external\filament\libs\math\include\math\TVecHelpers.h(337): style: Unused private function: 'TVecComparisonOperators::greaterThan'
+external\filament\libs\math\include\math\TVecHelpers.h(351): style: Unused private function: 'TVecComparisonOperators::greaterThanEqual'
+external\filament\libs\math\include\math\TVecHelpers.h(405): style: Unused private function: 'TVecFunctions::distance'
+external\filament\libs\math\include\math\TVecHelpers.h(411): style: Unused private function: 'TVecFunctions::distance2'
+external\filament\libs\math\include\math\TVecHelpers.h(415): style: Unused private function: 'TVecFunctions::normalize'
+external\filament\libs\math\include\math\TVecHelpers.h(419): style: Unused private function: 'TVecFunctions::rcp'
+external\filament\libs\math\include\math\TVecHelpers.h(423): style: Unused private function: 'TVecFunctions::abs'
+external\filament\libs\math\include\math\TVecHelpers.h(482): style: Unused private function: 'TVecFunctions::inversesqrt'
+external\filament\libs\math\include\math\TVecHelpers.h(510): style: Unused private function: 'TVecFunctions::sign'
+external\filament\libs\math\include\math\TVecHelpers.h(577): style: Unused private function: 'TVecFunctions::fma'
+external\filament\libs\math\include\math\TVecHelpers.h(615): style: Unused private function: 'TVecFunctions::mix'
+external\filament\libs\math\include\math\TVecHelpers.h(622): style: Unused private function: 'TVecFunctions::smoothstep'
+external\filament\libs\math\include\math\TVecHelpers.h(627): style: Unused private function: 'TVecFunctions::step'
+external\filament\libs\math\include\math\TVecHelpers.h(634): style: Unused private function: 'TVecFunctions::step'
+external\filament\libs\math\include\math\TVecHelpers.h(641): style: Unused private function: 'TVecFunctions::any'
+external\filament\libs\math\include\math\TVecHelpers.h(648): style: Unused private function: 'TVecFunctions::all'
+external\filament\libs\math\include\math\vec2.h(57): style: The member function 'filament::math::details::TVec2::size' can be static.
+external\filament\libs\math\include\math\vec3.h(69): style: The member function 'filament::math::details::TVec3::size' can be static.
+external\filament\libs\math\include\math\vec4.h(70): style: The member function 'filament::math::details::TVec4::size' can be static.
+external\filament\libs\math\include\math\vec2.h(77): style: Class 'TVec2' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec3.h(89): style: Class 'TVec3' has a constructor with 1 argument that is not explicit.
+external\filament\libs\math\include\math\vec4.h(90): style: Class 'TVec4' has a constructor with 1 argument that is not explicit.
+external\filament\filament\include\filament\MaterialInstance.h(60): style: Struct 'StringLiteral' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\FixedCapacityVector.h(472): style: Class 'SizeTypeWrapper < uint32_t >' has a constructor with 1 argument that is not explicit.
+base\src\grapi\base\ellipse_curve.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\first_person_controls.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\hitbox_2d.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\include\grapi\base\keyframe_track.h(78): performance: Function 'getTimes()' should return member 'times_' by const reference.
+base\include\grapi\base\keyframe_track.h(87): performance: Function 'getValues()' should return member 'values_' by const reference.
+base\src\grapi\base\ibl.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\filament\backend\include\backend\PixelBufferDescriptor.h(51): warning: Member variable 'PixelBufferDescriptor::stride' is not initialized in the constructor.
+external\filament\filament\backend\include\backend\PixelBufferDescriptor.h(51): warning: Member variable 'PixelBufferDescriptor::format' is not initialized in the constructor.
+external\filament\filament\backend\include\backend\PixelBufferDescriptor.h(51): warning: Member variable 'PixelBufferDescriptor::imageSize' is not initialized in the constructor.
+external\filament\filament\backend\include\backend\PixelBufferDescriptor.h(51): warning: Member variable 'PixelBufferDescriptor::compressedFormat' is not initialized in the constructor.
+external\filament\filament\backend\include\backend\PixelBufferDescriptor.h(51): warning: Member variable 'PixelBufferDescriptor::type' is not initialized in the constructor.
+external\filament\filament\backend\include\backend\PixelBufferDescriptor.h(51): warning: Member variable 'PixelBufferDescriptor::alignment' is not initialized in the constructor.
+external\filament\libs\utils\include\utils\Path.h(44): style: Class 'Path' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Path.h(51): style: Class 'Path' has a constructor with 1 argument that is not explicit.
+external\filament\libs\utils\include\utils\Path.h(58): style: Class 'Path' has a constructor with 1 argument that is not explicit.
+base\src\grapi\base\orbit_controls.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\glm\glm\gtx\polar_coordinates.inl(8): style: Argument 'euclidean' shadows outer function
+external\glm\glm\gtx\polar_coordinates.inl(24): style: Argument 'polar' shadows outer function
+base\src\grapi\base\plane.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\random.h(48): style: Redundant initialization for 'value'. The initialized value is overwritten before it is read.
+base\src\grapi\base\random.h(77): style: Redundant initialization for 'value'. The initialized value is overwritten before it is read.
+base\src\grapi\base\providers\ktx2_reader.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\third_party\basisu\transcoder\basisu.h(440): error: Array 'm_bytes[4]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[4]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[4]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[4]' accessed at index 6, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[4]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[4]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(440): error: Array 'm_bytes[3]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[3]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[3]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[3]' accessed at index 6, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[3]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[3]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(427): error: Array 'm_bytes[1]' accessed at index 1, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(431): error: Array 'm_bytes[1]' accessed at index 2, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(431): error: Array 'm_bytes[1]' accessed at index 1, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(440): error: Array 'm_bytes[1]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[1]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[1]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[1]' accessed at index 6, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[1]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[1]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(431): error: Array 'm_bytes[2]' accessed at index 2, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(440): error: Array 'm_bytes[2]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[2]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(446): error: Array 'm_bytes[2]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[2]' accessed at index 6, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[2]' accessed at index 5, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(452): error: Array 'm_bytes[2]' accessed at index 4, which is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu.h(458): portability: Undefined behaviour, pointer arithmetic 'm_bytes+4' is out of bounds.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1513): error: Using 'memcpy' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1699): error: Using 'memcpy' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2124): error: Using 'memmove' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2146): error: Using 'memcpy' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2280): error: Using 'memmove' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2533): portability: Using memset() on struct which contains a floating point number.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2533): error: Using 'memset' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1015): portability: Using memset() on struct which contains a floating point number.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1015): error: Using 'memset' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1107): error: Using 'memcpy' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1164): error: Using 'memcpy' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(612): error: Using 'memcpy' on struct that contains a 'std::string'.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(926): warning: Member variable 'color32::r' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(926): warning: Member variable 'color32::g' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(926): warning: Member variable 'color32::b' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(926): warning: Member variable 'color32::a' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(926): warning: Member variable 'color32::c' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(926): warning: Member variable 'color32::m' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(950): warning: Member variable 'endpoint::m_inten5' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(1453): warning: Member variable 'xuastc_ldr_arith_header::m_flags' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(1469): warning: Member variable 'xuastc_ldr_full_zstd_header::m_flags' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(1694): warning: Member variable 'grid_weight_dct::m_block_width' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(1694): warning: Member variable 'grid_weight_dct::m_block_height' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(3135): warning: Member variable 'pack_etc1_state::m_prev_solid_block' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(214): warning: Member variable 'unpacked_uastc_block::m_astc' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(216): warning: Member variable 'unpacked_uastc_block::m_mode' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(217): warning: Member variable 'unpacked_uastc_block::m_common_pattern' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(221): warning: Member variable 'unpacked_uastc_block::m_bc1_hint0' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(222): warning: Member variable 'unpacked_uastc_block::m_bc1_hint1' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(224): warning: Member variable 'unpacked_uastc_block::m_etc1_flip' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(225): warning: Member variable 'unpacked_uastc_block::m_etc1_diff' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(226): warning: Member variable 'unpacked_uastc_block::m_etc1_inten0' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(227): warning: Member variable 'unpacked_uastc_block::m_etc1_inten1' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(229): warning: Member variable 'unpacked_uastc_block::m_etc1_bias' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(231): warning: Member variable 'unpacked_uastc_block::m_etc2_hints' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(233): warning: Member variable 'unpacked_uastc_block::m_etc1_selector' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(234): warning: Member variable 'unpacked_uastc_block::m_etc1_r' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(234): warning: Member variable 'unpacked_uastc_block::m_etc1_g' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_uastc.h(234): warning: Member variable 'unpacked_uastc_block::m_etc1_b' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(671): warning: Member variable 'basisu_file_info::m_version' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(672): warning: Member variable 'basisu_file_info::m_total_header_size' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(674): warning: Member variable 'basisu_file_info::m_total_selectors' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(676): warning: Member variable 'basisu_file_info::m_selector_codebook_ofs' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(677): warning: Member variable 'basisu_file_info::m_selector_codebook_size' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(679): warning: Member variable 'basisu_file_info::m_total_endpoints' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(681): warning: Member variable 'basisu_file_info::m_endpoint_codebook_ofs' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(682): warning: Member variable 'basisu_file_info::m_endpoint_codebook_size' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(684): warning: Member variable 'basisu_file_info::m_tables_ofs' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(685): warning: Member variable 'basisu_file_info::m_tables_size' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(687): warning: Member variable 'basisu_file_info::m_slices_size' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(689): warning: Member variable 'basisu_file_info::m_tex_type' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(690): warning: Member variable 'basisu_file_info::m_us_per_frame' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(695): warning: Member variable 'basisu_file_info::m_total_images' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(698): warning: Member variable 'basisu_file_info::m_userdata0' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(699): warning: Member variable 'basisu_file_info::m_userdata1' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(701): warning: Member variable 'basisu_file_info::m_tex_format' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(703): warning: Member variable 'basisu_file_info::m_block_width' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(704): warning: Member variable 'basisu_file_info::m_block_height' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(706): warning: Member variable 'basisu_file_info::m_y_flipped' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(707): warning: Member variable 'basisu_file_info::m_srgb' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(708): warning: Member variable 'basisu_file_info::m_etc1s' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(709): warning: Member variable 'basisu_file_info::m_has_alpha_slices' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(846): warning: Member variable 'ktx2_header::m_identifier' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(1085): warning: Member variable 'ktx2_transcoder_state::m_uncomp_data_level_index' has no initializer.
+external\filament\third_party\basisu\transcoder\basisu.h(400): warning: Member variable 'packed_uint < 4 >::m_bytes' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu.h(400): warning: Member variable 'packed_uint < 3 >::m_bytes' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu.h(400): warning: Member variable 'packed_uint < 1 >::m_bytes' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu.h(400): warning: Member variable 'packed_uint < 2 >::m_bytes' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu.h(400): warning: Member variable 'packed_uint < 8 >::m_bytes' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3313): warning: Member variable 'raw_node::m_bits' is not initialized in the constructor.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3327): warning: Member variable 'raw_node::m_bits' is not initialized in the copy constructor.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3341): warning: Member variable 'raw_node::m_bits' is not assigned a value in 'raw_node::operator='.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3984): style: The member function 'basisu::fixed_array::size' can be static.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(466): style: The member function 'basist::bitwise_decoder::stop' can be static.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(2642): style: The member function 'basist::arith::arith_enc::get_gamma_price' can be static.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(4285): style: The member function 'basisu::static_vector < coeff , 65 >::reserve' can be static.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(4307): style: The member function 'basisu::static_vector < coeff , 65 >::capacity' can be static.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3862): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3863): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3864): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3865): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3870): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3871): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3872): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3873): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3874): style: Struct 'fmt_variant' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(835): style: Class 'approx_move_to_front' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(981): style: Class 'color_rgba' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(998): style: Class 'color_rgba' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(1558): style: Struct 'astc_block_grid_data' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(2297): style: Class 'arith_data_model' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu.h(401): style: Struct 'packed_uint < 4 >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu.h(401): style: Struct 'packed_uint < 3 >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu.h(401): style: Struct 'packed_uint < 1 >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu.h(401): style: Struct 'packed_uint < 2 >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu.h(401): style: Struct 'packed_uint < 8 >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2989): style: Class 'const_iterator' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < fmt_variant >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < fmt_variant >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < uint8_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < uint8_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < int >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < int >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < int16_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < int16_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < float >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < float >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < uint32_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < uint32_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < trial_mode >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < trial_mode >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < block_preds >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < block_preds >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < endpoint >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < endpoint >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < selector >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < selector >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < basisu_slice_info >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < basisu_slice_info >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < ktx2_level_index >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < ktx2_level_index >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < key_value >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < key_value >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < ktx2_etc1s_image_desc >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < ktx2_etc1s_image_desc >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1550): style: Class 'vector < ktx2_slice_offset_len_desc_orig >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1558): style: Class 'vector < ktx2_slice_offset_len_desc_orig >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < fmt_variant >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < uint8_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < int >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < int16_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < float >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < uint32_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < trial_mode >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < block_preds >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < endpoint >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < selector >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < basisu_slice_info >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < ktx2_level_index >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < key_value >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < ktx2_etc1s_image_desc >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(790): style: Class 'writable_span < ktx2_slice_offset_len_desc_orig >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < fmt_variant >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < fmt_variant >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < uint8_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < uint8_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < int >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < int >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < int16_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < int16_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < float >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < float >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < uint32_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < uint32_t >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < trial_mode >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < trial_mode >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < block_preds >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < block_preds >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < endpoint >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < endpoint >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < selector >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < selector >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < basisu_slice_info >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < basisu_slice_info >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < ktx2_level_index >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < ktx2_level_index >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < key_value >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < key_value >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < ktx2_etc1s_image_desc >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < ktx2_etc1s_image_desc >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(314): style: Class 'readable_span < ktx2_slice_offset_len_desc_orig >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(345): style: Class 'readable_span < ktx2_slice_offset_len_desc_orig >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2481): warning: Logical conjunction always evaluates to false: *(pTrial_key) < key && key < *(pTrial_key).
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1603): style: Condition 'new_size' is always true
+external\filament\third_party\basisu\transcoder\basisu.h(123): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(1221): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_transcoder.h(1326): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2848): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3238): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3243): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3252): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3257): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3262): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3282): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3289): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3292): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3297): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3300): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3638): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3642): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3648): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3652): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1699): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1982): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2018): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2068): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2084): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2280): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2626): style: C-style pointer casting
+external\filament\third_party\basisu\transcoder\basisu_astc_helpers.h(329): style: Unsigned expression 'range' can't be negative so it is unnecessary to test it.
+external\filament\third_party\basisu\transcoder\basisu_astc_helpers.h(335): style: Unsigned expression 'range' can't be negative so it is unnecessary to test it.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2563): style: Argument 'size' shadows outer function
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2563): style: Argument 'capacity' shadows outer function
+external\filament\third_party\basisu\transcoder\basisu_containers.h(1000): style: Argument 'size' shadows outer function
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2025): performance: Function parameter 'obj' should be passed by const reference.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2040): performance: Function parameter 'obj' should be passed by const reference.
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2795): style: Variable 'p_end' can be declared as pointer to const
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2828): style: Variable 'p_end' can be declared as pointer to const
+external\filament\third_party\basisu\transcoder\basisu_containers.h(2853): style: Variable 'p_end' can be declared as pointer to const
+external\filament\third_party\basisu\transcoder\basisu_containers.h(3477): style: Variable 'pNode_end' can be declared as pointer to const
+base\src\grapi\base\providers\ktx2_provider.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+external\filament\third_party\basisu\transcoder\basisu_transcoder_internal.h(900): portability: Shifting signed 32-bit value by 31 bits is implementation-defined behaviour
+base\src\grapi\base\providers\ktx2_reader.cc(43): style: struct member 'FinalFormatInfo::name' is never used.
+external\glm\glm\detail\type_half.inl(100): style: Unused variable: Result
+base\src\grapi\base\providers\ktx2_reader.cc(885): style: Variable 'level_indices' is assigned a value that is never used.
+external\filament\libs\utils\include\utils\JobSystem.h(68): warning: Member variable 'Job::storage' is not initialized in the constructor.
+external\filament\libs\utils\include\utils\JobSystem.h(68): warning: Member variable 'Job::function' is not initialized in the constructor.
+external\filament\libs\utils\include\utils\JobSystem.h(68): warning: Member variable 'Job::parent' is not initialized in the constructor.
+external\filament\libs\utils\include\utils\JobSystem.h(407): warning: Member variable 'ThreadState::workQueue' has no initializer.
+external\filament\libs\utils\include\utils\WorkStealingDequeue.h(48): style: The class 'WorkStealingDequeue < uint16_t , MAX_JOB_COUNT >' does not declare a constructor although it has private member variables which likely require initialization.
+external\filament\libs\utils\include\utils\WorkStealingDequeue.h(59): warning: Member variable 'WorkStealingDequeue < uint16_t , MAX_JOB_COUNT >::mItems' has no initializer.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , true >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , false >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(171): warning: Member variable 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): warning: Member variable 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , STORE_HASH >::m_value' is not initialized in the constructor.
+external\filament\libs\utils\include\utils\JobSystem.h(610): style: The member function 'utils::jobs::CountSplitter::split' can be static.
+external\filament\libs\utils\include\utils\WorkStealingDequeue.h(74): style: The member function 'utils::WorkStealingDequeue < uint16_t , MAX_JOB_COUNT >::getSize' can be static.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(1051): style: Either there is a missing 'override', or the member function 'tsl::detail_robin_hash::robin_hash < std :: pair < std :: thread :: id , ThreadState * > , KeySelect , ValueSelect , std :: hash < std :: thread :: id > , std :: equal_to < std :: thread :: id > , std :: allocator < std :: pair < std :: thread :: id , ThreadState * > > , false , tsl :: rh :: power_of_two_growth_policy < 2 > >::mutable_iterator' can be static.
+external\filament\libs\utils\include\utils\memalign.h(91): style: The member function 'utils::STLAlignedAllocator < ThreadState >::allocate' can be static.
+external\filament\libs\utils\include\utils\memalign.h(95): style: The member function 'utils::STLAlignedAllocator < ThreadState >::deallocate' can be static.
+external\filament\libs\utils\include\utils\Mutex.h(87): style: Class 'UniqueLock < utils :: Mutex >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , true >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , false >' has a constructor with 1 argument that is not explicit.
+external\filament\third_party\robin-map\include\tsl\robin_hash.h(178): style: Class 'bucket_entry < std :: pair < std :: thread :: id , ThreadState * > , STORE_HASH >' has a constructor with 1 argument that is not explicit.
+base\include\grapi\base\shape.h(47): performance: Function 'getHoles()' should return member 'holes_' by const reference.
+base\src\grapi\base\resource_manager.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\sphere.cc(0): information: Limiting analysis of branches. Use --check-level=exhaustive to analyze all branches.
+base\src\grapi\base\curve.cc(183): information: Unmatched suppression: suspiciousCommaExpression
+base\src\grapi\base\curve.cc(188): information: Unmatched suppression: suspiciousCommaExpression
+base\src\grapi\base\curve.cc(192): information: Unmatched suppression: suspiciousCommaExpression
+base\src\grapi\base\curve.cc(214): information: Unmatched suppression: suspiciousCommaExpression
+base\src\grapi\base\curve.cc(232): information: Unmatched suppression: suspiciousCommaExpression
+nofile(0): information: Active checkers: There was critical errors (use --checkers-report=<filename> to see details)

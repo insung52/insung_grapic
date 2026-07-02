@@ -5,7 +5,9 @@
 > (2026-06 기준, LLVM 19 / Cppcheck 2.21.0)  
 > **v5 스캔 (2026-07)**: 수정 적용 후 재스캔 — 유저 코드 경고 9건 확인 및 전 건 수정 완료  
 > **v6 스캔 (2026-07)**: 유저 코드 경고 **0건** — 전 항목 처리 완료 확인  
-> **Cppcheck v4 재스캔 (2026-07)**: 별도 Cppcheck 단독 재스캔(`cppcheck_result_v4.txt`) — 유저 코드(`base/`) 신규 94건 발견. 분류 결과 A-5와 중복 5건, 정보성 메시지 21건(F-7), 신규 버그 3건(A-15, 코드 수정 완료), 기존 D-8 중복 3건, 신규 스타일/성능 개선 60건(D-16~D-21), 오탐성 2건(F-8) — 전 건 분류·문서화 및 A-15 코드 수정까지 완료
+> **Cppcheck v4 재스캔 (2026-07)**: 별도 Cppcheck 단독 재스캔(`cppcheck_result_v4.txt`) — 유저 코드(`base/`) 신규 94건 발견. 분류 결과 A-5와 중복 5건, 정보성 메시지 21건(F-7), 신규 버그 3건(A-15, 코드 수정 완료), 기존 D-8 중복 3건(코드 수정 완료), 신규 스타일/성능 개선 60건(D-16~D-21, 55건 코드 적용 + 4건 공개 API 보류 + 1건 디버그 전용 필드 유지; ktx2_provider.cc:89는 삭제로 D-18/D-21 항목을 동시에 해소), 오탐성 2건(F-8) — 전 건 분류·문서화 및 코드 적용 완료 (테스트/빌드 검증은 사용자가 별도 진행)  
+> **Cppcheck v5/v6 재스캔 (2026-07, 사용자 빌드/재스캔)**: v5에서 두 가지 잔여 문제 발견 — ① A-5 억제 주석의 ID(`suspiciousCommaExpression`)가 실존하지 않는 잘못된 값이라 억제가 작동하지 않고 있었음(`Unmatched suppression` 메시지로 노출) → 실측으로 정확한 ID(`constStatement`) 확인 후 수정. ② `ktx2_reader.cc`의 세 번째 `createTexture` 오버로드에서 A-15 당시 놓쳤던 별개의 미사용 변수(`level_indices`) 발견 → 삭제 대신 주석 처리로 보존. 이어서 D-16/F-8/D-21에서 의도적으로 보류했던 7건(공개 API 4건, `random.h` 2건, `FinalFormatInfo::name` 1건)에도 정확한 ID(`returnByReference`, `redundantInitialization`, `unusedStructMember`, 모두 `--errorlist`로 실측 확인)로 억제 주석을 추가해 향후 재스캔 시 재발견되지 않도록 조치. v6 재스캔에서 `base/`의 잔여 28건이 모두 "의도적으로 보류한 항목"과 정확히 일치함을 확인(신규/누락 없음).  
+> **Cppcheck v7/v8 재스캔 (2026-07, 사용자 빌드/재스캔)**: v7에서 `random.h` 억제 주석이 여전히 안 먹히는 걸 발견(ID는 맞았으나 주석을 `} value = {};` 선언 줄에 달아 실제 경고가 찍히는 overwrite 줄과 위치가 어긋남) → overwrite 줄로 이동해 수정. **v8 재스캔에서 `base/`에 남은 항목이 정보성 메시지(F-7) 21건뿐임을 확인 — 그 외 경고 0건.** Cppcheck v4 재스캔에서 시작된 94건 전부(코드 수정 55건, 공개 API/디버그 필드 등 의도적 보류 + 억제 주석 7건, 오탐 확인 5+2건, 정보성 21건) 최종 정리 완료.
 
 ---
 
@@ -31,11 +33,12 @@
 | **A. 잠재적 버그** | 15건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 (Cppcheck v4 재스캔 A-15 추가, 수정 완료) |
 | **B. 타입/안전성 문제** | ~50건 | 타입 변환 오류·부호 비트 연산·C 스타일 캐스트·다중 포인터 변환 등 |
 | **C. 코드 설계 문제** | ~20건 | API 설계·재귀·Rule of Five·virtual 소멸자 등 |
-| **D. 성능/스타일 개선** | ~113건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷, getter const& 리턴, pointer-to-const 등 (Cppcheck v4 재스캔 D-16~D-21 63건 추가) |
+| **D. 성능/스타일 개선** | ~113건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷, getter const& 리턴, pointer-to-const 등 (Cppcheck v4 재스캔 D-16~D-21 63건 추가, 이 중 5건은 공개 API 보류/디버그 필드 유지로 코드 변경 없음) |
 | **E. 대량 스타일 (노이즈)** | 100건+ | `misc-const-correctness` 위주 — 기계적으로 수정 가능 |
 | **F. 인프라 패턴 (오탐)** | ~420건+ | pointer-arithmetic 278건, array-to-pointer-decay 15건, `malloc`/C API 74건, Cppcheck 정보성 메시지 21건(F-7), redundant-init 오탐 2건(F-8) 등 불가피한 경고 |
 
-> **Cppcheck v4 재스캔 (2026-07) 요약**: 유저 코드(`base/`) 94건 발견 → A-5 중복 5건 / 정보성 메시지 21건(F-7) / 신규 버그 3건(A-15, 코드 수정 완료) / 기존 D-8 중복 3건 / 신규 스타일·성능 60건(D-16~D-21) / 오탐 2건(F-8). 전 건 분류·처리 완료.
+> **Cppcheck v4 재스캔 (2026-07) 요약**: 유저 코드(`base/`) 94건 발견 → A-5 중복 5건 / 정보성 메시지 21건(F-7) / 신규 버그 3건(A-15, 코드 수정 완료) / 기존 D-8 중복 3건(코드 수정 완료) / 신규 스타일·성능 60건(D-16~D-21, 55건 코드 적용·5건 보류/유지) / 오탐 2건(F-8). 전 건 분류·문서화 및 코드 적용 완료.  
+> **최종 확인 (v8 재스캔, 2026-07, 사용자 빌드/재스캔)**: 빌드 성공 확인. 재스캔 과정에서 억제 주석 오류 2건(A-5 잘못된 ID, F-8 잘못된 줄 위치) 및 A-15 관련 잔여 미사용 변수 1건을 추가로 발견·수정. **v8 최종 결과: `base/` 잔여 경고 0건 (정보성 메시지 21건만 남음).**
 
 ---
 
@@ -147,8 +150,8 @@ memcpy(blocks, level_data, length);
 
 ---
 
-### A-5. glm 생성자 쉼표 오탐 (F등급 재분류 — 오탐 확인)
-**도구**: Cppcheck `suspiciousCommaExpression` — "Found suspicious operator ',', result is not used."  
+### A-5. glm 생성자 쉼표 오탐 (F등급 재분류 — 오탐 확인) ✅ 완료
+**도구**: Cppcheck — "Found suspicious operator ',', result is not used." (실제 체크 ID `constStatement`, 아래 참고)  
 **위치**: `curve.cc:183, 188, 192, 214, 232`
 
 실제 Cppcheck 출력 확인 결과, 경고가 실제로 존재하지만 **오탐**으로 판단:
@@ -163,11 +166,17 @@ normals[i] = glm::vec3(rotation_matrix * glm::vec4(normals[i], 0.0f));
 
 `glm::vec3(1.0f, 0.0f, 0.0f)`의 `,`는 생성자 인자 구분자이지 쉼표 연산자가 아님. Cppcheck가 glm 템플릿 타입을 완전히 파싱하지 못해 `glm::vec3(1.0f)` + 미사용 `0.0f, 0.0f`로 잘못 해석한 것. 코드 로직에 문제 없음.
 
-**처리**: 인라인 주석 `// cppcheck-suppress suspiciousCommaExpression`을 코드에 삽입하여 경고 억제 조치 완료.
+**처리**: 인라인 주석 `// cppcheck-suppress constStatement`를 코드에 삽입하여 경고 억제.
 
 > **참고**: A-5는 실질적 위험 없음 — F등급(오탐)으로 재분류.
 
-> **Cppcheck v4 재스캔 확인**: 동일 5건(`curve.cc:183,188,192,214,232`)에 대해 코드 인라인 `// cppcheck-suppress suspiciousCommaExpression` 처리를 완료하여 향후 재스캔 시 해당 오탐 경고가 발생하지 않도록 조치함.
+> **Cppcheck v4 재스캔 확인**: 동일 5건(`curve.cc:183,188,192,214,232`)이 그대로 재발견됨.
+
+> **⚠️ v5 재스캔에서 발견된 문제 — 억제 ID 오류**: 최초 적용 시 `// cppcheck-suppress suspiciousCommaExpression`로 처리했으나, v5 재스캔 결과 경고가 **그대로 재발생**했고 동시에 `information: Unmatched suppression: suspiciousCommaExpression` 메시지까지 새로 나타남. `suspiciousCommaExpression`은 실제로 존재하지 않는(추측으로 지어낸) 체크 ID였음 — 억제가 전혀 작동하지 않고 있었던 것.  
+> **원인 확인 방법**: `cppcheck --project=... "--file-filter=*curve.cc" --enable=warning,style` (기본 템플릿, `--template=vs` 미사용)로 단독 실행하면 메시지 끝에 `[constStatement]`가 표시되어 정확한 ID 확인 가능.  
+> **수정**: 5곳 모두 `constStatement`로 교체. v6 재스캔에서 경고 및 `Unmatched suppression` 메시지 모두 사라짐을 확인 완료.
+>
+> **교훈**: cppcheck 억제 ID는 메시지 문구만 보고 추측하지 말고, `--errorlist` 또는 기본 템플릿(ID 표시) 실행으로 반드시 실제 ID를 확인한 뒤 주석을 작성해야 함. 틀린 ID를 넣으면 억제가 조용히 실패하고 `Unmatched suppression` 정보 메시지만 늘어난다.
 
 ---
 
@@ -784,6 +793,9 @@ if (header->level_count == 0 || header->level_count > KTX2_MAX_SUPPORTED_LEVEL_C
 ```
 
 **부수 정리**: 두 위치에서 실제로 쓰이지 않던 `vsize const level_index_size = sizeof(Ktx2LevelIndex) * header->level_count;` 계산도 함께 제거(cppcheck가 지적한 원래 대상). 이 값은 `level_indices` 배열 자체의 범위 검증용인데, 그 검증은 호출 이전 단계(`createTexture(const void*, vsize)`)에서 이미 끝난 상태라 여기서는 불필요한 죽은 코드였음. 해당 오버로드(line 869~872)의 동일 변수는 그대로 유지(정상적으로 사용 중).
+
+> **v5 재스캔에서 추가로 발견된 동일 계열 이슈**: `createTexture(const void* data, vsize size)` 오버로드(범위 검증이 있는 "정상" 버전) 자체에도 별개의 죽은 코드가 남아있었음 — `const Ktx2LevelIndex* level_indices = reinterpret_cast<...>(level_index_ptr);`를 계산해놓고 이 함수는 텍스처 메타데이터(width/height/levels/format/sampler)만 빌드하고 반환하며 실제 픽셀 데이터는 채우지 않아 `level_indices`를 전혀 읽지 않음. cppcheck `unreadVariable` — "Variable 'level_indices' is assigned a value that is never used."(당시 라인 871).  
+> **처리**: 삭제 대신 주석 처리로 보존(향후 이 함수에서도 이미지 데이터를 채우게 될 가능성 대비) — `level_index_ptr`, `level_indices` 계산 두 줄을 주석으로 남기고 사유 설명 추가. v6 재스캔에서 해당 경고 사라짐 확인.
 
 ---
 
@@ -1649,35 +1661,51 @@ using namespace filament;  // NOLINT(google-build-using-namespace)
 
 ---
 
-### D-16. getter가 값 대신 `const&` 리턴해야 함 (Cppcheck v4 신규) ✅ 완료
+### D-16. getter가 값 대신 `const&` 리턴해야 함 (Cppcheck v4 신규) ✅ 완료 (9건 적용 / 4건 공개 API로 보류)
 **도구**: Cppcheck `performance` (returnByReference 계열)  
 **건수**: 13건
 
-| 파일 | 라인 | 함수 |
-|------|------|------|
-| `asset_impl.h` | :27 | `getActors()` |
-| `asset_impl.h` | :31 | `getLightActors()` |
-| `asset_impl.h` | :35 | `getCameraActors()` |
-| `asset_impl.h` | :43 | `getAnimations()` |
-| `asset_impl.h` | :47 | `getResourceUris()` |
-| `context.h` | :59 | `getConfig()` |
-| `components/animation_component.h` | :16 | `getTracks()` |
-| `components/light_component.h` | :81 | `getShadowOptions()` |
-| `curve_path.h` | :51 | `getCurves()` |
-| `keyframe_track.h` | :78 | `getTimes()` |
-| `keyframe_track.h` | :87 | `getValues()` |
-| `shape.h` | :47 | `getHoles()` |
-| `text/freetype_font.h` | :36 | `getUri()` |
+코드 적용 전, 각 클래스가 `include/`(공개 헤더, `BASE_PUBLIC` export)인지 `src/`(내부 구현)인지 확인 후 처리를 나눔. C-1에서 확립된 방침("공개 API는 시그니처 유지, 내부 구현만 실제 변경")을 그대로 따름 — 리턴 타입 변경은 파라미터 이름과 달리 실제 시그니처/ABI 변경이라 공개 API에는 적용하지 않음.
+
+**적용 완료 (9건 — 모두 `src/` 내부 구현 클래스)**:
+
+| 파일 | 라인 | 함수 | 비고 |
+|------|------|------|------|
+| `asset_impl.h` | :27 | `getActors()` | `AssetImpl`은 PIMPL 내부 구현, `Asset::getActors()`(공개)는 시그니처 그대로 유지 |
+| `asset_impl.h` | :31 | `getLightActors()` | 상동 |
+| `asset_impl.h` | :35 | `getCameraActors()` | 상동 |
+| `asset_impl.h` | :43 | `getAnimations()` | 상동 |
+| `asset_impl.h` | :47 | `getResourceUris()` | 상동 |
+| `context.h` | :59 | `getConfig()` | `Context`는 내부 싱글턴, `Engine::getConfig()`(공개)는 유지 |
+| `components/animation_component.h` | :16 | `getTracks()` | ECS 컴포넌트, 내부 전용. 호출부(`animation_mixer.cc`) 확인 — 반환값 non-const 변경 없음 |
+| `components/light_component.h` | :81 | `getShadowOptions()` | 상동, 호출부(`light.cc`) 확인 |
+| `text/freetype_font.h` | :36 | `getUri()` | 내부 클래스, 호출부(`font_component.cc`) 삼항연산자 호환 확인 |
 
 ```cpp
-// 변경 전 — 컨테이너 전체를 값으로 복사해서 리턴
+// 적용 예 (asset_impl.h)
+// 변경 전
 std::vector<BaseID> getActors() const { return actors_; }
-
 // 변경 후
 const std::vector<BaseID>& getActors() const { return actors_; }
 ```
 
-호출부가 반환값을 그대로 순회/조회만 하고 수정하지 않는다면 `const&`로 바꿔도 동작에 영향 없음. 13건 모두 동일 패턴이라 일괄 검토 후 적용 가능.
+**보류 (4건 — `include/`, `BASE_PUBLIC` 공개 API)**:
+
+| 파일 | 라인 | 함수 | 보류 사유 |
+|------|------|------|-----------|
+| `curve_path.h` | :51 | `getCurves()` | `class BASE_PUBLIC CurvePath` — 공개 export 클래스 |
+| `keyframe_track.h` | :78 | `getTimes()` | `class BASE_PUBLIC KeyframeTrack` — 공개 export 클래스 |
+| `keyframe_track.h` | :87 | `getValues()` | 상동 |
+| `shape.h` | :47 | `getHoles()` | `class BASE_PUBLIC Shape` — 공개 export 클래스 |
+
+이 4건은 C-1의 `Controls::setViewport` NOLINT 처리와 동일한 논리로 보류. 코드는 변경하지 않음.
+
+> **추가 조치 (v5 재스캔 후)**: 보류 4건도 향후 재스캔 시 계속 "신규 경고"처럼 재발견되는 것을 막기 위해 `// cppcheck-suppress returnByReference` 인라인 억제 주석을 각 선언부에 추가(실제 코드 시그니처는 변경하지 않음). 정확한 체크 ID는 `curve_path.cc`를 `--file-filter`로 단독 스캔해 `[returnByReference]`로 직접 확인(A-5의 ID 실수 이후 추측 대신 항상 실측하도록 변경). `curve_path.cc`, `keyframe_track.cc`, `shape.cc`를 각각 `--inline-suppr`로 재스캔해 경고 및 `Unmatched suppression` 메시지 모두 사라짐을 확인 완료.
+> ```cpp
+> // 예 (curve_path.h)
+> // 공개 API 시그니처 유지를 위해 const&로 변경하지 않음 (D-16 참고)
+> std::vector<std::shared_ptr<Curve>> getCurves() const;  // cppcheck-suppress returnByReference
+> ```
 
 ---
 
@@ -1718,9 +1746,9 @@ Ray::Ray(const glm::vec3& origin, const glm::vec3& direction)
 | `first_person_controls.cc` | :217, 226 | `actor` (×2) | pointer |
 | `fly_controls.cc` | :178, 187 | `actor` (×2) | pointer |
 | `orbit_controls.cc` | :445, 454 | `actor` (×2) | pointer |
-| `providers/ktx2_reader.cc` | :538 | `iter` | pointer |
+| `providers/ktx2_reader.cc` | :538 | `iter` | pointer (`begin()/end()` → `cbegin()/cend()`로 교체) |
 | `providers/ktx2_provider.cc` | :235 | `item` | reference |
-| `providers/ktx2_provider.cc` | :89 | `texture` | pointer |
+| `providers/ktx2_provider.cc` | :89 | `texture` | pointer → **D-21과 겹쳐 변수 자체를 삭제로 처리** (아래 D-21 참고) |
 | `resource_manager.cc` | :38, 45 | `iter` (×2) | reference |
 | `resource_manager.cc` | :39, 46, 112 | `texture` (×3) | pointer |
 
@@ -1732,7 +1760,7 @@ Actor* actor = Context::get().getObjectFactory()->get<Actor>(actor_id);
 const Actor* actor = Context::get().getObjectFactory()->get<Actor>(actor_id);
 ```
 
-전 건 각 위치에서 해당 변수를 통해 non-const 멤버 함수를 호출하거나 값을 변경하지 않는지 개별 확인 후 `const` 추가.
+전 건 각 위치에서 해당 변수를 통해 non-const 멤버 함수를 호출하거나 값을 변경하지 않는지(예: `engine->destroy(const T*)` 오버로드 존재 여부, getter의 `const` 여부) 개별 확인 후 `const` 추가. 코드 적용 완료.
 
 ---
 
@@ -1780,19 +1808,17 @@ if (std::any_of(requested_formats_.begin(), requested_formats_.end(),
 
 ---
 
-### D-21. 기타 개별 스타일 항목 (Cppcheck v4 신규) ✅ 완료
+### D-21. 기타 개별 스타일 항목 (Cppcheck v4 신규) ✅ 완료 (6건 적용 / 1건 검토 후 유지)
 **건수**: 7건
 
-| 파일 | 라인 | 도구/내용 |
-|------|------|-----------|
-| `ibl.cc` | :264 | `style` — 변수 `num_levels`의 스코프를 좁힐 수 있음 |
-| `providers/ktx2_reader.cc` | :713 | `style` — 멤버 함수 `asyncDestroy`가 static일 수 있음 |
-| `providers/ktx2_reader.h` | :51 | `style` — `Ktx2Reader` 생성자가 인자 1개인데 `explicit` 없음 |
-| `providers/ktx2_reader.cc` | :42 | `style` — 구조체 멤버 `FinalFormatInfo::name`이 사용되지 않음 |
-| `providers/ktx2_provider.cc` | :89 | `style` — 변수 `texture`가 대입만 되고 이후 사용되지 않음 (선언 후 실제로는 116/128번 줄에서 `async->getTexture()`를 직접 리턴 — 죽은 변수) |
-| `text/freetype_font.cc` | :38, 42 | `style` — `isSpace`, `isNewline` 멤버 함수가 static일 수 있음 (×2) |
-
-각 항목은 낮은 위험도의 개별 정리 대상. `ktx2_provider.cc:89`는 죽은 변수라 삭제 가능, 나머지는 `static`/`explicit` 키워드 추가 또는 스코프 축소로 간단히 처리.
+| 파일 | 라인 | 도구/내용 | 처리 |
+|------|------|-----------|------|
+| `ibl.cc` | :264 | `style` — 변수 `num_levels`의 스코프를 좁힐 수 있음 | ✅ 적용 — 함수 스코프에서 실제 사용되는 내부 `{}` 블록 안으로 선언 이동 |
+| `providers/ktx2_reader.cc` | :713 | `style` — 멤버 함수 `asyncDestroy`가 static일 수 있음 | ✅ 적용 — `Ktx2Reader`가 `src/` 내부 클래스(비공개)라 `static` 추가. 호출부는 모두 `reader->asyncDestroy(...)` 형태라 static 메서드도 동일 문법으로 호출 가능, 영향 없음 |
+| `providers/ktx2_reader.h` | :51 | `style` — `Ktx2Reader` 생성자가 인자 1개인데 `explicit` 없음 | ✅ 적용 — `explicit` 추가. 암묵적 변환 형태 호출부 없음 확인 |
+| `providers/ktx2_reader.cc` | :42 | `style` — 구조체 멤버 `FinalFormatInfo::name`이 사용되지 않음 | **보류 + 억제** — 코드 추적 결과 `#if BASISU_FORCE_DEVEL_MESSAGES` 블록(825~828번 줄) 안에서 `info.name`을 로그로 출력하는 디버그 전용 필드로 확인됨(주석에도 "for debug purposes only" 명시). 해당 매크로가 기본 빌드에서 꺼져 있어 cppcheck가 미사용으로 오인. 삭제하지 않고 `// cppcheck-suppress unusedStructMember` 추가로 재스캔 시 재발견되지 않도록 처리 |
+| `providers/ktx2_provider.cc` | :89 | `style` — 변수 `texture`가 대입만 되고 이후 사용되지 않음 | ✅ 적용 — 죽은 변수 삭제 (D-18의 같은 위치 항목과 동일 지점, 삭제로 두 항목 동시 해소) |
+| `text/freetype_font.cc` | :38, 42 | `style` — `isSpace`, `isNewline` 멤버 함수가 static일 수 있음 (×2) | ✅ 적용 — `static` 추가. 호출부(`typesetter.cc`)는 모두 `font->isSpace(...)` 형태라 영향 없음 |
 
 ---
 
@@ -2103,7 +2129,25 @@ constexpr vint64 nextInt() {
 
 `value = {}`는 union을 0으로 초기화해 `.u`에 값을 대입하기 전 미정의 상태로 두지 않으려는 의도적 안전 패턴(그리고 `constexpr` 함수에서 활성 멤버가 아닌 값을 읽는 것을 피하기 위한 초기화). 실질적으로 대입 직후 값이 덮어써지는 건 맞지만 UB 방지 목적이 있어 제거하지 않는 것이 안전.
 
-**처리**: 조치 불필요 (코드 변경 없이 유지). 원하면 `// cppcheck-suppress redundantInitialization` 주석으로 억제 가능.
+**처리**: 코드 변경 없이 유지 + 재스캔 시 반복 재발견 방지를 위해 두 위치 모두 `// cppcheck-suppress redundantInitialization` 인라인 억제 추가. ID는 `--errorlist`로 실존 여부 확인 후 적용(A-5의 ID 실수 이후 추측 대신 항상 실측).
+
+> **⚠️ v7 재스캔에서 발견된 문제 — 억제 주석 위치 오류**: 최초 적용 시 억제 주석을 `} value = {};` 선언 줄에 달았으나, v7 재스캔 결과 경고가 **그대로 재발생**(`random.h(49)`, `random.h(79)`)했고 동시에 `information: Unmatched suppression: redundantInitialization`(`random.h(48)`, `random.h(78)`)까지 나타남.  
+> **원인**: cppcheck는 이 체크를 "선언 줄"이 아니라 **값을 실제로 덮어쓰는 줄**(`value.u = nextUint();` 등)에서 보고함. ID는 맞았지만(A-5와 달리) 주석을 엉뚱한 줄에 달아서 매칭이 안 된 것 — "같은 줄 억제"는 정확히 경고가 찍히는 줄에 달아야 함을 재확인.  
+> **수정**: 주석을 `} value = {};` 줄에서 실제 overwrite 줄(`value.u = nextUint();` / `value.u = 0x3f800000u | ...`)로 이동. v8 재스캔에서 경고 및 `Unmatched suppression` 모두 사라짐을 확인 완료.
+
+```cpp
+// 최종 적용본
+constexpr vint64 nextInt() {
+  union {
+    vuint64 u;
+    vint64 i;
+  } value = {};
+  value.u = nextUint();  // cppcheck-suppress redundantInitialization
+  return value.i;
+}
+```
+
+> **교훈 (A-5와 함께)**: cppcheck 인라인 억제는 (1) 정확한 체크 ID, (2) 경고가 실제로 찍히는 정확한 줄 — 이 두 가지가 모두 맞아야 동작한다. 둘 중 하나라도 틀리면 억제는 조용히 실패하고 `Unmatched suppression` 정보 메시지만 남는다. 반드시 재스캔으로 검증할 것.
 
 ---
 
@@ -2190,15 +2234,23 @@ constexpr vint64 nextInt() {
 ─────────────────────────────────────────────────────────────────
 ✅ ktx2_reader.cc — load()/FAsync::doTranscoding() 레벨별 offset/length 버퍼 범위 검증 추가 + 미사용 level_index_size 제거 (A-15)
 ✅ first_person_controls.h/fly_controls.h/map_controls.h — 소멸자 override 추가 3건 (D-8 추가분)
-✅ getter 13건 — const& 리턴으로 변경 (D-16)
+✅ getter 13건 — const& 리턴 9건 적용 + 공개 API 4건 보류(억제 주석 추가) (D-16)
 ✅ ray.h:36-38 — 생성자 초기화 목록 사용 (D-17)
-✅ pointer/reference to const 22건 (D-18)
+✅ pointer/reference to const 22건 — 21건 const 추가 + 1건(ktx2_provider.cc:89) 삭제로 처리 (D-18)
 ✅ raw loop → 표준 알고리즘 8건 (D-19)
 ✅ outer scope shadow 7건 — 변수/인자명 구분 (D-20)
-✅ 기타 개별 스타일 7건 (D-21)
-✅ curve.cc 쉼표 오탐 5건 — A-5와 동일, 변경 없음 (재확인)
+✅ 기타 개별 스타일 7건 — 6건 적용 + 1건(FinalFormatInfo::name, 디버그 전용 필드, 억제 주석 추가) 검토 후 유지 (D-21)
+✅ curve.cc 쉼표 오탐 5건 — A-5와 동일, 억제 주석 추가 (재확인)
 ✅ Cppcheck 정보성 메시지 21건 — 조치 불필요 (F-7)
-✅ random.h union 초기화 2건 — 조치 불필요, 의도된 패턴 (F-8)
+✅ random.h union 초기화 2건 — 조치 불필요, 의도된 패턴, 억제 주석 추가 (F-8)
+
+6단계 — 사용자 빌드/재스캔 후 잔여 이슈 정리 (v5~v8, 2026-07)
+─────────────────────────────────────────────────────────────────
+✅ v5 재스캔 — A-5 억제 ID 오류(`suspiciousCommaExpression`→`constStatement`) 발견 및 수정
+✅ v5 재스캔 — ktx2_reader.cc 세 번째 createTexture 오버로드의 잔여 미사용 변수(level_indices) 발견, 주석 처리로 보존
+✅ v6 재스캔 — D-16/F-8/D-21 보류 7건에 억제 주석 추가(returnByReference/redundantInitialization/unusedStructMember), 잔여 28건이 의도적 보류와 일치함 확인
+✅ v7 재스캔 — random.h 억제 주석 위치 오류(선언 줄 vs overwrite 줄) 발견 및 수정
+✅ v8 재스캔 — base/ 잔여 경고 0건 확인 (정보성 메시지 21건만 남음), 최종 완료
 ```
 
 ---
@@ -2213,3 +2265,7 @@ constexpr vint64 nextInt() {
 - 원시 결과: `C:\working\grapi-base\clangtidy_v5.txt` — 수정 후 재스캔, 유저 코드 경고 9건
 - 원시 결과: `C:\working\grapi-base\clangtidy_v6.txt` — 전 항목 수정 후 재스캔, **유저 코드 경고 0건**
 - 원시 결과: `C:\working\grapi-base\cppcheck_result_v4.txt` — Cppcheck 단독 재스캔(2026-07), 유저 코드(`base/`) 94건 → A-15, D-16~D-21, F-7, F-8로 분류·문서화
+- 원시 결과: `C:\working\grapi-base\cppcheck_result_v5.txt` — 코드 적용 후 재스캔, A-5 억제 ID 오류 및 `ktx2_reader.cc` 잔여 미사용 변수 1건 발견
+- 원시 결과: `C:\working\grapi-base\cppcheck_result_v6.txt` — 위 2건 수정 + 보류 항목 7건 억제 주석 추가 후 재스캔, 유저 코드(`base/`) 잔여 28건 전부 의도적 보류 항목과 일치 확인 (신규/누락 없음)
+- 원시 결과: `C:\working\grapi-base\cppcheck_result_v7.txt` — `random.h` 억제 주석 위치 오류(선언 줄 vs overwrite 줄) 발견, D-16/D-21 억제는 정상 동작 확인
+- 원시 결과: `C:\working\grapi-base\cppcheck_result_v8.txt` — `random.h` 억제 주석 위치 수정 후 최종 재스캔, `base/` 잔여 경고 **0건**(정보성 메시지 21건만 남음) — Cppcheck v4 재스캔 94건 전 항목 처리 완료 최종 확인
