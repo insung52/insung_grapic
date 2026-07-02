@@ -4,10 +4,13 @@
 > 원시 결과 파일: `clangtidy_v2.txt`, `cppcheck_result_v3.txt`  
 > (2026-06 기준, LLVM 19 / Cppcheck 2.21.0)  
 > **v5 스캔 (2026-07)**: 수정 적용 후 재스캔 — 유저 코드 경고 9건 확인 및 전 건 수정 완료  
-> **v6 스캔 (2026-07)**: 유저 코드 경고 **0건** — 전 항목 처리 완료 확인  
+> **v6 스캔 (2026-07)**: 유저 코드 경고 **0건** — 전 항목 처리 완료 확인 (⚠️ 2026-07-02 확인 결과 이 "0건"은 사실 **`.cc` 파일 기준**이었음 — 정정 내용은 아래 "Clang-Tidy v9 재스캔" 항목 참고)  
 > **Cppcheck v4 재스캔 (2026-07)**: 별도 Cppcheck 단독 재스캔(`cppcheck_result_v4.txt`) — 유저 코드(`base/`) 신규 94건 발견. 분류 결과 A-5와 중복 5건, 정보성 메시지 21건(F-7), 신규 버그 3건(A-15, 코드 수정 완료), 기존 D-8 중복 3건(코드 수정 완료), 신규 스타일/성능 개선 60건(D-16~D-21, 55건 코드 적용 + 4건 공개 API 보류 + 1건 디버그 전용 필드 유지; ktx2_provider.cc:89는 삭제로 D-18/D-21 항목을 동시에 해소), 오탐성 2건(F-8) — 전 건 분류·문서화 및 코드 적용 완료 (테스트/빌드 검증은 사용자가 별도 진행)  
 > **Cppcheck v5/v6 재스캔 (2026-07, 사용자 빌드/재스캔)**: v5에서 두 가지 잔여 문제 발견 — ① A-5 억제 주석의 ID(`suspiciousCommaExpression`)가 실존하지 않는 잘못된 값이라 억제가 작동하지 않고 있었음(`Unmatched suppression` 메시지로 노출) → 실측으로 정확한 ID(`constStatement`) 확인 후 수정. ② `ktx2_reader.cc`의 세 번째 `createTexture` 오버로드에서 A-15 당시 놓쳤던 별개의 미사용 변수(`level_indices`) 발견 → 삭제 대신 주석 처리로 보존. 이어서 D-16/F-8/D-21에서 의도적으로 보류했던 7건(공개 API 4건, `random.h` 2건, `FinalFormatInfo::name` 1건)에도 정확한 ID(`returnByReference`, `redundantInitialization`, `unusedStructMember`, 모두 `--errorlist`로 실측 확인)로 억제 주석을 추가해 향후 재스캔 시 재발견되지 않도록 조치. v6 재스캔에서 `base/`의 잔여 28건이 모두 "의도적으로 보류한 항목"과 정확히 일치함을 확인(신규/누락 없음).  
-> **Cppcheck v7/v8 재스캔 (2026-07, 사용자 빌드/재스캔)**: v7에서 `random.h` 억제 주석이 여전히 안 먹히는 걸 발견(ID는 맞았으나 주석을 `} value = {};` 선언 줄에 달아 실제 경고가 찍히는 overwrite 줄과 위치가 어긋남) → overwrite 줄로 이동해 수정. **v8 재스캔에서 `base/`에 남은 항목이 정보성 메시지(F-7) 21건뿐임을 확인 — 그 외 경고 0건.** Cppcheck v4 재스캔에서 시작된 94건 전부(코드 수정 55건, 공개 API/디버그 필드 등 의도적 보류 + 억제 주석 7건, 오탐 확인 5+2건, 정보성 21건) 최종 정리 완료.
+> **Cppcheck v7/v8 재스캔 (2026-07, 사용자 빌드/재스캔)**: v7에서 `random.h` 억제 주석이 여전히 안 먹히는 걸 발견(ID는 맞았으나 주석을 `} value = {};` 선언 줄에 달아 실제 경고가 찍히는 overwrite 줄과 위치가 어긋남) → overwrite 줄로 이동해 수정. **v8 재스캔에서 `base/`에 남은 항목이 정보성 메시지(F-7) 21건뿐임을 확인 — 그 외 경고 0건.** Cppcheck v4 재스캔에서 시작된 94건 전부(코드 수정 55건, 공개 API/디버그 필드 등 의도적 보류 + 억제 주석 7건, 오탐 확인 5+2건, 정보성 21건) 최종 정리 완료.  
+> **Clang-Tidy v9 재스캔 — `HeaderFilterRegex` 설정 버그 발견 (2026-07-02, 중요)**: WSL에서 Linux/WebGL 플랫폼용 Clang-Tidy를 재검증하던 중([08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md)), `.clang-tidy`의 `HeaderFilterRegex: '.*(grapi-base/(base|samples)).*\.(h|hpp)$'`가 슬래시(`/`) 기준인데 Windows 컴파일 DB 경로는 백슬래시(`\`)라 **한 번도 매치된 적이 없었고**, 그 결과 **헤더 파일(`.h`) 안의 clang-tidy 진단이 이번 검증 시작(v2)부터 지금까지 전부 숨겨져 있었음**이 드러남(증거: `clangtidy_v2.txt` 1852건 전체가 `.cc` 파일 경고뿐, `.h` 파일 경고 0건). 즉 "v6~v8 유저 코드 경고 0건"은 실제로는 "`.cc` 파일 기준 0건"이었음.  
+> **수정**: `HeaderFilterRegex`를 `'.*grapi-base[/\\](base|samples)[/\\].*\.(h|hpp)$'`로 변경(양쪽 슬래시 모두 매치). 이후 재스캔한 `clangtidy_v9.txt`에서 헤더 파일 기준 신규 findings 대량 발견(중복 제거 후 고유 위치 1,833건 — 대부분 `modernize-use-nodiscard`처럼 대량/기계적 처리 가능한 성격, 잠재적 실버그 후보는 6건 중 2건(A-16, A-17) 확인 후 수정 완료, 나머지는 오탐이거나 기존 항목(D-26 등)에 통합). 상세 분류는 예비 문서 [09-clangtidy-v9-header-findings.md](09-clangtidy-v9-header-findings.md) 참고 — 대량 카테고리(D-22~D-27) 및 개별 소량 카테고리(D-28) 모두 본 리포트에 병합·코드 수정·재검증(v14) 완료.  
+> **Cppcheck는 영향 없음**: `HeaderFilterRegex`는 clang-tidy 전용 설정이라 cppcheck 결과(v4~v8)는 그대로 유효, 재스캔 불필요.
 
 ---
 
@@ -30,15 +33,17 @@
 
 | 등급 | 항목 수 | 설명 |
 |------|--------|------|
-| **A. 잠재적 버그** | 15건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 (Cppcheck v4 재스캔 A-15 추가, 수정 완료) |
+| **A. 잠재적 버그** | 17건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 (Cppcheck v4 재스캔 A-15 추가 + Clang-Tidy v9 재스캔 A-16/A-17 추가, 전 건 수정 완료) |
 | **B. 타입/안전성 문제** | ~50건 | 타입 변환 오류·부호 비트 연산·C 스타일 캐스트·다중 포인터 변환 등 |
 | **C. 코드 설계 문제** | ~20건 | API 설계·재귀·Rule of Five·virtual 소멸자 등 |
-| **D. 성능/스타일 개선** | ~113건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷, getter const& 리턴, pointer-to-const 등 (Cppcheck v4 재스캔 D-16~D-21 63건 추가, 이 중 5건은 공개 API 보류/디버그 필드 유지로 코드 변경 없음) |
+| **D. 성능/스타일 개선** | ~1,936건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷, getter const& 리턴, pointer-to-const, narrowing conversion, 네이밍, Rule of Five, signed-bitwise, swappable-parameters, enum-size 등 (Cppcheck v4 재스캔 D-16~D-21 63건 + Clang-Tidy v9 헤더 재스캔 D-22~D-28 1,823건 추가, 전 건 코드 적용 완료·일부 공개 API/디버그 필드/불가피한 패턴은 NOLINT 보류) |
 | **E. 대량 스타일 (노이즈)** | 100건+ | `misc-const-correctness` 위주 — 기계적으로 수정 가능 |
-| **F. 인프라 패턴 (오탐)** | ~420건+ | pointer-arithmetic 278건, array-to-pointer-decay 15건, `malloc`/C API 74건, Cppcheck 정보성 메시지 21건(F-7), redundant-init 오탐 2건(F-8) 등 불가피한 경고 |
+| **F. 인프라 패턴 (오탐)** | ~420건+ | pointer-arithmetic 278건, array-to-pointer-decay 15건, `malloc`/C API 74건, Cppcheck 정보성 메시지 21건(F-7), redundant-init 오탐 2건(F-8), use-after-move 오탐 1건(F-9) 등 불가피한 경고 |
 
 > **Cppcheck v4 재스캔 (2026-07) 요약**: 유저 코드(`base/`) 94건 발견 → A-5 중복 5건 / 정보성 메시지 21건(F-7) / 신규 버그 3건(A-15, 코드 수정 완료) / 기존 D-8 중복 3건(코드 수정 완료) / 신규 스타일·성능 60건(D-16~D-21, 55건 코드 적용·5건 보류/유지) / 오탐 2건(F-8). 전 건 분류·문서화 및 코드 적용 완료.  
-> **최종 확인 (v8 재스캔, 2026-07, 사용자 빌드/재스캔)**: 빌드 성공 확인. 재스캔 과정에서 억제 주석 오류 2건(A-5 잘못된 ID, F-8 잘못된 줄 위치) 및 A-15 관련 잔여 미사용 변수 1건을 추가로 발견·수정. **v8 최종 결과: `base/` 잔여 경고 0건 (정보성 메시지 21건만 남음).**
+> **최종 확인 (v8 재스캔, 2026-07, 사용자 빌드/재스캔)**: 빌드 성공 확인. 재스캔 과정에서 억제 주석 오류 2건(A-5 잘못된 ID, F-8 잘못된 줄 위치) 및 A-15 관련 잔여 미사용 변수 1건을 추가로 발견·수정. **v8 최종 결과: `base/` 잔여 경고 0건 (정보성 메시지 21건만 남음).**  
+> **Clang-Tidy v9 재스캔 (2026-07) 요약**: `.clang-tidy`의 `HeaderFilterRegex`가 Windows 경로(백슬래시)와 매치되지 않던 설정 버그를 발견·수정(6장 D-22 앞 배경 설명 참고) — 이 버그로 인해 프로젝트 시작 이래 헤더 파일(`.h`) 진단이 전부 숨겨져 있었음. 수정 후 재스캔에서 헤더 전용 신규 경고 1,833건 노출. 잠재 버그 후보 6건 전수 검토(2건 실버그 확인·수정 → A-16/A-17, 1건 오탐 → F-9, 3건은 D-26 Rule of Five로 통합) + 대량 카테고리 6종(D-22~D-27, 1,723건) + 개별 소량 19종(D-28, 100건) 전부 분류·코드 수정 완료.  
+> **최종 확인 (v14 재스캔, 2026-07)**: D-22~D-28 전 작업 완료 후 처음부터 다시 전체 재스캔(v10→v14, 5회 반복) — 그 과정에서 자체 회귀 버그 2건(D-26 5건 포함 총 7건, D-28 절 참고) 발견·즉시 수정. **v14 최종 결과: `base/` 코드 경고 0건**(잔여 3건은 전부 `external/filament` 서드파티, 우리 소관 아님). 에러 270건은 v9부터 있던 환경 노이즈로 불변 확인.
 
 ---
 
@@ -821,6 +826,60 @@ if (header->level_count == 0 || header->level_count > KTX2_MAX_SUPPORTED_LEVEL_C
 
 > **v5 재스캔에서 추가로 발견된 동일 계열 이슈**: `createTexture(const void* data, vsize size)` 오버로드(범위 검증이 있는 "정상" 버전) 자체에도 별개의 죽은 코드가 남아있었음 — `const Ktx2LevelIndex* level_indices = reinterpret_cast<...>(level_index_ptr);`를 계산해놓고 이 함수는 텍스처 메타데이터(width/height/levels/format/sampler)만 빌드하고 반환하며 실제 픽셀 데이터는 채우지 않아 `level_indices`를 전혀 읽지 않음. cppcheck `unreadVariable` — "Variable 'level_indices' is assigned a value that is never used."(당시 라인 871).  
 > **처리**: 삭제 대신 주석 처리로 보존(향후 이 함수에서도 이미지 데이터를 채우게 될 가능성 대비) — `level_index_ptr`, `level_indices` 계산 두 줄을 주석으로 남기고 사유 설명 추가. v6 재스캔에서 해당 경고 사라짐 확인.
+
+---
+
+### A-16. `ContactListenerImpl::body_interface_` 멤버 초기화 누락 (확인됨) ✅ 완료
+**도구**: Clang-Tidy `cppcoreguidelines-pro-type-member-init`  
+**위치**: `physics_context.h:85`  
+**발견 경위**: `.clang-tidy`의 `HeaderFilterRegex`가 Windows 경로(백슬래시)와 안 맞아 헤더 파일 진단이 전부 숨겨져 있던 버그를 발견·수정한 뒤(v9 재스캔), 처음으로 드러난 헤더 전용 findings 중 하나. 상세 경위는 [09-clangtidy-v9-header-findings.md](09-clangtidy-v9-header-findings.md) 참고.
+
+A-7과 동일 패턴. `ContactListenerImpl`에 생성자가 없어 암묵 기본생성자가 `body_interface_`(raw pointer)를 초기화하지 않은 채로 둠.
+
+```cpp
+// physics_context.h — 변경 전
+class ContactListenerImpl : public JPH::ContactListener {
+  ...
+ private:
+  JPH::Mutex mutex_;
+  std::vector<std::pair<JPH::BodyID, JPH::BodyID>> added_contacts_;
+  std::vector<std::pair<JPH::BodyID, JPH::BodyID>> removed_contacts_;
+  JPH::BodyInterface* body_interface_;   // ← 초기화 없음
+};
+```
+
+**호출 경로 확인**: `pollContactAdded()`/`pollContactRemoved()`에서 `body_interface_->GetUserData(...)`로 역참조. 세팅하는 유일한 경로 `setBodyInterface()`는 `SceneImpl::getPhysicsContext()`(scene_impl.cc:625~644)에서 `PhysicsContext` 생성 직후 바로 호출되고, `contact_listener`를 쓰는 모든 곳(`_runPhysicsFeedbackSystem` 등)이 이 게터를 거치므로 **현재 코드 경로에서 미초기화 역참조는 발생하지 않음**. 다만 호출 순서가 바뀌거나 새 호출부가 추가되면 크래시 소지가 있는 잠재적 지뢰라 A-7과 동일하게 방어적으로 수정.
+
+```cpp
+// 수정
+JPH::BodyInterface* body_interface_ = nullptr;
+```
+
+---
+
+### A-17. `Sphere` 생성자 정점 수 계산 — 확장 전 캐스트 (확인됨) ✅ 완료
+**도구**: Clang-Tidy `bugprone-misplaced-widening-cast`  
+**위치**: `geometries/sphere.h:26-27`  
+**발견 경위**: A-16과 동일 (`HeaderFilterRegex` 버그 수정 후 v9 재스캔에서 신규 발견).
+
+A-10(`curve.cc:42`)과 동일 패턴 — 연산이 확장 전 타입(`int`) 범위에서 먼저 수행된 후 캐스트가 적용됨.
+
+```cpp
+// sphere.h — 변경 전
+const vsize vertex_count =
+  static_cast<vsize>((width_segments + 1) * (height_segments + 1));
+//                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//                    width_segments/height_segments가 vint(int)라
+//                    곱셈이 int 범위에서 먼저 계산됨
+```
+
+`width_segments`, `height_segments`가 둘 다 대략 46,341(`INT_MAX`의 제곱근 근처) 이상이면 곱셈 자체가 부호 있는 정수 오버플로(UB)를 일으키고, 그 쓰레기 값이 `vsize`로 캐스트되어 `vertices_.reserve(vertex_count)`에 비정상적인 크기가 전달될 수 있음. 실사용 세그먼트 수(수십~수백)로는 발생 가능성 낮지만 방어적 수정 가치 있음.
+
+```cpp
+// 수정 — 곱셈 전에 각 항을 먼저 vsize로 확장
+const vsize vertex_count =
+    static_cast<vsize>(width_segments + 1) * static_cast<vsize>(height_segments + 1);
+```
 
 ---
 
@@ -1847,6 +1906,240 @@ if (std::any_of(requested_formats_.begin(), requested_formats_.end(),
 
 ---
 
+### D-22. `[[nodiscard]]` 누락 — 헤더 대량 (Clang-Tidy v9 신규) ✅ 완료
+**도구**: Clang-Tidy `modernize-use-nodiscard`  
+**건수**: 1,376건
+
+`.clang-tidy`의 `HeaderFilterRegex` 버그(6장 앞부분 참고) 수정 후 새로 노출된 대량 항목. D-4/D-7에서 개별 처리한 것은 이 중 극히 일부였고, 헤더 전체 기준으로는 1,376건. 거의 전부 헤더에 선언된 getter/조회성 함수.
+
+**적용**: `run-clang-tidy -fix -checks="-*,modernize-use-nodiscard"`로 일괄 자동 적용.
+
+**이슈 발견 및 수정**: 적용 후 `components/joint_component.h`에서 `[[nodiscard]] [[nodiscard]]` 형태의 중복 삽입 31건 발견(병렬 `-fix` 적용 과정의 레이스 컨디션으로 추정). `sed -i 's/\[\[nodiscard\]\] \[\[nodiscard\]\]/[[nodiscard]]/g'`로 일괄 정리 후 재확인 완료.
+
+---
+
+### D-23. `const` 선언 누락 — 헤더 대량 (Clang-Tidy v9 신규) ✅ 완료
+**도구**: Clang-Tidy `misc-const-correctness`  
+**건수**: 128건
+
+E-1(`.cc` 파일 기준 100+건)과 동일 성격의 헤더 몫. E-1에서 정리한 "의도적 non-const 구분표"(루프 변수, 외부 API 전달용 등)를 동일 기준으로 적용.
+
+**적용**: `run-clang-tidy -fix -checks="-*,misc-const-correctness"`로 일괄 적용. 재대입되는 변수에 잘못 `const`가 붙는 등의 오적용 사례 없이 정상 적용 완료.
+
+---
+
+### D-24. Narrowing Conversion — 헤더 대량 (Clang-Tidy v9 신규) ✅ 완료
+**도구**: Clang-Tidy `bugprone-narrowing-conversions`  
+**건수**: 90건
+
+B-1(`.cc` 파일 기준)과 동일 패턴의 헤더 몫. **이 체크는 clang-tidy `-fix` 자동 수정을 지원하지 않아** 전 건 수동으로 `static_cast<T>()` 래핑.
+
+| 파일 | 건수 | 패턴 |
+|------|------|------|
+| `component_factory.h` | 23 | `Entity::import(id)` 인자 캐스트 |
+| `geometries/capsule.h` | 19 | 루프 인덱스(`i`,`j`)/세그먼트 수 곱셈·나눗셈 캐스트 |
+| `geometries/extrude.h` | 17 | `_addVertex(a/b/c/d)` 인자, `next_index = vertices_.size()` 등 |
+| `geometries/box.h` | 8 | 세그먼트 분할/uv 계산 |
+| `geometries/plane.h` | 6 | 상동 |
+| `geometries/torus.h` | 4 | 상동 |
+| `geometries/cylinder.h` | 3 | 상동 |
+| `bvh.h` | 3 | `node.offset`/`node.count` 캐스트 |
+| `viewport.h` | 2 | `width` 계산(`std::min(...) - left`) |
+| `geometries/sphere.h` | 2 | 정점 수 계산 (A-17과 별개 지점) |
+| `asset_impl.h` | 1 | `actors_.begin() + mesh_count_` iterator 산술 |
+| `physics_context.h` | 1 | `kTimestep * kAccuracy` |
+| `shape_utils.h` | 1 | `contour.size()` 캐스트 |
+
+```cpp
+// 패턴 예시 (geometries/box.h)
+// 변경 전
+vfloat u = ix / segment_width;
+// 변경 후
+vfloat u = static_cast<vfloat>(ix) / static_cast<vfloat>(segment_width);
+```
+
+**검증**: 수정 후 `bugprone-narrowing-conversions` 체크만 활성화한 재스캔에서 잔여 경고 0건 확인 완료(2026-07-02).
+
+---
+
+### D-25. 네이밍 컨벤션 — 헤더 대량 (Clang-Tidy v9 신규) ✅ 완료
+**도구**: Clang-Tidy `readability-identifier-naming`  
+**건수**: 63건
+
+C-5(`.cc` 기준 7건)와 동일 성격의 헤더 몫.
+
+**적용 전 예외 처리 (서드파티 심볼 보호)**: `providers/ktx2_reader.h:32`의 `class ktx2_transcoder;`는 BasisU 서드파티 라이브러리 타입의 전방선언 — 일괄 rename 대상에 걸리면 실제 라이브러리 심볼명과 어긋나 링크가 깨짐. `-fix` 적용 전 `// NOLINT(readability-identifier-naming)`을 선제적으로 추가해 보호.
+
+**대표 사례**:
+
+| 파일 | 변경 | 비고 |
+|------|------|------|
+| `actor.h` | `last_error_` → `last_error` | 멤버 네이밍 정정 |
+| `material_component.h` | `_setMap` → `setMap`, `_setUvMatrix` → `setUvMatrix` | `protected` 메서드가 private 전용 `_` 접두사를 잘못 사용하던 것 정정 |
+| `actor_exporter.h` | private 메서드 54건 | `_` 접두사 추가 |
+| `custom_material_provider.h` | 메서드 다수 rename | 호출부 전체 정상 반영 확인 |
+
+**적용**: `run-clang-tidy -fix -checks="-*,readability-identifier-naming"`로 일괄 적용 후 호출부(`.cc`) 자동 반영 여부 확인 완료.
+
+---
+
+### D-26. Rule of Five 미준수 — 헤더 전반 (Clang-Tidy v9 신규) ✅ 완료
+**도구**: Clang-Tidy `cppcoreguidelines-special-member-functions` (+ 근본 원인이 같은 `bugprone-exception-escape` 3건 통합)  
+**건수**: 40건 (40개 클래스) + 예비 문서 A-16(가칭) 예외탈출 3건 통합 = 43개 클래스
+
+C-2(자원 소유 클래스 6건)에서 다룬 패턴이 헤더 전반에 훨씬 넓게 존재. 자동 수정 미지원 — 클래스별로 실제 자원 소유/복사 의미를 코드에서 확인 후 수동 적용.
+
+**통합 3건 (`bugprone-exception-escape`, 근본 원인 동일)**: `keyframe_track.h`(`KeyframeTrack`), `components/collider_component.h`(`ColliderComponent`), `components/rigidbody_component.h`(`RigidbodyComponent`) — 셋 다 소멸자/복사/이동을 하나도 명시적으로 선언 안 해서 컴파일러가 암묵 생성했고, clang-tidy가 그 암묵 생성분의 noexcept 여부를 정적으로 증명 못 해 "예외 가능"으로 보수적 판단한 것(D-26 나머지 40건과 동일 근본 원인).
+- `KeyframeTrack`(공개 API, `std::vector<KeyframeTrack>`로 값 복사되며 사용됨 확인) → 복사/이동 전부 `= default` 명시.
+- `ColliderComponent`/`RigidbodyComponent`(둘 다 `Component` 파생) → `Component`가 이미 복사 delete/이동 default로 처리돼 있어 파생 클래스도 암묵적으로 동일하게 동작 중이었음(기능적으로는 문제 없었음) — `~override = default` 소멸자만 명시해 clang-tidy가 증명 가능하도록 정리(`ParticlesComponent`와 동일 패턴).
+
+**⚠️ MSVC C++20 aggregate-initialization 함정**: `CMakeLists.txt`에서 MSVC만 `/std:c++latest`(C++20+)로 빌드하고 나머지 플랫폼은 `-std=c++17`. C++20부터는 생성자를 하나라도 선언(`= delete` 포함)하면 그 타입은 aggregate 자격을 잃는 반면, C++17은 user-*provided* 생성자만 aggregate 자격을 배제하고 defaulted/deleted는 영향 없음. `asset_impl.h`의 `SourceAsset`이 `new SourceAsset{hierarchy}` 형태의 aggregate 초기화로 생성되고 있었는데, 여기 단순히 복사/이동 생성자만 `= delete` 추가했다면 **MSVC 빌드만 깨지는** 문제가 발생했을 것. 명시적 생성자(`explicit SourceAsset(cgltf_data* h) : hierarchy(h) {}`)를 먼저 추가해 aggregate 자격을 없앤 뒤 Rule of Five를 적용해 우회.
+
+**그룹별 처리**:
+
+| 그룹 | 처리 | 대상 클래스 (총 40개) |
+|------|------|------------------------|
+| 1. 이동 가능 / 복사 불가 (2) | 복사 delete + 이동 default | `component.h`(`Component`), `components/particles_component.h`(`~ParticlesComponent() override = default`만 추가) |
+| 2. 복사·이동 모두 불가 (19) | 전부 delete, 소멸자 명시 | `body.h`, `cone_joint.h`, `controls.h`, `curve.h`, `distance_joint.h`, `extrude_geometry.h`(`UVGenerator`), `first_person_controls.h`, `fixed_joint.h`, `fly_controls.h`, `hinge_joint.h`, `hitbox_2d.h`(예외 — 아래 참고), `joint.h`, `map_controls.h`, `point_joint.h`, `sixdof_joint.h`, `slider_joint.h`, `swing_twist_joint.h`, `vehicle.h`, `component_manager_interface.h` |
+| 3. 복사·이동 불가 (싱글턴/리소스 소유, 15) | 전부 delete | `actor_exporter.h`, `asset_impl.h`(`AssetImpl` + 중첩 `SourceAsset`, 위 aggregate 함정 참고), `component_factory.h`, `ibl.h`, `image.h`, `instance_manager.h`, `object_factory.h`, `renderer_impl.h`, `rigid_body.h`(예외 — 아래 참고), `scene_impl.h`, `text/freetype_font.h`, `text/text_field.h`, `text/typesetter.h`, `view_impl.h` |
+| 4. 소멸자/이동만 누락 (4) | 누락분만 추가 | `component_manager.h`(`~ComponentManager() override = default`), `context.h`(`~Context() = default`), `custom_material_provider.h`(이동 delete), `resource_manager.h`(이동 delete) |
+
+**예외 3건** (일괄 패턴을 그대로 적용하지 않고 실제 코드 확인 후 다르게 처리):
+- `hitbox_2d.h` — 다른 클래스와 달리 핸들이 아닌 **순수 값 타입**으로 쓰여서, 복사/이동을 `delete`하지 않고 전부 `= default`로 명시(그룹 2 나머지와 반대 방향).
+- `rigid_body.h` — C-2의 `VehicleData`와 동일하게 Jolt 네이티브 핸들을 실제로 소유하는 리소스 오너라 복사/이동 전부 `delete`.
+- `asset_impl.h::SourceAsset` — 위 MSVC aggregate-init 함정으로 명시적 생성자 선추가 필요.
+
+**⚠️ 재스캔(v10)에서 발견된 회귀 버그 5건 — 빌드 에러 (전부 수정 완료)**
+
+D-22~D-27 코드 수정 완료 후 `clangtidy_v10.txt`로 전체 재스캔한 결과, 새 컴파일 에러 29건 발생(경고가 아니라 **빌드가 깨지는 에러**). 원인은 동일: 대상 클래스에 **기존에 사용자 선언 생성자가 전혀 없어 암묵적 기본 생성자에 의존하고 있었는데**, 복사/이동 생성자를 `= delete`로 추가하는 순간(설령 delete라도 "사용자 선언"으로 간주되어) 암묵적 기본 생성자 생성이 함께 억제되어 버림. 아래 5개 클래스가 실제로 기본 생성되고 있던 지점이 존재해 빌드 에러로 표면화됨:
+
+| 파일 | 클래스 | 실제 기본 생성 지점 | 수정 |
+|------|--------|----------------------|------|
+| `curve.h` | `Curve` | `CatmullRomCurve`/`CubicBezierCurve`/`EllipseCurve`/`LineCurve`/`QuadraticBezierCurve`/`SplineCurve`/`CurvePath` 등 7개 파생 클래스 생성자가 베이스 초기화 없이 암묵적 기본 생성에 의존 | `Curve() = default;` 추가 |
+| `component_manager_interface.h` | `ComponentManagerInterface` | `ComponentManager<T>`(18개 컴포넌트 타입 전부)가 베이스 초기화 없이 암묵적 기본 생성에 의존 | `ComponentManagerInterface() = default;` 추가 |
+| `extrude_geometry.h` | `UVGenerator` | 파생 클래스 `WorldUVGenerator`가 (컨테이너 등에서) 기본 생성됨 | `UVGenerator() = default;` 추가 |
+| `object_factory.h` | `ObjectFactory` | `context.cc:233`의 `std::make_unique<ObjectFactory>()` | `ObjectFactory() = default;` 추가 |
+| `text/typesetter.h` | `Typesetter` | `text_field.cc:5`의 `std::make_unique<Typesetter>()` | `Typesetter() = default;` 추가 |
+
+**교훈**: Rule of Five 적용 시 복사/이동을 `delete`하는 클래스라도, 그 클래스(또는 파생 클래스)가 어딘가에서 기본 생성(`make_unique<T>()`, 파생 클래스의 암묵적 베이스 초기화, 컨테이너의 기본 생성 등)되고 있다면 **기본 생성자를 명시적으로 `= default`로 선언해줘야 함** — 자동 수정이 지원되지 않는 체크라 이런 부작용은 실제 컴파일까지 해봐야 드러남. 전 40개 클래스에 대해 `bugprone-narrowing-conversions`처럼 좁게 재스캔한 것이 아니라 **전체 재빌드에 준하는 clang-tidy 전체 재스캔(v10)** 을 돌린 덕분에 발견. `clangtidy_v9.txt`(D-26 적용 전) 대비 v10의 신규 컴파일 에러(299−270=29건)와 정확히 일치.
+
+---
+
+### D-27. 부호 있는 정수 비트연산 — 헤더 대량 (Clang-Tidy v9 신규) ✅ 완료
+**도구**: Clang-Tidy `hicpp-signed-bitwise`  
+**건수**: 26건
+
+A-8과 동일 패턴. `enum`/`enum class`로 비트 플래그를 정의하는 4개 파일에 분산.
+
+| 파일 | 건수 | 원인 / 수정 |
+|------|------|--------------|
+| `components/joint_component.h` | 5 | `enum FLAGS : uint32_t`로 underlying type은 있었으나 시프트량(`<< 0`)이 부호 있는 `int` 리터럴이라 잔존 → `1u << 0u`처럼 좌우 리터럴 모두 unsigned화 |
+| `components/particles_component.h` | 3 | `enum class Flags : vuint32`도 동일하게 시프트량에 `u` 누락 → 동일 수정 |
+| `components/rigidbody_component.h` | 12 | `enum Flags`에 underlying type 자체가 없어 `1u`를 붙여도 enum 값이 `int`로 추론됨 → `enum Flags : vuint32`로 타입 고정 + 시프트량에도 `u` 추가 |
+| `random.h` | 1 | `nextFloat()`의 `>> 9`(시프트량) → `>> 9u` |
+
+```cpp
+// components/rigidbody_component.h — 변경 전
+enum Flags {
+  kEmpty = 0,
+  kDisableDeactivation = 1 << 0,
+  kStartDeactivated = 1 << 1,
+};
+
+// 변경 후
+enum Flags : vuint32 {
+  kEmpty = 0,
+  kDisableDeactivation = 1u << 0u,
+  kStartDeactivated = 1u << 1u,
+};
+```
+
+**교훈**: `hicpp-signed-bitwise`를 완전히 해소하려면 (1) enum에 명시적 unsigned underlying type 지정과 (2) 시프트 연산의 좌·우변 리터럴 모두에 `u` 접미사, 두 가지가 다 필요함 — 하나만 하면 다른 하나에서 경고가 남는다.
+
+---
+
+### D-28. 개별 소량 카테고리 — 헤더 (Clang-Tidy v9 신규, 19종·100건) ✅ 완료
+
+D-22~D-27 등 대량 카테고리를 제외한 나머지 헤더 전용 신규 발견. 대부분 기존 항목(C-1, D-11, D-8 등)과 동일 패턴의 헤더 몫이라 동일 방침을 적용. 체크별로 정리:
+
+**자동 수정 적용 (2종, 27건)**
+
+| 체크 | 건수 | 내용 |
+|------|------|------|
+| `modernize-use-override` | 14 | `override` 누락 추가(9개 joint 계열 헤더) + `virtual`+`override` 중복 제거(`physics_context.h` 4곳, D-8과 동일 패턴) |
+| `modernize-use-emplace` | 13 | `push_back({...})` → `emplace_back(...)` (`box.h`, `capsule.h`, `torus.h`, `shape_utils.h`) |
+
+`run-clang-tidy -fix -checks="-*,modernize-use-override,modernize-use-emplace"`로 일괄 적용, 재검증 0건.
+
+**NOLINT 처리 — 공개 API/불가피 패턴 (C-1, B-3, F-4, F-2, C-6과 동일 방침, 3종, 26건)**
+
+| 체크 | 건수 | 내용 |
+|------|------|------|
+| `bugprone-easily-swappable-parameters` | 17 | `Box`/`Capsule`/`Cylinder`/`Plane`/`Sphere`/`Torus`/`Ray`/`AABB`/`Hitbox2D`/`Viewport` 등 지오메트리·수학 타입의 공개 생성자(radius/height/segments류) + `_buildPlane`/`_addCap`/`_sidewalls` 등 델리케이트한 내부 정점 계산 헬퍼. C-1과 동일하게 공개 API·위험도 낮은 내부 알고리즘은 재구조화 대신 NOLINT |
+| `cppcoreguidelines-pro-type-reinterpret-cast` | 3 | `bvh.h`(원시 바이트 버퍼→`Node*`/`vuint32*` 수동 배치), `rigid_body.h`(`glm::mat4`↔`JPH::Float4` 동일 레이아웃 type-pun). B-3과 동일 패턴 |
+| `cppcoreguidelines-virtual-class-destructor` | 2 | `base_api.h`(`BaseAPI`), `ktx2_reader.h`(`Async`, 클래스 선언 줄이 경고 위치라는 C-6의 교훈대로 위치 재확인). 둘 다 protected virtual 소멸자로 "파생 클래스를 통해서만 소멸 가능"하게 만드는 의도적 팩토리 패턴 — C-6과 동일 방침 |
+| `cppcoreguidelines-avoid-c-arrays` | 5(중 1) | `ibl.h`의 `bands_[9]`는 Filament C API에 포인터로 전달돼서 NOLINT(나머지 4건은 아래 실제 수정 참고) |
+| `cppcoreguidelines-pro-bounds-array-to-pointer-decay` | 1 | `ibl.h`의 `getSphericalHarmonics()`가 `bands_`를 포인터로 반환 — 위와 동일 이유 |
+
+**실제 코드 수정 (14종, 47건)**
+
+| 체크 | 건수 | 내용 |
+|------|------|------|
+| `performance-enum-size` | 17(중 14) | 값 범위에 맞춰 `vuint8`(음수 있는 `orbit_controls.h::State`는 `vint8`)로 축소. **예외 3건**: `joint_component.h`/`particles_component.h`/`rigidbody_component.h`의 비트플래그 enum은 D-27에서 이미 `: vuint32`로 고정한 것 — 축소하면 비트연산 시 `int`로 승격되어 `hicpp-signed-bitwise`가 재발하므로 NOLINT 유지 |
+| `cppcoreguidelines-avoid-c-arrays` | 5(중 4) | `bvh.h::stack`, `physics_context.h::mObjectToBroadPhase`, `rigid_body.h::prev_wheel_positions/rotations` → `std::array`로 교체(순수 인덱스 접근만 하는 배열이라 안전) |
+| `performance-unnecessary-value-param` | 6 | `AnimationMixer`/`FlyControls`/`OrbitControls`의 `std::function` 콜백 세터에서 대입 시 `std::move()` 적용 (시그니처는 값 전달 그대로 유지, 내부만 이동으로 변경) |
+| `google-readability-casting` | 6 | `geometries/capsule.h`의 `(vfloat)i`/`(vfloat)j` C스타일 캐스트 → `static_cast`(D-24에서 놓친 잔여분) |
+| `hicpp-multiway-paths-covered` + `bugprone-switch-missing-default-case` | 4+4 | `aabb.h::corner()`, `gltf_enums.h`의 3개 switch문에 `default:` 추가(A-12와 동일 패턴) |
+| `readability-simplify-boolean-expr` | 2 | `aabb.h::isValid()`, `math_utils.h::rayTriangleIntersects()` — De Morgan 법칙 적용(D-5와 동일 패턴) |
+| `misc-no-recursion` | 2 | `bvh.h::subdivide()`/`intersects()` — 재귀 트리 순회를 이미 파일에 있던 `intersectsFirst()`의 고정 크기 스택(`std::array<vuint32, 64>`) 패턴으로 통일해 반복문으로 전환(A-6과 동일 방침, 외부 호출 시그니처는 그대로 유지) |
+| `performance-move-const-arg` | 1 | `component_manager.h`의 `std::move(entities_.back())` — `utils::Entity`가 trivially-copyable이라 `std::move`가 무의미, 제거 |
+| `google-readability-namespace-comments` | 1 | `ktx2_reader.h` 네임스페이스 종료 주석이 `grapi::base`를 가리키고 있었음 → `grapi::base::providers`로 정정 |
+| `google-explicit-constructor` | 1 | `geometries/capsule.h`의 `Capsule(vfloat radius = 1, ...)` — 전 인자 디폴트값이 있어 단일 인자로도 호출 가능 → `explicit` 추가 |
+| `google-build-namespaces` | 1 | `component_factory.h`의 헤더 내 익명 네임스페이스(23개 `getXxxComponent(BaseID)` 래퍼 함수) — 78개 포함 파일마다 중복 컴파일되는 문제라 익명 네임스페이스를 걷어내고 각 함수에 `inline` 추가(링커가 중복 정의를 병합, 동작 동일) |
+| `modernize-use-equals-default` | 0 | 발견 당시 이미 D-26 작업 중 자연스럽게 해소됨(별도 조치 불필요) |
+
+```cpp
+// bvh.h — misc-no-recursion 수정 예 (intersects, 기존 intersectsFirst 패턴과 통일)
+// 변경 전 — 재귀
+void intersects(const T& primitive, vuint32 node_index, const Callback& callback) const {
+  const Node& node = nodes[node_index];
+  if (!node.aabb.intersects(primitive)) return;
+  if (node.isLeaf()) { for (...) callback(...); }
+  else {
+    intersects(primitive, node.left, callback);
+    intersects(primitive, node.left + 1, callback);
+  }
+}
+
+// 변경 후 — 고정 크기 스택 기반 반복 (파일 내 intersectsFirst()와 동일 패턴)
+void intersects(const T& primitive, vuint32 root_index, const Callback& callback) const {
+  std::array<vuint32, 64> stack{};
+  vuint32 stack_count = 0;
+  stack[stack_count++] = root_index;
+  while (stack_count > 0) {
+    const vuint32 node_index = stack[--stack_count];
+    const Node& node = nodes[node_index];
+    if (!node.aabb.intersects(primitive)) continue;
+    if (node.isLeaf()) { for (...) callback(...); }
+    else {
+      stack[stack_count++] = node.left;
+      stack[stack_count++] = node.left + 1;
+    }
+  }
+}
+```
+
+> **⚠️ D-28 작업 중 발견한 회귀 버그 2건 — 재검증 과정에서 즉시 발견·수정**
+>
+> 1. **`ColliderComponent`/`RigidbodyComponent` 이동 억제 (빌드 에러)**: D-26 통합 작업(구 A-16, 예외탈출 3건 처리) 때 두 클래스에 `~override = default` 소멸자만 추가했는데, 소멸자를 사용자 선언하면 암묵적 이동 생성자/이동 대입 생성이 억제됨. `ComponentManager<T>::destroy()`의 swap-remove(`components_[index] = std::move(components_.back())`)가 이동 연산자를 못 찾고 `const&` 오버로드로 폴백을 시도하다 베이스 클래스(`Component`)의 `= delete`된 복사 대입에 걸려 **컴파일 에러** 발생. 전체 재스캔(`clangtidy_v12.txt`)에서 `component_manager.h`/`component_factory.cc`의 신규 컴파일 에러로 발견 → 두 클래스에 `이동 = default` 명시적으로 추가해 해결(복사는 계속 delete 유지). D-26의 5건 회귀(본 문서 D-26 절 참고)와 동일한 유형의 함정.
+> 2. **`gltf_enums.h` 분기 중복 (`bugprone-branch-clone`)**: 위 `switch` `default:` 케이스 추가 시, 마지막 `case`와 완전히 동일한 반환문을 가진 `default:`를 별도로 작성해 "두 분기가 동일하다"는 새 경고가 발생. `case GL_LINEAR_MIPMAP_LINEAR: default: return ...;`처럼 두 라벨이 반환문 하나를 공유하도록(fallthrough) 합쳐서 해결 — 동작은 동일, 중복 코드만 제거.
+>
+> 두 건 다 **본 카테고리를 고치다가 생긴 부작용**이며, D-22~D-28 전체를 마친 뒤 처음부터 다시 전체 재스캔(v12~v14)해서 잡아냄. 부분 스캔(체크 단위)만으로는 놓칠 수 있는 상호작용이라, 대량 작업 이후엔 전체 재스캔이 필수라는 교훈을 다시 확인.
+
+**최종 검증**: `clangtidy_v14.txt`(전체 재스캔) 기준 `base/` 코드 경고 **0건**. 잔여 경고 3건은 전부 `external/filament`(서드파티) `bugprone-forward-declaration-namespace` — 우리 소관 아님. 에러 270건은 v9 때부터 있던 `type_traits`/`maybe_unused` 환경 노이즈로 D-22~D-28 작업과 무관(불변 확인).
+
+---
+
 ## 7. E등급 — 대량 스타일 (기계적 적용 가능)
 
 ### E-1. `const` 선언 누락 (misc-const-correctness) ✅ 완료
@@ -2176,6 +2469,24 @@ constexpr vint64 nextInt() {
 
 ---
 
+### F-9. `use-after-move` 오탐 — 베이스 서브오브젝트 이동과 파생 멤버 이동 혼동 (Clang-Tidy v9 신규, 오탐 확인) ✅ 확인 완료
+**도구**: Clang-Tidy `bugprone-use-after-move`  
+**위치**: `components/particles_component.h:177` (`ParticlesComponent(ParticlesComponent&& other)`)
+
+```cpp
+ParticlesComponent(ParticlesComponent&& other) noexcept
+    : Component(std::move(other)) {          // ← 여기서 'other' 이동됐다고 경고
+  particle_buffer_ = std::move(other.particle_buffer_);  // ← "이동 후 재사용" 오탐
+  alive_list_ = std::move(other.alive_list_);
+  ...
+```
+
+**분석**: `Component(std::move(other))`는 `other` 전체가 아니라 **베이스 클래스(`Component`) 서브오브젝트만** 슬라이싱해서 이동함(`entity_`/`dirty_flag_` 두 멤버로 구성된 별개 서브오브젝트). 이후 접근하는 `other.particle_buffer_` 등은 전부 `ParticlesComponent` 자신의 멤버라 베이스 슬라이싱과 무관하게 아직 손 안 댄 상태 — 실제 UB 아님. clang-tidy가 "베이스 서브오브젝트만 이동됨"과 "객체 전체가 이동됨"을 구분하지 못해 발생하는 알려진 오탐 패턴.
+
+**처리**: 코드 변경 없이 유지 + `// NOLINT(bugprone-use-after-move)` 인라인 억제 추가(재스캔 시 재발견 방지).
+
+---
+
 ## 9. 도구별 비교
 
 | 항목 | Clang-Tidy v2 | Cppcheck |
@@ -2294,3 +2605,11 @@ constexpr vint64 nextInt() {
 - 원시 결과: `C:\working\grapi-base\cppcheck_result_v6.txt` — 위 2건 수정 + 보류 항목 7건 억제 주석 추가 후 재스캔, 유저 코드(`base/`) 잔여 28건 전부 의도적 보류 항목과 일치 확인 (신규/누락 없음)
 - 원시 결과: `C:\working\grapi-base\cppcheck_result_v7.txt` — `random.h` 억제 주석 위치 오류(선언 줄 vs overwrite 줄) 발견, D-16/D-21 억제는 정상 동작 확인
 - 원시 결과: `C:\working\grapi-base\cppcheck_result_v8.txt` — `random.h` 억제 주석 위치 수정 후 최종 재스캔, `base/` 잔여 경고 **0건**(정보성 메시지 21건만 남음) — Cppcheck v4 재스캔 94건 전 항목 처리 완료 최종 확인
+- 원시 결과: `C:\working\grapi-base\clangtidy_v9.txt` — `HeaderFilterRegex` 버그 수정 후 재스캔, 헤더 파일 기준 신규 findings 발견(고유 위치 1,833건). 잠재 버그 후보 6건 중 A-16/A-17 확인·수정 완료, 나머지는 오탐/기존 항목 통합
+- [09-clangtidy-v9-header-findings.md](09-clangtidy-v9-header-findings.md) — v9 신규 findings 전체 분류 예비 문서 (대량 카테고리 D-22~D-27, 개별 소량 D-28 — 전부 본 리포트에 병합 완료)
+- 원시 결과: `C:\working\grapi-base\clangtidy_v10.txt` — D-24(narrowing) 코드 수정 직후 재스캔, D-26(Rule of Five) 관련 컴파일 에러 29건 신규 발견(암묵 기본 생성자 억제 회귀)
+- 원시 결과: `C:\working\grapi-base\clangtidy_v11.txt` — D-26 회귀 5건 수정 후 재스캔, `base/` 코드 경고 0건 확인 + 4장 개별 소량 카테고리(D-28) 19종 100건 원본 데이터
+- 원시 결과: `C:\working\grapi-base\clangtidy_v12.txt` — D-28 코드 수정 완료 후 전체 재스캔, `ColliderComponent`/`RigidbodyComponent` 이동 억제 회귀(컴파일 에러) + `bugprone-branch-clone`/`performance-noexcept-move-constructor`/`bugprone-use-after-move` 신규 발견
+- 원시 결과: `C:\working\grapi-base\clangtidy_v13.txt` — 위 회귀 수정 후 재스캔, `bugprone-exception-escape` 3건 잔존 확인(noexcept 명시에도 clang-tidy 보수적 오탐)
+- 원시 결과: `C:\working\grapi-base\clangtidy_v14.txt` — NOLINT 최종 처리 후 재스캔, **`base/` 코드 경고 0건 최종 확인**(잔여 3건은 `external/filament` 서드파티)
+- [08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md) — `HeaderFilterRegex` 버그를 발견하게 된 멀티플랫폼 검증 작업 계획
