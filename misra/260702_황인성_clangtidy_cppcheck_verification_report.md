@@ -547,6 +547,31 @@ AssetImpl::~AssetImpl() {
 }
 ```
 
+> **⚠️ WebGL(Emscripten) 빌드 에러 발견 및 수정 (2026-07)**: 위 `try/catch` 수정이 데스크톱(MSVC)에서는 문제없지만, WebGL 타깃(`em++`, `-fno-exceptions -fno-rtti -fno-unwind-tables`)에서는 컴파일 자체가 실패함:
+> ```
+> asset_impl.cc:21:3: error: cannot use 'try' with exceptions disabled
+> ```
+> 예외가 꺼진 빌드에서는 애초에 예외가 발생할 수 없으므로(모든 throw 지점이 abort/trap으로 대체됨) try/catch가 없어도 동작은 동일함. 표준 기능 테스트 매크로 `__cpp_exceptions`(MSVC/GCC/Clang/Emscripten 공통 지원, Filament의 `utils/Panic.h`도 유사하게 `__EXCEPTIONS`로 동일 패턴 사용)로 조건부 컴파일 처리:
+> ```cpp
+> AssetImpl::~AssetImpl() {
+> #if __cpp_exceptions
+>   try {
+> #endif
+>     releaseSourceData();
+>     if (!detached_) {
+>       // ... (기존 destroy 루프)
+>     }
+> #if __cpp_exceptions
+>   } catch (const std::exception& e) {
+>     utils::slog.e << "~AssetImpl: cleanup failed: " << e.what() << utils::io::endl;
+>   } catch (...) {
+>     utils::slog.e << "~AssetImpl: cleanup failed: unknown exception" << utils::io::endl;
+>   }
+> #endif
+> }
+> ```
+> **교훈**: 이 프로젝트는 데스크톱(MSVC) 외에 WebGL(Emscripten, `-fno-exceptions`), 임베디드(Telechips) 등 예외가 아예 비활성화된 빌드 타깃을 함께 지원하므로, 앞으로 `try`/`catch`/`throw`를 새로 추가하는 수정은 항상 `#if __cpp_exceptions`로 감싸거나 애초에 예외를 쓰지 않는 방식(에러 코드 리턴 등)을 우선 검토해야 함.
+
 ---
 
 ### A-10. 변환 순서 오류 — 확장 전 캐스트 (확인됨) ✅ 완료

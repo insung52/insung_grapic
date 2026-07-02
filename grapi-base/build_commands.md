@@ -145,7 +145,7 @@ python3 -m http.server 8000
 
 ```bash
 # SDK 환경 설정 (터미널 새로 열었을 때)
-source /opt/poky-telechips-systemd/nodistro.0/environment-setup-cortexa72-poky-linux
+source /opt/poky-telechips-systemd/nodistro.0/environment-setup-aarch64-telechips-linux
 
 # SDK cmake 충돌 방지 (최초 1회)
 # mv /opt/poky-telechips-systemd/.../cmake /opt/.../cmake.bak
