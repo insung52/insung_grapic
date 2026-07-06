@@ -1,16 +1,10 @@
 # 무료 정적분석 도구 테스트 결과 분석 — grapi-base
 
-> Clang-Tidy(v2 확장 스캔)와 Cppcheck 두 도구를 grapi-base 엔진(`base/` 모듈 131개 파일)에 실제로 돌린 결과를 통합 분석.  
-> 원시 결과 파일: `clangtidy_v2.txt`, `cppcheck_result_v3.txt`  
-> (2026-06 기준, LLVM 19 / Cppcheck 2.21.0)  
-> **v5 스캔 (2026-07)**: 수정 적용 후 재스캔 — 유저 코드 경고 9건 확인 및 전 건 수정 완료  
-> **v6 스캔 (2026-07)**: 유저 코드 경고 **0건** — 전 항목 처리 완료 확인 (⚠️ 2026-07-02 확인 결과 이 "0건"은 사실 **`.cc` 파일 기준**이었음 — 정정 내용은 아래 "Clang-Tidy v9 재스캔" 항목 참고)  
-> **Cppcheck v4 재스캔 (2026-07)**: 별도 Cppcheck 단독 재스캔(`cppcheck_result_v4.txt`) — 유저 코드(`base/`) 신규 94건 발견. 분류 결과 A-5와 중복 5건, 정보성 메시지 21건(F-7), 신규 버그 3건(A-15, 코드 수정 완료), 기존 D-8 중복 3건(코드 수정 완료), 신규 스타일/성능 개선 60건(D-16~D-21, 55건 코드 적용 + 4건 공개 API 보류 + 1건 디버그 전용 필드 유지; ktx2_provider.cc:89는 삭제로 D-18/D-21 항목을 동시에 해소), 오탐성 2건(F-8) — 전 건 분류·문서화 및 코드 적용 완료 (테스트/빌드 검증은 사용자가 별도 진행)  
-> **Cppcheck v5/v6 재스캔 (2026-07, 사용자 빌드/재스캔)**: v5에서 두 가지 잔여 문제 발견 — ① A-5 억제 주석의 ID(`suspiciousCommaExpression`)가 실존하지 않는 잘못된 값이라 억제가 작동하지 않고 있었음(`Unmatched suppression` 메시지로 노출) → 실측으로 정확한 ID(`constStatement`) 확인 후 수정. ② `ktx2_reader.cc`의 세 번째 `createTexture` 오버로드에서 A-15 당시 놓쳤던 별개의 미사용 변수(`level_indices`) 발견 → 삭제 대신 주석 처리로 보존. 이어서 D-16/F-8/D-21에서 의도적으로 보류했던 7건(공개 API 4건, `random.h` 2건, `FinalFormatInfo::name` 1건)에도 정확한 ID(`returnByReference`, `redundantInitialization`, `unusedStructMember`, 모두 `--errorlist`로 실측 확인)로 억제 주석을 추가해 향후 재스캔 시 재발견되지 않도록 조치. v6 재스캔에서 `base/`의 잔여 28건이 모두 "의도적으로 보류한 항목"과 정확히 일치함을 확인(신규/누락 없음).  
-> **Cppcheck v7/v8 재스캔 (2026-07, 사용자 빌드/재스캔)**: v7에서 `random.h` 억제 주석이 여전히 안 먹히는 걸 발견(ID는 맞았으나 주석을 `} value = {};` 선언 줄에 달아 실제 경고가 찍히는 overwrite 줄과 위치가 어긋남) → overwrite 줄로 이동해 수정. **v8 재스캔에서 `base/`에 남은 항목이 정보성 메시지(F-7) 21건뿐임을 확인 — 그 외 경고 0건.** Cppcheck v4 재스캔에서 시작된 94건 전부(코드 수정 55건, 공개 API/디버그 필드 등 의도적 보류 + 억제 주석 7건, 오탐 확인 5+2건, 정보성 21건) 최종 정리 완료.  
-> **Clang-Tidy v9 재스캔 — `HeaderFilterRegex` 설정 버그 발견 (2026-07-02, 중요)**: WSL에서 Linux/WebGL 플랫폼용 Clang-Tidy를 재검증하던 중([08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md)), `.clang-tidy`의 `HeaderFilterRegex: '.*(grapi-base/(base|samples)).*\.(h|hpp)$'`가 슬래시(`/`) 기준인데 Windows 컴파일 DB 경로는 백슬래시(`\`)라 **한 번도 매치된 적이 없었고**, 그 결과 **헤더 파일(`.h`) 안의 clang-tidy 진단이 이번 검증 시작(v2)부터 지금까지 전부 숨겨져 있었음**이 드러남(증거: `clangtidy_v2.txt` 1852건 전체가 `.cc` 파일 경고뿐, `.h` 파일 경고 0건). 즉 "v6~v8 유저 코드 경고 0건"은 실제로는 "`.cc` 파일 기준 0건"이었음.  
-> **수정**: `HeaderFilterRegex`를 `'.*grapi-base[/\\](base|samples)[/\\].*\.(h|hpp)$'`로 변경(양쪽 슬래시 모두 매치). 이후 재스캔한 `clangtidy_v9.txt`에서 헤더 파일 기준 신규 findings 대량 발견(중복 제거 후 고유 위치 1,833건 — 대부분 `modernize-use-nodiscard`처럼 대량/기계적 처리 가능한 성격, 잠재적 실버그 후보는 6건 중 2건(A-16, A-17) 확인 후 수정 완료, 나머지는 오탐이거나 기존 항목(D-26 등)에 통합). 상세 분류는 예비 문서 [09-clangtidy-v9-header-findings.md](09-clangtidy-v9-header-findings.md) 참고 — 대량 카테고리(D-22~D-27) 및 개별 소량 카테고리(D-28) 모두 본 리포트에 병합·코드 수정·재검증(v14) 완료.  
-> **Cppcheck는 영향 없음**: `HeaderFilterRegex`는 clang-tidy 전용 설정이라 cppcheck 결과(v4~v8)는 그대로 유효, 재스캔 불필요.
+> Clang-Tidy와 Cppcheck 두 도구를 grapi-base 엔진(`base/` 모듈)에 실제로 돌려 발견한 이슈를 등급별(A~F)로 분류·수정한 결과.
+>
+> **최종 상태 (2026-07-06)**: Windows(MSVC/LLVM19) + Linux/WebGL(LLVM21)/Android arm64·arm·x86·x64(NDK LLVM19.0.1)/Telechips·Renesas(GCC, Cppcheck 전용) 전 플랫폼에서 `base/` 코드 기준 경고 **0건**(서드파티·정보성 메시지만 잔존). 실버그 3건 확인·수정(A-18~A-20), 1건은 미구현 기능이라 조치 보류(A-21).
+>
+> 이 결과는 총 20여 회의 스캔 라운드(v1~v14 Windows 단일 플랫폼 검증 → 멀티플랫폼 재검증 라운드)를 거쳐 도달한 것. 그 과정에서 도구/환경 설정 버그를 2건 발견했음(`HeaderFilterRegex` 슬래시 불일치로 헤더 파일 진단이 전부 숨겨져 있던 문제, VS 18 Insiders가 clang-tidy의 STL 헤더 자동탐지를 오염시킨 문제). **라운드별 상세 이력은 2장 하단 참고.**
 
 ---
 
@@ -33,17 +27,19 @@
 
 | 등급 | 항목 수 | 설명 |
 |------|--------|------|
-| **A. 잠재적 버그** | 17건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 (Cppcheck v4 재스캔 A-15 추가 + Clang-Tidy v9 재스캔 A-16/A-17 추가, 전 건 수정 완료) |
-| **B. 타입/안전성 문제** | ~50건 | 타입 변환 오류·부호 비트 연산·C 스타일 캐스트·다중 포인터 변환 등 |
+| **A. 잠재적 버그** | 20건 | 실제 런타임 오동작 가능성 있음 — 즉시 검토 필요 (Cppcheck v4 재스캔 A-15 추가 + Clang-Tidy v9 재스캔 A-16/A-17 추가 + 멀티플랫폼 재검증 A-18~A-20 추가, 전 건 수정 완료) |
+| **B. 타입/안전성 문제** | ~50건 | 타입 변환 오류·부호 비트 연산·C 스타일 캐스트·다중 포인터 변환 등 (멀티플랫폼 재검증으로 B-1/B-2/B-3/B-8에 추가 인스턴스 확인) |
 | **C. 코드 설계 문제** | ~20건 | API 설계·재귀·Rule of Five·virtual 소멸자 등 |
-| **D. 성능/스타일 개선** | ~1,936건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷, getter const& 리턴, pointer-to-const, narrowing conversion, 네이밍, Rule of Five, signed-bitwise, swappable-parameters, enum-size 등 (Cppcheck v4 재스캔 D-16~D-21 63건 + Clang-Tidy v9 헤더 재스캔 D-22~D-28 1,823건 추가, 전 건 코드 적용 완료·일부 공개 API/디버그 필드/불가피한 패턴은 NOLINT 보류) |
+| **D. 성능/스타일 개선** | ~2,610건 | `= default`, `[[nodiscard]]`, unused 파라미터, TODO 포맷, getter const& 리턴, pointer-to-const, narrowing conversion, 네이밍, Rule of Five, signed-bitwise, swappable-parameters, enum-size 등 (Cppcheck v4 재스캔 D-16~D-21 63건 + Clang-Tidy v9 헤더 재스캔 D-22~D-28 1,823건 + 멀티플랫폼 재검증 D-29(673건)·D-30(약 90건)·기존 항목 추가 확인 다수 포함, 전 건 코드 적용 완료·일부 공개 API/디버그 필드/불가피한 패턴은 NOLINT 보류) |
 | **E. 대량 스타일 (노이즈)** | 100건+ | `misc-const-correctness` 위주 — 기계적으로 수정 가능 |
-| **F. 인프라 패턴 (오탐)** | ~420건+ | pointer-arithmetic 278건, array-to-pointer-decay 15건, `malloc`/C API 74건, Cppcheck 정보성 메시지 21건(F-7), redundant-init 오탐 2건(F-8), use-after-move 오탐 1건(F-9) 등 불가피한 경고 |
+| **F. 인프라 패턴 (오탐)** | ~440건+ | pointer-arithmetic 278건, array-to-pointer-decay 15건, `malloc`/C API 74건, Cppcheck 정보성 메시지 21건(F-7), redundant-init 오탐 2건(F-8), use-after-move 오탐 1건(F-9), autoVariables 오탐 1건(F-10), unchecked-optional-access 오탐 17건(F-11), `#ifdef` 조건부 컴파일 오탐 다수(F-12) 등 불가피한 경고 |
 
+> **Clang-Tidy v2→v6 (2026-06~07)**: 초기 스캔(`clangtidy_v2.txt`, LLVM19/Cppcheck 2.21.0 기준) 이후 v5에서 수정 적용 후 재스캔 — 유저 코드 경고 9건 확인 및 전 건 수정 완료. v6에서 유저 코드 경고 **0건**으로 처리 완료 확인 — (⚠️ 이 "0건"은 사실 `.cc` 파일 기준이었고, 이후 v9에서 `HeaderFilterRegex` 버그로 헤더 파일 진단이 전부 숨겨져 있었음이 드러남 — 아래 v9 항목 참고).  
 > **Cppcheck v4 재스캔 (2026-07) 요약**: 유저 코드(`base/`) 94건 발견 → A-5 중복 5건 / 정보성 메시지 21건(F-7) / 신규 버그 3건(A-15, 코드 수정 완료) / 기존 D-8 중복 3건(코드 수정 완료) / 신규 스타일·성능 60건(D-16~D-21, 55건 코드 적용·5건 보류/유지) / 오탐 2건(F-8). 전 건 분류·문서화 및 코드 적용 완료.  
 > **최종 확인 (v8 재스캔, 2026-07, 사용자 빌드/재스캔)**: 빌드 성공 확인. 재스캔 과정에서 억제 주석 오류 2건(A-5 잘못된 ID, F-8 잘못된 줄 위치) 및 A-15 관련 잔여 미사용 변수 1건을 추가로 발견·수정. **v8 최종 결과: `base/` 잔여 경고 0건 (정보성 메시지 21건만 남음).**  
 > **Clang-Tidy v9 재스캔 (2026-07) 요약**: `.clang-tidy`의 `HeaderFilterRegex`가 Windows 경로(백슬래시)와 매치되지 않던 설정 버그를 발견·수정(6장 D-22 앞 배경 설명 참고) — 이 버그로 인해 프로젝트 시작 이래 헤더 파일(`.h`) 진단이 전부 숨겨져 있었음. 수정 후 재스캔에서 헤더 전용 신규 경고 1,833건 노출. 잠재 버그 후보 6건 전수 검토(2건 실버그 확인·수정 → A-16/A-17, 1건 오탐 → F-9, 3건은 D-26 Rule of Five로 통합) + 대량 카테고리 6종(D-22~D-27, 1,723건) + 개별 소량 19종(D-28, 100건) 전부 분류·코드 수정 완료.  
-> **최종 확인 (v14 재스캔, 2026-07)**: D-22~D-28 전 작업 완료 후 처음부터 다시 전체 재스캔(v10→v14, 5회 반복) — 그 과정에서 자체 회귀 버그 2건(D-26 5건 포함 총 7건, D-28 절 참고) 발견·즉시 수정. **v14 최종 결과: `base/` 코드 경고 0건**(잔여 3건은 전부 `external/filament` 서드파티, 우리 소관 아님). 에러 270건은 v9부터 있던 환경 노이즈로 불변 확인.
+> **최종 확인 (v14 재스캔, 2026-07)**: D-22~D-28 전 작업 완료 후 처음부터 다시 전체 재스캔(v10→v14, 5회 반복) — 그 과정에서 자체 회귀 버그 2건(D-26 5건 포함 총 7건, D-28 절 참고) 발견·즉시 수정. **v14 최종 결과: `base/` 코드 경고 0건**(잔여 3건은 전부 `external/filament` 서드파티, 우리 소관 아님). 에러 270건은 v9부터 있던 환경 노이즈로 불변 확인.  
+> **멀티플랫폼 재검증 (2026-07) 요약**: Linux/WebGL(LLVM21)/Android arm64·arm·x86·x64(NDK LLVM19.0.1)/Telechips·Renesas(GCC, Cppcheck만)로 확장 재스캔. 실버그 2건(A-18 `KHR_materials_volume` 항상 등록, A-19 `TemporalAntiAliasingOptions::upscaling` bool/float 오설계) + 잠재 크래시 1건(A-20 `updateGeometryLods`) 신규 발견·수정. `misc-const-correctness` pointee-const 673건(D-29, LLVM21 전용 옵션)이 새 대량 카테고리로 확인·적용(-fix 적용 후 44곳에서 downstream non-const 요구 충돌로 컴파일 에러 발생 → 개별 되돌리고 NOLINT 처리, D-26 회귀 패턴과 동일 유형). Telechips Cppcheck에서 기존 B-1/B-2/B-3/B-8/D-16/D-17/D-18/D-19/D-20/D-21/D-25/A-4와 동일한 패턴 다수 재확인(파일별 상세는 각 항목 참고), 매핑되지 않는 잔여 소량 카테고리는 D-30으로 통합. 오탐 신규 확인 3종: `autoVariables`(F-10, `std::array` 값 복사를 주소-저장으로 오인), `bugprone-unchecked-optional-access`(F-11, 17건, 사전 가드로 이미 안전한데 clang-tidy가 함수 호출/반복 역참조 경계를 못 넘어 오탐), `#ifdef USE_JOLT` 조건부 컴파일로 인한 다수 체크 오탐(F-12). 상세 분류·처리 과정은 [10-multiplatform-verification-findings.md](10-multiplatform-verification-findings.md) 참고.
 
 ---
 
@@ -152,6 +148,8 @@ vuint64* const blocks = static_cast<vuint64*>(malloc(length));
 if (!blocks) { /* 오류 처리 */ return nullptr; }
 memcpy(blocks, level_data, length);
 ```
+
+> **멀티플랫폼 재검증 — 동일 패턴 Cppcheck `nullPointerOutOfMemory`(Telechips, `actor_exporter.cc`, 17건, 전부 적용)**: `calloc()` 결과를 null 체크 없이 바로 역참조하는 동일 근본 원인. 실제로는 두 지점: `_allocateCgltfData()`의 `data_ = calloc(1, sizeof(cgltf_data));` 이후 13건 전부 `data_->` 역참조 체인(할당 직후 `if (!data_) { _setError(...); return; }` 하나 추가로 13건 동시 해소), `_buildLights()`/`_registerExtension()`의 `new_extensions = calloc(new_count, sizeof(char*));` 이후 4건(각각 동일한 null 체크 추가, 2곳).
 
 ---
 
@@ -883,6 +881,76 @@ const vsize vertex_count =
 
 ---
 
+### A-18. `KHR_materials_volume`이 실제 설정 여부와 무관하게 항상 등록됨 (확인됨) ✅ 완료
+**도구**: Cppcheck `nullPointerRedundantCheck` (멀티플랫폼 재검증, Telechips)  
+**위치**: `actor_exporter.cc::_convertExtendedMaterial()`
+
+`_convertExtendedMaterial()`의 다른 모든 확장 블록(`KHR_materials_transmission` 등)은 `if (drtmat->getXxxFactor() != 기본값)`으로 실제 설정된 경우에만 등록하는데, `KHR_materials_volume`만 `if (drtmat) { cgmat->has_volume = true; ... }`로 되어 있어 **null 체크만 하고 사실상 무조건 실행**됨(이 함수 안에서 `drtmat`는 이미 여러 곳에서 조건 없이 역참조되고 있어 null일 수 없음 — cppcheck가 "redundant or null deref"로 지적한 지점).
+
+**근본 원인**: `ExtendedMaterialComponent`에는 다른 `key->hasXxxTexture` 필드들과 동일한 역할을 하는 내부 플래그(`key_.hasVolume`, `setVolumeAbsorption()`/`setVolumeThicknessFactor()` 호출 시에만 `true`)가 있으나, 이 플래그가 exporter가 쓰는 공개 API(`ExtendedMaterial`)에는 노출되지 않아 exporter가 "대표 factor가 기본값과 다른가"로 판단할 수밖에 없는 구조.
+
+```cpp
+// 변경 전
+if (drtmat) { cgmat->has_volume = true; /* ... */ }
+
+// 변경 후 — glTF KHR_materials_volume 스펙상 thicknessFactor 기본값 0
+if (drtmat->getVolumeThicknessFactor() != 0.0f) { cgmat->has_volume = true; /* ... */ }
+```
+
+**영향**: 이 버그로 인해 지금까지 익스포트된 모든 GLB/GLTF 파일에 실제 볼륨 속성을 설정하지 않았어도 `KHR_materials_volume` 확장과 기본 attenuation 값이 항상 끼어들어갔을 것으로 추정 — 뷰어에 따라 렌더링에 영향을 줄 수 있음.
+
+---
+
+### A-19. `TemporalAntiAliasingOptions::upscaling`이 절대 의도대로 작동할 수 없던 구조 (공개 API, 확인됨) ✅ 완료
+**도구**: Cppcheck `assignBoolToFloat` (멀티플랫폼 재검증, Telechips)  
+**위치**: `base/include/grapi/base/view.h` (공개 API), `view_impl.cc`
+
+공개 API `TemporalAntiAliasingOptions::upscaling`이 `bool`(업스케일링 on/off)로 정의돼 있었는데, 이 값이 그대로 대입되는 Filament의 `filament::TemporalAntiAliasingOptions::upscaling`은 **업스케일 배율을 나타내는 `float`**(기본값 `1.0f` = "배율 없음")임. `bool`→`float` 암묵 변환으로 `upscaling = true` → Filament 쪽엔 `1.0f`(배율 없음, 즉 업스케일링 비활성과 동일한 값), `upscaling = false` → `0.0f`(무의미한 배율)로 들어감 — **이 옵션은 처음부터 의도한 대로 동작한 적이 없는 구조적 버그**.
+
+영향 범위 확인(레포 내부에는 `view_impl.cc` 자기 자신 외 사용처 없음, `samples`에도 미사용) 후 공개 API 타입 자체를 변경(D-16/C-1의 "공개 API는 시그니처 유지" 원칙의 예외 — 이 경우 현재 시그니처 자체가 버그라 유지할 가치가 없다고 판단):
+
+```cpp
+// view.h — 변경 전/후
+bool upscaling = false;        // 변경 전
+vfloat upscaling = 1.0f;       // 변경 후 — 진짜 배율, 기본값 1.0f(=배율 없음)
+```
+
+사용처 2곳(대입, dirty-check 비교) 모두 float로도 문법적/의미적으로 자연스럽게 동작 확인.
+
+---
+
+### A-20. `updateGeometryLods()` — LOD 계산 시 미완성 지오메트리 역참조로 매 프레임 크래시 위험 (확인됨) ✅ 완료
+**도구**: Clang-Tidy `bugprone-unchecked-optional-access` (멀티플랫폼 재검증, Linux/WebGL/Android)  
+**위치**: `mesh_component.cc::updateGeometryLods()`
+
+이 함수는 `scene_impl.cc`에서 **모든 MeshComponent에 대해 매 프레임 무조건** 호출됨. 원래 코드는 `gc->getBoundingBox()`(옵셔널)를 조건 없이 역참조 — `onRebuild()`가 한 번도 성공하지 못한(예: `Geometry::create()`로 만들고 아직 `setPositions()`를 호출하지 않은) 지오메트리가 걸리면 매 프레임 크래시 위험.
+
+```cpp
+// 변경 전
+if (lod_count > 1) {
+  auto aabb = gc->getBoundingBox();
+  glm::vec3 const max = mesh_matrix * glm::vec4(aabb->max, 1.0f);  // 값 없으면 UB
+
+// 변경 후 — 가드 추가, 값 없으면 안전한 기본값(new_lod = 0)으로 다음 프레임 재시도
+if (std::optional<AABB> aabb = gc->getBoundingBox();
+    lod_count > 1 && aabb.has_value()) {
+  glm::vec3 const max = mesh_matrix * glm::vec4(aabb->max, 1.0f);
+```
+
+Windows(LLVM19)에서는 이 체크 자체가 이 코드에서 발동하지 않아(0건) 로컬 검증 불가했던 항목 — WSL(LLVM21)/Android(NDK) 재검증으로 발견. `bugprone-unchecked-optional-access`의 나머지 인스턴스(같은 세 파일 내 17곳)는 전부 사전 가드로 이미 안전함이 확인된 오탐이며 NOLINT 처리(F-11 참고).
+
+---
+
+### A-21. `AnimationAction::fadeIn()`/`fadeOut()`/`stopFading()` — 완전 미구현 상태로 방치 (확인됨, 조치 보류) ⏸️ 보류
+**도구**: Cppcheck `functionStatic` (멀티플랫폼 재검증, Telechips) — 단서만 제공, 실제 발견은 코드 확인으로 확정  
+**위치**: `animation_action.cc`
+
+Cppcheck는 이 세 함수가 "인스턴스 상태를 안 쓰니 `static`으로 선언 가능"이라고 지적했는데, 실제 이유가 정상적인 상황이 아니라 **함수 본문이 통째로 비어있어서**(파라미터도 사용 안 함)였음. `AnimationMixer`에 `weight_` 멤버가 있고 `crossFadeFrom()`/`crossFadeTo()`가 이 세 함수를 호출해 실제 크로스페이드 효과를 기대하는 구조인데, 현재 호출해도 아무 일도 일어나지 않는 완전 미구현 상태.
+
+**처리**: 버그가 아니라 알려진 미구현 기능이라는 성격상, 코드 수정(정적 메서드화 포함) 없이 현재 상태 그대로 유지하기로 결정 — 실제로 기능을 구현할지, 호출부를 제거할지는 별도 우선순위 결정 필요. 향후 크로스페이드 기능을 사용하는 코드가 추가되면 반드시 재확인 필요.
+
+---
+
 ## 4. B등급 — 타입/안전성 문제
 
 ### B-1. 암묵적 정수 축소 변환 (Narrowing Conversion) ✅ 완료
@@ -958,6 +1026,8 @@ const vfloat p = static_cast<vfloat>(l - (closed_ ? 0u : 1u)) * t;
 
 **공통 수정 방향**: `static_cast`를 명시하거나, `BaseID` → `Entity::import` 타입 체인 전체를 unsigned로 통일.
 
+> **멀티플랫폼 재검증 추가 발견 (2건, Android arm/x86 32비트 전용)**: `asset_impl.h` — `actors_.begin() + static_cast<vint64>(mesh_count_)`처럼 64비트로 widening했다가 `vector::iterator::operator+`의 `difference_type`(이 32비트 ABI에서는 32비트 `int`)로 다시 narrowing되는 구조 → `static_cast<std::vector<BaseID>::difference_type>(mesh_count_)`로 목표 타입에 직접 캐스팅. `custom_material_provider.cc` — `std::streamoff`(64비트)→`std::streamsize`(이 ABI에서 32비트) narrowing → `static_cast<std::streamsize>(file.tellg())` 명시. 둘 다 64비트 데스크톱(Windows/Linux)에서는 두 타입 폭이 같아 발동하지 않던, 32비트 ABI에서만 드러나는 패턴.
+
 ---
 
 ### B-2. 정수 곱셈 결과 암묵적 확장 ✅ 완료
@@ -976,6 +1046,8 @@ const vfloat p = static_cast<vfloat>(l - (closed_ ? 0u : 1u)) * t;
 
 **원인**: 좁은 정수(int/uint32)끼리 곱셈이 32비트에서 먼저 수행된 뒤 size_t/ptrdiff_t로 확장. 결과가 2³²를 넘으면 오버플로 후 확장 → 잘못된 크기로 메모리 접근.  
 **수정 방향**: 곱셈 전에 한쪽 피연산자를 `static_cast<vsize>` 또는 `static_cast<ptrdiff_t>`로 먼저 올려서 64비트 산술로 수행.
+
+> **멀티플랫폼 재검증 추가 발견 (1건, Linux/WebGL)**: `freetype_font.cc:16` — `FT_Set_Char_Size(ft_face_, size_ * 64, 0, 72, 72)`에서 `size_ * 64`가 `int`(32비트)로 먼저 계산된 뒤 `FT_F26Dot6`(`signed long`)로 암묵 확장되는 동일 패턴. `static_cast<FT_F26Dot6>(size_) * 64`로 수정.
 
 ---
 
@@ -1000,6 +1072,8 @@ const vfloat p = static_cast<vfloat>(l - (closed_ ? 0u : 1u)) * t;
 | actor_exporter.cc | :2428,2528,2826 | `vuint8*`/`void*` → `char*` (ostream::write/istream::read C++ API) |
 
 **처리 방침**: 모두 C/C++ API 경계 또는 바이너리 파싱 불가피 패턴. `NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)` 일괄 적용. 이미 `performance-no-int-to-ptr` NOLINT가 있던 경우 콤마로 체인.
+
+> **멀티플랫폼 재검증 — 동일 패턴 Cppcheck `invalidPointerCast`(Telechips, `asset_loader.cc:405,410`)**: `unsigned char*`→`float*` reinterpret_cast(바이너리 애니메이션 타임라인 파싱)에 대한 cppcheck 쪽 대응 체크. 위 NOLINT에 `// cppcheck-suppress invalidPointerCast`를 이어붙여 처리했었으나, 최종 재스캔에서 **억제가 실제로는 전혀 동작하지 않고 있었음**을 발견 — `// NOLINT(...) cppcheck-suppress invalidPointerCast`처럼 하나의 `//` 주석 안에 텍스트로 이어붙인 것이었는데, C++ 문법상 `//`부터 줄 끝까지는 통째로 하나의 주석이라 `cppcheck-suppress`가 "주석 시작 토큰"이어야 인식하는 cppcheck 입장에서는 그냥 무시되는 일반 텍스트였던 것. **최종 해결**: cppcheck 표준 관례대로 대상 줄 바로 위에 `// cppcheck-suppress invalidPointerCast` 전용 줄을 추가(NOLINT는 원래 줄에 유지). 재스캔으로 억제 정상 동작 확인. **교훈**: 억제 주석을 합쳐 쓸 때는 반드시 재스캔해서 실제로 먹히는지 확인할 것 — "코드가 그렇게 보인다"와 "도구가 그렇게 해석한다"는 다를 수 있음(F-8/A-5에서 이미 얻은 "정확한 ID·정확한 줄" 교훈에 "정확한 주석 형식"까지 추가).
 
 ---
 
@@ -1112,6 +1186,8 @@ cgltf C API가 `free(void*)` 호출로 내부 배열을 해제하는 패턴. `T*
 free(static_cast<void*>(data_->skins[i].joints));                          // NOLINT(cppcoreguidelines-no-malloc)
 free(static_cast<void*>(const_cast<char**>(data_->extensions_used)));      // NOLINT(cppcoreguidelines-no-malloc)
 ```
+
+> **멀티플랫폼 재검증**: 이 체크는 Windows(LLVM19 VS 번들)에서는 발동하지 않았으나(0건), Android NDK(LLVM19.0.1)에서는 동일 4곳이 그대로 재검출됨 — 이미 적용된 NOLINT가 정상 억제하는 것 확인. VS 번들과 NDK가 같은 LLVM 19 계열이어도 빌드/패치 차이로 진단 세트가 다를 수 있음을 보여주는 사례.
 
 ---
 
@@ -1540,6 +1616,8 @@ KTX2 텍스처 스트리밍 큐의 상태 조회 함수들. 반환값을 사용�
 [[nodiscard]] vsize getDecodedCount() const final;
 ```
 
+> **멀티플랫폼 재검증 추가 발견 (1건, WebGL)**: `ktx2_reader.cc:484` `getTexture()` — 동일하게 `[[nodiscard]]` 누락, 추가.
+
 ---
 
 ### D-8. `override` 누락 (확인됨) ✅ 완료
@@ -1666,6 +1744,8 @@ return !(position.x + size.x < point.x || position.x > point.x || ...);
 → return position.x + size.x >= point.x && position.x <= point.x && ...;
 ```
 
+> **멀티플랫폼 재검증 — 동일 성격의 Cppcheck `knownConditionTrueFalse`(Telechips, 8건, 6건 적용/1건 되돌림/1건 유지)**: 앞선 `if (...) return;` 가드로 뒤따르는 조건이 항상 참/거짓이 되는 패턴. `animation_action.cc:122`(`_update()`), `particles_component.cc:128,144`(두 `burst()` 오버로드) 등에서 조건을 단순화. **⚠️ 주의**: 일괄 치환(`replace_all`) 도중 가드가 없는 별개의 1-인자 `burst(vint num)` 오버로드까지 실수로 함께 바뀌어 원래대로 되돌림 — 같은 텍스트 패턴이 다른 문맥에도 있는지 항상 확인해야 한다는 교훈. `asset_loader.cc:1033`의 `name ? name : "texture"`(`c_str()`은 항상 non-null이라 조건이 redundant) 1건은 코드베이스 전반에 반복되는 방어적 관용구라 이 한 곳만 다르게 고치면 일관성이 깨져 유지.
+
 ---
 
 ### D-13. TODO 포맷 불일치 (확인됨) ✅ 완료
@@ -1791,6 +1871,8 @@ const std::vector<BaseID>& getActors() const { return actors_; }
 > std::vector<std::shared_ptr<Curve>> getCurves() const;  // cppcheck-suppress returnByReference
 > ```
 
+> **멀티플랫폼 재검증 — 동일 패턴 Cppcheck `returnByReference`(Telechips, 21건, 전부 적용)**: 전부 `base/src/`(내부 구현) 클래스라 D-16의 "공개 API는 보류" 예외 없이 21건 모두 적용 — `actor_exporter.h`(1), `custom_material_component.h`(1), `joint_component.h`(2), `mesh_component.h`(1), `texture_component.h`(1), `vehicle_component.h`(7), `text/typesetter.h`(1), `view_impl.h`(7). 전부 `return member_;` 단순 패턴이라 `.h` 선언과 `.cc` 정의 양쪽의 반환 타입만 `Type` → `const Type&`로 변경.
+
 ---
 
 ### D-17. 생성자 본문 대입 대신 초기화 목록 사용 (Cppcheck v4 신규) ✅ 완료
@@ -1812,6 +1894,8 @@ Ray::Ray(const glm::vec3& origin, const glm::vec3& direction)
 ```
 
 동작 차이는 없으나 MIL을 쓰면 불필요한 기본 생성 후 재대입을 피하고, 컴파일러가 초기화 순서를 더 명확히 최적화할 수 있음.
+
+> **멀티플랫폼 재검증 — 동일 패턴 Cppcheck `useInitializationList`(Telechips, 4건, 3건 적용/1건 보류)**: `rigidbody_component.cc`(`body_data_ = nullptr;`가 헤더에 이미 `= nullptr` 기본 멤버 초기화가 있어 완전히 중복이라 삭제), `sprite_component.cc`/`text_component.cc`(`image_ = make_unique<Image>();` → 초기화 목록으로 이동, 멤버 선언 순서에 맞춰 조정 필요). **보류 1건**: `particles_component.h`의 이동 생성자는 F-9(use-after-move 오탐)로 이미 세밀하게 검토·주석까지 달아둔 코드라, 부분적 리팩터링이 득보다 리스크가 커서 보류.
 
 ---
 
@@ -1846,6 +1930,14 @@ const Actor* actor = Context::get().getObjectFactory()->get<Actor>(actor_id);
 
 전 건 각 위치에서 해당 변수를 통해 non-const 멤버 함수를 호출하거나 값을 변경하지 않는지(예: `engine->destroy(const T*)` 오버로드 존재 여부, getter의 `const` 여부) 개별 확인 후 `const` 추가. 코드 적용 완료.
 
+> **멀티플랫폼 재검증 — 동일 카테고리가 Telechips에서 대량 재확인 (`constVariablePointer`/`constParameterPointer`/`constParameterReference`/`constVariableReference`, 총 476건, 461건 적용·15건 보류)**: Telechips(GCC, 임베디드 aarch64) 빌드 경로에서만 코드 경로가 열리는 지점 다수 포함(전처리기/타입 폭 차이로 `#ifdef` 분기가 이 플랫폼에서만 더 많이 열림 — 파일 수는 다른 플랫폼과 동일한데 발견 건수만 4배 이상 차이 나는 이유). `physical_material.cc`를 샘플로 확인한 결과 cppcheck가 mutating 메서드 호출 여부를 이미 정확히 구분하고 있어 자체 데이터플로 분석을 신뢰 가능(사람이 일일이 재검증할 필요 적음). `constVariablePointer` 437건은 스크립트로 일괄 적용 + 전체 컴파일 검증.
+>
+> **⚠️ 이번에도 반복된 함정 — `scene_impl.cc`의 `js`/`parent` 파라미터(14건 중 12건 제외)**: cppcheck가 `JobSystem& js`, `JobSystem::Job* parent`를 전부 const 가능하다고 제안했으나, 실제로는 `js.runAndWait(job)`(비-const 멤버 함수)와 `utils::jobs::parallel_for(js, parent, ...)`(Filament 템플릿 함수, non-const 요구)에 그대로 전달되고 있어 const로 바꾸면 실제 컴파일 에러 발생 — 헤더 시그니처 직접 확인 후 미적용. cppcheck가 서드파티 템플릿 헤더까지 완전히 추적 못 해 생기는 오탐.
+>
+> **보류 1건 — 공개 API**: `scene.cc::Scene::setGravity(glm::vec3& gravity)`는 `base/include/grapi/base/scene.h` 공개 API라 시그니처 변경 보류, `// cppcheck-suppress constParameterReference` 인라인 억제만 추가.
+>
+> **멀티플랫폼 재검증 추가 발견 (1건, Telechips)**: `actor_exporter.cc:202` `exportAsset(Asset* asset, ...)` — 리포지토리 전체에서 호출부가 없는 공개 API(죽은 코드 아님, 이 파일의 형제 메서드들과 동일하게 `const Asset*`로 변경, 비파괴적 변경이라 시그니처 변경 보류 없이 적용).
+
 ---
 
 ### D-19. raw loop → 표준 알고리즘 (Cppcheck v4 신규) ✅ 완료
@@ -1875,6 +1967,8 @@ if (std::any_of(requested_formats_.begin(), requested_formats_.end(),
 
 기능은 동일하며 가독성/의도 명확화 목적. 성능 차이는 미미함.
 
+> **멀티플랫폼 재검증 — 동일 패턴 Cppcheck `useStlAlgorithm`(Telechips, 5건, 전부 적용)**: `actor_exporter.cc`(all-whitespace 검사 → `std::all_of`), `custom_material_component.cc`(카운트 루프 → `std::count_if`), `collider_component.cc`(반복자 수동 전진 → `std::next`), `text/typesetter.cc`(변환 루프 → `std::transform`+`std::back_inserter`), `view_impl.cc`(첫 지원 포맷 탐색 → `std::find_if`).
+
 ---
 
 ### D-20. 변수/인자가 outer scope를 shadow (Cppcheck v4 신규) ✅ 완료
@@ -1890,6 +1984,8 @@ if (std::any_of(requested_formats_.begin(), requested_formats_.end(),
 
 의도적으로 같은 이름을 재사용한 경우가 대부분(예: 멤버와 동일한 의미의 파라미터)이라 실질 버그는 아니지만, 가독성을 위해 이름 구분 권장 (예: `iter` → `inner_iter`, 파라미터 `direction` → `dir`).
 
+> **멀티플랫폼 재검증 — 동일 패턴 Cppcheck `shadowVariable`/`shadowArgument`(Telechips, 3건, 전부 적용)**: `asset_loader.cc`의 중첩 `for`문 `len` 변수명 충돌(`len`→`joint_count` 리네임), `mesh_component.cc`의 `im` 재선언(제거 후 바깥 `im` 재사용 — 중복 조회이기도 했음), `animation_mixer.cc::update(vfloat delta_time)` 내부 지역 `delta_time` 재선언(`segment_time`으로 리네임).
+
 ---
 
 ### D-21. 기타 개별 스타일 항목 (Cppcheck v4 신규) ✅ 완료 (6건 적용 / 1건 검토 후 유지)
@@ -1903,6 +1999,8 @@ if (std::any_of(requested_formats_.begin(), requested_formats_.end(),
 | `providers/ktx2_reader.cc` | :42 | `style` — 구조체 멤버 `FinalFormatInfo::name`이 사용되지 않음 | **보류 + 억제** — 코드 추적 결과 `#if BASISU_FORCE_DEVEL_MESSAGES` 블록(825~828번 줄) 안에서 `info.name`을 로그로 출력하는 디버그 전용 필드로 확인됨(주석에도 "for debug purposes only" 명시). 해당 매크로가 기본 빌드에서 꺼져 있어 cppcheck가 미사용으로 오인. 삭제하지 않고 `// cppcheck-suppress unusedStructMember` 추가로 재스캔 시 재발견되지 않도록 처리 |
 | `providers/ktx2_provider.cc` | :89 | `style` — 변수 `texture`가 대입만 되고 이후 사용되지 않음 | ✅ 적용 — 죽은 변수 삭제 (D-18의 같은 위치 항목과 동일 지점, 삭제로 두 항목 동시 해소) |
 | `text/freetype_font.cc` | :38, 42 | `style` — `isSpace`, `isNewline` 멤버 함수가 static일 수 있음 (×2) | ✅ 적용 — `static` 추가. 호출부(`typesetter.cc`)는 모두 `font->isSpace(...)` 형태라 영향 없음 |
+
+> **멀티플랫폼 재검증 — 동일 패턴 Cppcheck `functionStatic`(Telechips, 17건, 14건 적용/3건 보류)**: `actor_exporter.h/.cc`(5), `asset_loader.h`(3, `destroyAsset`/`_createLight`/`_createCamera`), `material_component.h`(2, `setMap`/`setUvMatrix`), `extrude.h`(2, inline), `text/typesetter.h/.cc`(2, `static` 멤버 함수는 `const` 불가라 트레일링 `const` 제거 필요) — 전부 `this`/인스턴스 멤버 미사용 확인 후 적용. **보류 3건**: `AnimationAction::fadeIn()`/`fadeOut()`/`stopFading()` — static 적용은 가능하나 실제 이유가 함수 본문이 완전히 비어있는 미구현 상태였음(A-21 참고), static화도 함께 보류. **멀티플랫폼 재검증 추가 발견 (1건)**: `actor_exporter.cc:2634` `_detectMimeType()` — 이미 static 처리된 형제 함수들과 동일 패턴인데 빠져있어 추가.
 
 ---
 
@@ -1980,6 +2078,8 @@ C-5(`.cc` 기준 7건)와 동일 성격의 헤더 몫.
 | `custom_material_provider.h` | 메서드 다수 rename | 호출부 전체 정상 반영 확인 |
 
 **적용**: `run-clang-tidy -fix -checks="-*,readability-identifier-naming"`로 일괄 적용 후 호출부(`.cc`) 자동 반영 여부 확인 완료.
+
+> **멀티플랫폼 재검증 추가 발견 (1건, Android 전용)**: `virtual_machine_env.h::JNI_OnLoad` — `static jint JNI_OnLoad(JavaVM* vm);`가 `filament::VirtualMachineEnv::JNI_OnLoad`(Filament 엔진의 JNI 관례)와 이름을 맞춘 의도적 네이밍이라 NOLINT 처리. `jni.h` 의존 파일이라 Android 전용 — Windows에서는 컴파일 자체가 안 돼 발견 불가했던 항목.
 
 ---
 
@@ -2137,6 +2237,35 @@ void intersects(const T& primitive, vuint32 root_index, const Callback& callback
 > 두 건 다 **본 카테고리를 고치다가 생긴 부작용**이며, D-22~D-28 전체를 마친 뒤 처음부터 다시 전체 재스캔(v12~v14)해서 잡아냄. 부분 스캔(체크 단위)만으로는 놓칠 수 있는 상호작용이라, 대량 작업 이후엔 전체 재스캔이 필수라는 교훈을 다시 확인.
 
 **최종 검증**: `clangtidy_v14.txt`(전체 재스캔) 기준 `base/` 코드 경고 **0건**. 잔여 경고 3건은 전부 `external/filament`(서드파티) `bugprone-forward-declaration-namespace` — 우리 소관 아님. 에러 270건은 v9 때부터 있던 `type_traits`/`maybe_unused` 환경 노이즈로 D-22~D-28 작업과 무관(불변 확인).
+
+---
+
+### D-29. `misc-const-correctness` pointee-const — 673건 (멀티플랫폼 재검증, Linux/WebGL 전용) ✅ 완료
+**도구**: Clang-Tidy `misc-const-correctness` (`WarnPointersAsPointers`/`TransformPointersAsPointers` 옵션)  
+**건수**: 673건
+
+D-23(`.clang-tidy` 대상 `misc-const-correctness`)과 같은 체크명이지만 **다른 서브옵션**: `pointee of variable 'mc' of type '...*' can be declared 'const'` 형태로, `Type* var = getXComponent(...); var->읽기전용();` 패턴에서 포인터가 가리키는 대상을 `const T*`로 만드는 것. Windows 번들 LLVM 19에는 이 서브체크에 대응하는 옵션이 아예 없음(`--dump-config` 확인 결과 옵션 6개 전부 포인터 자체의 재대입 여부에 관한 것). **LLVM 21에서 새로 추가된 진짜 버전 제한** — WSL(Linux/WebGL, LLVM 21)에서만 발견 가능했던 카테고리.
+
+**적용**: LLVM 21 기본 설정에서 `WarnPointersAsPointers`가 이미 `true`로 켜져 있어 별도 옵션 없이 `run-clang-tidy -fix`로 44개 파일 258곳 일괄 적용.
+
+> **⚠️ D-26/D-28과 동일한 유형의 회귀 — 컴파일 에러 44건**: `-fix` 직후 빌드한 결과 44건 컴파일 에러 발생. clang-tidy가 선언 지점의 지역 사용만 보고 판단해서, 그 포인터가 함수 밖으로 흘러나가는 경우(non-const 타입으로 리턴, non-const 컨테이너에 저장, `JobSystem::runAndWait`/`parallel_for` 같은 non-const 파라미터 API에 전달, C API out-param 등)를 못 잡아낸 것 — D-18/D-26에서 이미 겪은 것과 완전히 동일한 함정이 clang-tidy 자동 수정 쪽에서도 재현됨. 해당 지점만 개별로 non-const로 되돌리고, 재스캔해도 같은 오탐이 재검출되므로 전부 `// NOLINT(misc-const-correctness) - <구체적 사유>` 주석으로 재발 방지(예: `getPhysicsContext()`는 non-const `PhysicsContext*` 리턴, `scene_impl.cc`의 컴포넌트 포인터 12곳은 non-const 멤버 컨테이너에 push/insert, Job* 13곳은 JobSystem non-const API). 재빌드·재스캔 모두 0건 확인.
+
+**최종 검증**: 전용 재스캔 0건, `linux-clang-release`/`linux-webgl-release` 빌드 정상.
+
+---
+
+### D-30. Telechips Cppcheck 나머지 소규모 카테고리 (멀티플랫폼 재검증, 10종·15건) ✅ 완료
+D-16~D-21에 매핑되지 않는 Telechips 전용 신규 소량 카테고리. D-28과 동일하게 체크별로 간단히 정리(대부분 기존 항목과 같은 방침으로 처리):
+
+| 체크 | 건수 | 내용 | 처리 |
+|------|------|------|------|
+| `unreadVariable` | 74 | "선언만 하고 안 씀" — 실제로는 세 가지 성격이 섞여 있었음: ① `Type& var = factory->createXComponent(e);`(57건, `object_factory.cc`) — 반환값은 안 쓰지만 **호출 자체가 컴포넌트를 생성·등록하는 필수 부수효과**라 호출은 유지, 캡처만 제거 ② 순수 죽은 코드(8건) — 선언 자체 삭제 ③ `joint_component.cc::checkBreakDistance()`의 `physics_scene`(1건) — `#ifdef USE_JOLT` 블록 안에서만 쓰이는데 선언이 밖에 있었음, Telechips만 `GRAPI_USE_JOLT: OFF`라 진짜 미사용이 됨 → 선언을 `#ifdef` 안으로 이동(삭제 아님) ④ `extrude.h::spline_tube_tangents`(3건) — 계산은 하지만 결과 미사용, 벡터 전체 삭제(사용 중인 `spline_tube_normals`/`spline_tube_binormals`는 유지) | 부수효과 있는 호출 유지, 순수 죽은 코드 삭제, 조건부 미사용은 `#ifdef` 안으로 이동 |
+| `variableScope` | 2 | `using_cache`, `spline_tube_tangents` | unreadVariable 정리 시 변수 자체가 삭제돼 자동 해소 |
+| `duplicateConditionalAssign` | 2 | `if (type_ != type) { type_ = type; }` 패턴 | `collider_component.cc`는 무조건 중복이라 단순화(적용). `joint_component.cc`는 `#ifdef USE_JOLT` 블록에 `joint_data_ = nullptr;`가 더 있어 Telechips에서만 중복으로 보이는 것이라 보류(F-12) |
+| `duplicateBreak` | 2 | `rigidbody_component.h`의 `return expr; return false;`(도달 불가 코드) | 죽은 `return false;` 제거 |
+| `stlFindInsert` | 1 | `rigidbody_component.cc`의 `find()`+`[]` 중복 해시 조회 | `try_emplace`/저장해둔 iterator 사용으로 재작성 |
+
+**검증**: 관련 파일 전체 컴파일 확인 — 신규 에러 0건.
 
 ---
 
@@ -2487,6 +2616,39 @@ ParticlesComponent(ParticlesComponent&& other) noexcept
 
 ---
 
+### F-10. `autoVariables` — `std::array` 값 복사를 주소-저장으로 오인 (멀티플랫폼 재검증, Telechips, 오탐 확인) ✅ 확인 완료
+**도구**: Cppcheck `autoVariables` (심각도 `error`)  
+**위치**: `extended_material_component.cc::_constrainMaterial()`
+
+`_constrainMaterial(MaterialKey* key, UvMap* uvmap)`에서 `UvMap retval {};`으로 지역 변수를 채운 뒤 `*uvmap = retval;`로 대입하는 마지막 줄에 대해 "지역 auto 변수의 주소가 함수 파라미터에 대입됨"으로 경고. `UvMap`은 `external/filament/libs/gltfio/include/gltfio/MaterialProvider.h`에 `using UvMap = std::array<UvSet, 8>;`로 정의된 **POD 배열 타입** — `*uvmap = retval`은 `std::array::operator=`를 통한 **값 복사**이지 `retval`의 주소를 저장하는 게 아님. `autoVariables` 체크가 "포인터 역참조 대입" 패턴을 주소-저장으로 오인한 cppcheck 쪽 오탐(Windows cppcheck 2.21.0에서는 재현되지 않았던 것도 이 체크의 데이터플로 분석이 버전/설정에 민감하다는 방증).
+
+**처리**: `// cppcheck-suppress autoVariables ; UvMap is std::array<UvSet, 8> (POD), this is a value copy, not an address escape` 인라인 억제 추가.
+
+---
+
+### F-11. `bugprone-unchecked-optional-access` 오탐 (멀티플랫폼 재검증, 17건) ✅ 확인 완료
+**도구**: Clang-Tidy `bugprone-unchecked-optional-access`  
+**위치**: `geometry_component.cc`(`computeBoundingSphere()`, 2곳), `mesh_component.cc`(2곳), `particles_component.cc`(7~8곳, 플랫폼별 약간 차이)
+
+A-20(실제 버그)과 같은 체크에서 나온 나머지 인스턴스는 전부 사전 가드로 이미 안전함이 확인된 오탐:
+
+| 위치 | 오탐 사유 | 처리 |
+|---|---|---|
+| `geometry_component.cc::computeBoundingSphere()` (`sphere`/`box` 2곳) | 함수 상단 `has_value()` 가드 또는 다른 함수(`computeBoundingBox()`) 호출로 이미 보장되나, clang-tidy가 함수 호출 경계를 넘는 추적을 못 함 | `Sphere& sphere = *bounding_sphere_; const AABB& box = *bounding_box_;`로 한 번만 역참조하도록 리팩터링 + NOLINT |
+| `mesh_component.cc` (2곳) | 각각 함수 상단의 사전 검증 루프, 직전 `has_value()` 체크로 이미 보장 | NOLINT + 주석 |
+| `particles_component.cc` (7곳, `counters_->`) | `animate()`가 `_createSelfBuffers()`를 먼저 호출(`counters_`를 무조건 채움)한 뒤에만 접근 | NOLINT + 주석 |
+
+Windows(LLVM19)에서는 이 체크 자체가 이 코드에서 발동하지 않아 로컬 검증 불가했던 항목 — WSL(LLVM21)/Android(NDK) 재검증으로 전부 발견. 이 체크의 특성상 "지역 가드"는 같은 함수 안에서도 안 걸리고 "다른 함수 호출로 보장"되는 경우만 오탐이 나는 패턴이 A-20/이 항목 모두에서 일관되게 관찰됨.
+
+---
+
+### F-12. `#ifdef USE_JOLT` 조건부 컴파일로 인한 다수 체크 오탐 (멀티플랫폼 재검증, Telechips) ✅ 확인 완료
+**위치**: `collider_component.cc::onDispose()`, `joint_component.cc::onRefresh()`/`setType()`, `rigidbody_component.cc::onRefresh()`, `vehicle_component.cc::onRefresh()`/`onDispose()` 등
+
+Telechips 프리셋은 `GRAPI_USE_JOLT: OFF`로 빌드되는데, 위 함수들의 실제 로직이 전부 `#ifdef USE_JOLT ... #endif`로 감싸여 있어 **Telechips에서만** base 클래스 기본 구현과 완전히 동일해 보이거나(`uselessOverride`, 6건 중 5건 보류), 조건이 중복돼 보임(`duplicateConditionalAssign` 1건, D-30 참고). 물리 활성 플랫폼(Windows 등)에서는 실제 로직이 있으므로 삭제하면 안 되는 오탐 — D-30의 `unreadVariable` 중 `physics_scene`(1건)과 동일한 함정 계열. 코드 변경 없이 유지.
+
+---
+
 ## 9. 도구별 비교
 
 | 항목 | Clang-Tidy v2 | Cppcheck |
@@ -2496,6 +2658,18 @@ ParticlesComponent(ParticlesComponent&& other) noexcept
 | 독자 강점 | 타입 변환 패턴, 비트 연산, 파라미터 설계 | 경로 감지(path-sensitive) 버그, 쉼표 오용 |
 | 노이즈 주원인 | `misc-const-correctness` (100건+) | external 헤더 경고 혼재 |
 | MISRA C++ 지원 | 부분적 (체크명으로 대응) | 미지원 (무료 버전) |
+
+**멀티플랫폼 검증 범위 (2026-07)**: 위 표는 Windows(MSVC, LLVM19 VS 번들) 단일 컴파일 DB 기준. 실제로는 아래 툴체인까지 확장 검증:
+
+| 플랫폼 | Clang-Tidy | Cppcheck |
+|---|---|---|
+| Windows (MSVC) | LLVM 19 (VS 2022 번들) | 2.21.0 |
+| Linux/WebGL | LLVM 21.1.8 (WSL apt) | 2.19.0 |
+| Android (NDK arm64/arm/x86/x64) | LLVM 19.0.1 (NDK 28.2.13676358 번들) | 2.19.0 |
+| Telechips (TCC803x) | 미지원 (GCC 9.3.0 크로스툴체인) | 2.19.0 |
+| Renesas (R-Car H3ULCB) | 미지원 (GCC 9.3.0 크로스툴체인) | 2.19.0 |
+
+LLVM 버전 차이로 일부 체크는 특정 플랫폼에서만 발동(예: D-29의 `misc-const-correctness` pointee-const는 LLVM 21 전용). GCC 툴체인(Telechips/Renesas)은 Clang-Tidy 자체가 불가해 Cppcheck만 적용.
 
 ---
 
@@ -2587,6 +2761,16 @@ ParticlesComponent(ParticlesComponent&& other) noexcept
 ✅ v6 재스캔 — D-16/F-8/D-21 보류 7건에 억제 주석 추가(returnByReference/redundantInitialization/unusedStructMember), 잔여 28건이 의도적 보류와 일치함 확인
 ✅ v7 재스캔 — random.h 억제 주석 위치 오류(선언 줄 vs overwrite 줄) 발견 및 수정
 ✅ v8 재스캔 — base/ 잔여 경고 0건 확인 (정보성 메시지 21건만 남음), 최종 완료
+
+7단계 — 멀티플랫폼 재검증 (2026-07, WSL + Windows 최종 라운드)
+─────────────────────────────────────────────────────────────────
+✅ Linux/WebGL/Android(arm64/arm/x86/x64)/Telechips/Renesas 전체 재스캔 — 실버그 2건(A-18, A-19) + 잠재 크래시 1건(A-20) 발견·수정
+✅ misc-const-correctness pointee-const 673건(D-29, LLVM21 전용) — -fix 적용, 컴파일 에러 44건 회귀 발견·NOLINT 처리로 해결
+✅ Telechips Cppcheck const-correctness 계열 476건(D-18 추가) — 461건 적용, JobSystem 오탐 12건 확인 후 미적용
+✅ Telechips Cppcheck 나머지 카테고리(D-16/D-17/D-19/D-20/D-21/D-30/A-4/B-1/B-2/B-3/B-8/D-25에 분산 반영) 전 건 분류·수정
+✅ 오탐 신규 확인 — autoVariables(F-10), unchecked-optional-access(F-11), #ifdef USE_JOLT 조건부 컴파일(F-12)
+✅ Windows clang-tidy 환경 이슈(VS 18 Insiders 자동탐지 충돌) 발견·`/vctoolsdir`로 해결, 최종 재스캔 클린 확인
+✅ 최종 v2/v3 재스캔에서 잔여 7건 추가 발견·전부 수정 및 재검증(B-1/D-7/D-18/D-21/B-3 항목에 반영)
 ```
 
 ---
@@ -2612,4 +2796,7 @@ ParticlesComponent(ParticlesComponent&& other) noexcept
 - 원시 결과: `C:\working\grapi-base\clangtidy_v12.txt` — D-28 코드 수정 완료 후 전체 재스캔, `ColliderComponent`/`RigidbodyComponent` 이동 억제 회귀(컴파일 에러) + `bugprone-branch-clone`/`performance-noexcept-move-constructor`/`bugprone-use-after-move` 신규 발견
 - 원시 결과: `C:\working\grapi-base\clangtidy_v13.txt` — 위 회귀 수정 후 재스캔, `bugprone-exception-escape` 3건 잔존 확인(noexcept 명시에도 clang-tidy 보수적 오탐)
 - 원시 결과: `C:\working\grapi-base\clangtidy_v14.txt` — NOLINT 최종 처리 후 재스캔, **`base/` 코드 경고 0건 최종 확인**(잔여 3건은 `external/filament` 서드파티)
-- [08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md) — `HeaderFilterRegex` 버그를 발견하게 된 멀티플랫폼 검증 작업 계획
+- [08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md) — `HeaderFilterRegex` 버그를 발견하게 된 멀티플랫폼 검증 작업 계획, Android arm/x86/x64 스캔 명령 포함
+- [10-multiplatform-verification-findings.md](10-multiplatform-verification-findings.md) — 멀티플랫폼 재검증(A-18~A-21, D-29/D-30, F-10~F-12 및 기존 항목 추가 확인분) 전체 분류·처리 과정 상세 기록. 본 리포트는 이 문서의 병합·요약본이며, 세부 삽질/교훈 기록은 원본 문서 참고
+- 원시 결과 (WSL, `\\wsl.localhost\Ubuntu\home\insung52\grapi-base\`): `clangtidy_{linux-clang,webgl,android-arm64,android-arm,android-x86,android-x64}_v2.txt`, `cppcheck_{linux-clang,webgl,android-arm64,android-arm,android-x86,android-x64,telechips-tcc803x,renesas-rcar_h3ulcb}_v2.txt`, `cppcheck_telechips-tcc803x_v3.txt`(최종 확인 재스캔)
+- 원시 결과 (Windows, `C:\working\grapi-base\`): `clangtidy_v13.txt`(멀티플랫폼 라운드의 Windows 환경 이슈 해결 후 재스캔 — 6~7장의 `clangtidy_v12/v13.txt`와는 별개의 후속 스캔 회차), `cppcheck_result_v9.txt`

@@ -124,7 +124,7 @@ python3 ~/llvm-tools/run-clang-tidy.py \
   -p=out/build/linux-clang-release \
   -j$(nproc) \
   '.*base/src/.*' \
-  > clangtidy_linux-clang_v1.txt 2>&1
+  > clangtidy_linux-clang_v2.txt 2>&1
 ```
 
 **Cppcheck**:
@@ -137,7 +137,7 @@ cppcheck \
   --suppress=missingIncludeSystem \
   --inline-suppr \
   -j$(nproc) \
-  2> cppcheck_linux-clang_v1.txt
+  2> cppcheck_linux-clang_v2.txt
 ```
 
 ### 5.2 WebGL (`linux-webgl-release`)
@@ -154,7 +154,7 @@ python3 ~/llvm-tools/run-clang-tidy.py \
   -p=out/build/linux-webgl-release \
   -j$(nproc) \
   '.*base/src/.*' \
-  > clangtidy_webgl_v1.txt 2>&1
+  > clangtidy_webgl_v2.txt 2>&1
 ```
 > `em++`가 내부적으로 clang 프론트엔드이긴 하나, `run-clang-tidy`는 `-clang-tidy-binary`로 지정한 별도 `clang-tidy-21`을 사용해 `compile_commands.json`의 플래그(`-fno-exceptions` 등)만 그대로 재사용함. em++ 자체를 clang-tidy 대신 쓰는 게 아니므로 위 방식이 맞음.
 
@@ -167,7 +167,7 @@ cppcheck \
   --suppress=missingIncludeSystem \
   --inline-suppr \
   -j$(nproc) \
-  2> cppcheck_webgl_v1.txt
+  2> cppcheck_webgl_v2.txt
 ```
 
 ### 5.3 Android (`linux-android-arm64-release` 등 4종)
@@ -190,7 +190,7 @@ python3 ~/llvm-tools/run-clang-tidy.py \
   -p=out/build/linux-android-arm64-release \
   -j$(nproc) \
   '.*base/src/.*' \
-  > clangtidy_android-arm64_v1.txt 2>&1
+  > clangtidy_android-arm64_v2.txt 2>&1
 ```
 
 **Cppcheck**:
@@ -202,10 +202,77 @@ cppcheck \
   --suppress=missingIncludeSystem \
   --inline-suppr \
   -j$(nproc) \
-  2> cppcheck_android-arm64_v1.txt
+  2> cppcheck_android-arm64_v2.txt
 ```
 
 > 4개 ABI(`arm`, `arm64`, `x86`, `x64`) 전부 도는 게 이상적이나, 32비트(`arm`, `x86`)와 64비트(`arm64`, `x64`)에서 타입 폭 관련 체크(B-1/B-2)가 갈릴 가능성이 가장 높으므로 시간이 부족하면 **`arm`(32비트 대표) + `arm64`(64비트 대표) 2종 우선** 진행. preset 이름만 바꿔서 동일 명령 반복.
+
+**나머지 3종(`arm`/`x86`/`x64`) 전체 명령어** (2026-07-03 추가 — arm64만 먼저 스캔했던 것을 뒤늦게 인지, 나머지도 필요 시 아래 그대로 실행):
+
+```bash
+export ANDROID_HOME=~/Android/android_sdk
+cd ~/grapi-base
+NDK_CLANG_TIDY=~/Android/android_sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/clang-tidy
+
+# ── arm (32비트) ──
+cmake --preset linux-android-arm-release
+
+python3 ~/llvm-tools/run-clang-tidy.py \
+  -clang-tidy-binary=$NDK_CLANG_TIDY \
+  -p=out/build/linux-android-arm-release \
+  -j$(nproc) \
+  '.*base/src/.*' \
+  > clangtidy_android-arm_v2.txt 2>&1
+
+cppcheck \
+  --project=out/build/linux-android-arm-release/compile_commands.json \
+  "--file-filter=*/grapi-base/base/*" \
+  --enable=all \
+  --suppress=missingIncludeSystem \
+  --inline-suppr \
+  -j$(nproc) \
+  2> cppcheck_android-arm_v2.txt
+
+# ── x86 ──
+cmake --preset linux-android-x86-release
+
+python3 ~/llvm-tools/run-clang-tidy.py \
+  -clang-tidy-binary=$NDK_CLANG_TIDY \
+  -p=out/build/linux-android-x86-release \
+  -j$(nproc) \
+  '.*base/src/.*' \
+  > clangtidy_android-x86_v2.txt 2>&1
+
+cppcheck \
+  --project=out/build/linux-android-x86-release/compile_commands.json \
+  "--file-filter=*/grapi-base/base/*" \
+  --enable=all \
+  --suppress=missingIncludeSystem \
+  --inline-suppr \
+  -j$(nproc) \
+  2> cppcheck_android-x86_v2.txt
+
+# ── x64 ──
+cmake --preset linux-android-x64-release
+
+python3 ~/llvm-tools/run-clang-tidy.py \
+  -clang-tidy-binary=$NDK_CLANG_TIDY \
+  -p=out/build/linux-android-x64-release \
+  -j$(nproc) \
+  '.*base/src/.*' \
+  > clangtidy_android-x64_v2.txt 2>&1
+
+cppcheck \
+  --project=out/build/linux-android-x64-release/compile_commands.json \
+  "--file-filter=*/grapi-base/base/*" \
+  --enable=all \
+  --suppress=missingIncludeSystem \
+  --inline-suppr \
+  -j$(nproc) \
+  2> cppcheck_android-x64_v2.txt
+```
+
+우선순위: `arm`(32비트 타입폭 차이 커버, 가장 중요) > `x64` > `x86`(대체로 `arm`/`x64`와 겹칠 가능성 높음, 여유 없으면 생략 가능).
 
 ### 5.4 Telechips TCC803x (`linux-telechips-tcc803x-release`)
 
@@ -228,7 +295,7 @@ cppcheck \
   --suppress=missingIncludeSystem \
   --inline-suppr \
   -j$(nproc) \
-  2> cppcheck_telechips-tcc803x_v1.txt
+  2> cppcheck_telechips-tcc803x_v2.txt
 ```
 
 ### 5.5 Renesas R-Car H3ULCB (`linux-renesas-rcar_h3ulcb-release`)
@@ -254,21 +321,21 @@ cppcheck \
   --suppress=missingIncludeSystem \
   --inline-suppr \
   -j$(nproc) \
-  2> cppcheck_renesas-rcar_h3ulcb_v1.txt
+  2> cppcheck_renesas-rcar_h3ulcb_v2.txt
 ```
 
 ### 5.6 결과 파일 위치
 
 WSL 쪽에서 생성된 결과 파일(`~/grapi-base/*.txt`)은 Windows에서 아래 경로로 그대로 열람 가능:
 ```
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\clangtidy_linux-clang_v1.txt
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_linux-clang_v1.txt
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\clangtidy_webgl_v1.txt
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_webgl_v1.txt
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\clangtidy_android-arm64_v1.txt
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_android-arm64_v1.txt
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_telechips-tcc803x_v1.txt
-\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_renesas-rcar_h3ulcb_v1.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\clangtidy_linux-clang_v2.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_linux-clang_v2.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\clangtidy_webgl_v2.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_webgl_v2.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\clangtidy_android-arm64_v2.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_android-arm64_v2.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_telechips-tcc803x_v2.txt
+\\wsl.localhost\Ubuntu\home\insung52\grapi-base\cppcheck_renesas-rcar_h3ulcb_v2.txt
 ```
 
 ---
@@ -282,8 +349,8 @@ WSL 쪽에서 생성된 결과 파일(`~/grapi-base/*.txt`)은 Windows에서 아
 Linux 경로 구분자는 `/`이므로 기존 Windows용 grep 패턴(`^base\\`)과 다름:
 
 ```bash
-grep -E "^base/|/base/" clangtidy_linux-clang_v1.txt | grep -v "external/"
-grep -E "^base/" cppcheck_linux-clang_v1.txt | grep -v "external/"
+grep -E "^base/|/base/" clangtidy_linux-clang_v2.txt | grep -v "external/"
+grep -E "^base/" cppcheck_linux-clang_v2.txt | grep -v "external/"
 ```
 
 ### 6.2 기존 항목과의 대조
@@ -326,19 +393,20 @@ Android/Telechips/Renesas 전부 설치 완료되어 5.3~5.5로 편입됨(환경
 2단계 — 즉시 가능한 플랫폼 스캔 (5장) — Android/Telechips/Renesas 전부 설치 확인됨, env만 활성화하면 됨
 ─────────────────────────────────────────────────────────────────
 [ ] linux-clang-release compile_commands.json 생성
-[ ] linux-clang: Clang-Tidy 스캔 → clangtidy_linux-clang_v1.txt
-[ ] linux-clang: Cppcheck 스캔 → cppcheck_linux-clang_v1.txt
+[ ] linux-clang: Clang-Tidy 스캔 → clangtidy_linux-clang_v2.txt
+[ ] linux-clang: Cppcheck 스캔 → cppcheck_linux-clang_v2.txt
 [ ] linux-webgl-release compile_commands.json 생성
-[ ] webgl: Clang-Tidy 스캔 → clangtidy_webgl_v1.txt
-[ ] webgl: Cppcheck 스캔 → cppcheck_webgl_v1.txt
+[ ] webgl: Clang-Tidy 스캔 → clangtidy_webgl_v2.txt
+[ ] webgl: Cppcheck 스캔 → cppcheck_webgl_v2.txt
 [ ] ANDROID_HOME export 후 linux-android-arm64-release compile_commands.json 생성
-[ ] android-arm64: NDK clang-tidy 스캔 → clangtidy_android-arm64_v1.txt
-[ ] android-arm64: Cppcheck 스캔 → cppcheck_android-arm64_v1.txt
-[ ] (여유 되면) android-arm(32비트) 동일 절차 반복 — 타입 폭 차이 확인용
+[ ] android-arm64: NDK clang-tidy 스캔 → clangtidy_android-arm64_v2.txt
+[ ] android-arm64: Cppcheck 스캔 → cppcheck_android-arm64_v2.txt
+[ ] android-arm(32비트, 타입 폭 차이 확인용 최우선): 5.3절 명령으로 compile_commands.json 생성 → clangtidy_android-arm_v2.txt / cppcheck_android-arm_v2.txt
+[ ] (여유 되면) android-x64/android-x86: 5.3절 명령으로 동일 반복 → clangtidy_android-{x64,x86}_v2.txt / cppcheck_android-{x64,x86}_v2.txt
 [ ] Telechips environment-setup source 후 linux-telechips-tcc803x-release compile_commands.json 생성
-[ ] telechips: Cppcheck 스캔 → cppcheck_telechips-tcc803x_v1.txt (GCC 툴체인이라 Clang-Tidy 제외)
+[ ] telechips: Cppcheck 스캔 → cppcheck_telechips-tcc803x_v2.txt (GCC 툴체인이라 Clang-Tidy 제외)
 [ ] Renesas environment-setup source 후 linux-renesas-rcar_h3ulcb-release compile_commands.json 생성
-[ ] renesas: Cppcheck 스캔 → cppcheck_renesas-rcar_h3ulcb_v1.txt (GCC 툴체인이라 Clang-Tidy 제외)
+[ ] renesas: Cppcheck 스캔 → cppcheck_renesas-rcar_h3ulcb_v2.txt (GCC 툴체인이라 Clang-Tidy 제외)
 
 3단계 — 결과 분석 (6장)
 ─────────────────────────────────────────────────────────────────
