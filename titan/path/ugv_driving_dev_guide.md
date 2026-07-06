@@ -180,11 +180,3 @@ ThrottleInput = clamp(요청속력 / MaxSpeed, 0, 1) × ThrottleFactor
 경사를 오르거나 현실적인 이동, 충돌 구현하려면 chaos vehicle 같은거 써야함
 
 듀얼모니터
-
-TankSimViewportClient::Tick 함수에 주석풀면 듀얼모니터 테스트한거 올려놨어요. 
-
-Metrics.MonitorInfo.Num() 가 1이면 싱글모니터 2이상이면 듀얼모니터 입니다.
-
-픽셀스트리밍 플러그인도 테스트해봤는데 웹에서 언리얼실행중인 화면이 스트리밍 되더라구요.  https://github.com/EpicGames/PixelStreamingInfrastructure  여기서 서버설치 프로그램을 설치하면 웹스트리밍이 되는 예제가 있습니다.
-
-LIG 에서 어떤 프로토콜로 할지는 아직 미정이라서 간단하게 테스트해봤습니다
