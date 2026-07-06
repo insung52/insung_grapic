@@ -1,6 +1,6 @@
 # 멀티플랫폼 재검증 결과 (Clang-Tidy: Linux/WebGL/Android, Cppcheck: Linux/WebGL/Android/Telechips/Renesas) — 예비 문서
 
-> **이 문서는 예비 정리본**. **2026-07-06 본 리포트(`C:\private\2026-W27-황인성\260702_황인성_clangtidy_cppcheck_verification_report.md`)에 병합 완료** — A-18~A-21(실버그 2건, 크래시 위험 1건, 미구현 기능 1건), D-29/D-30(신규 카테고리), F-10~F-12(신규 오탐 3종), 기존 A-4/B-1/B-2/B-3/B-8/D-7/D-12/D-16/D-17/D-18/D-19/D-20/D-21/D-25에 추가 확인분 반영. 이 문서는 세부 삽질·교훈 기록의 원본으로 계속 보존.
+> **이 문서는 예비 정리본**. **2026-07-06 본 리포트(`C:\private\2026-W27-황인성\260706_황인성_clangtidy_cppcheck_verification_report.md`)에 병합 완료** — A-18~A-21(실버그 2건, 크래시 위험 1건, 미구현 기능 1건), D-29/D-30(신규 카테고리), F-10~F-12(신규 오탐 3종), 기존 A-4/B-1/B-2/B-3/B-8/D-7/D-12/D-16/D-17/D-18/D-19/D-20/D-21/D-25에 추가 확인분 반영. 이 문서는 세부 삽질·교훈 기록의 원본으로 계속 보존.
 > [08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md)에 정리된 명령으로 WSL에서 스캔 수행(2026-07-02~03).
 > 원시 결과 (1차, v1):
 > - `clangtidy_linux-clang_v1.txt`, `clangtidy_webgl_v1.txt`, `clangtidy_android-arm64_v1.txt`
@@ -402,6 +402,6 @@ python "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm
 
 ## 5. 관련 문서
 
-- `260702_황인성_clangtidy_cppcheck_verification_report.md` — 병합 대상 본 리포트
+- `260706_황인성_clangtidy_cppcheck_verification_report.md` — 병합 대상 본 리포트
 - [08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md) — 이번 스캔에 사용한 명령/환경
 - [09-clangtidy-v9-header-findings.md](09-clangtidy-v9-header-findings.md) — 이전 단계(헤더 재스캔) 예비 문서, 이미 본 리포트에 병합 완료

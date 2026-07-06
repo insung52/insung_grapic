@@ -1,6 +1,6 @@
 # 멀티플랫폼 정적분석 검증 계획 — grapi-base
 
-> 지금까지의 Clang-Tidy/Cppcheck 검증([09] 문서, 현재 파일명 `260702_황인성_clangtidy_cppcheck_verification_report.md`)은 전부 **Windows MSVC(`windows-msvc-x64-debug`) 컴파일 DB 하나만** 기준으로 수행됨.  
+> 지금까지의 Clang-Tidy/Cppcheck 검증([09] 문서, 현재 파일명 `260706_황인성_clangtidy_cppcheck_verification_report.md`)은 전부 **Windows MSVC(`windows-msvc-x64-debug`) 컴파일 DB 하나만** 기준으로 수행됨.  
 > WebGL 빌드에서 `-fno-exceptions` 관련 컴파일 에러가 실제로 발생(A-9 후속 수정)하면서, Windows 전용 검증이 다른 플랫폼에 대해 아무 보증도 못 한다는 게 실증됨.  
 > 이 문서는 WSL 환경을 이용해 나머지 플랫폼을 어떻게, 어떤 순서로, 어떤 명령어로 검증할지 정리한 계획 문서.  
 > (2026-07 작성, 대상 WSL: Ubuntu, clang 21.1.8 / Cppcheck 후보 2.19.0)
@@ -355,7 +355,7 @@ grep -E "^base/" cppcheck_linux-clang_v2.txt | grep -v "external/"
 
 ### 6.2 기존 항목과의 대조
 
-`260702_황인성_clangtidy_cppcheck_verification_report.md`에 이미 정리된 A~F 등급 항목(특히 B-1/B-2 narrowing/widening 계열, F-1~F-6 플랫폼 불가피 패턴)과 대조:
+`260706_황인성_clangtidy_cppcheck_verification_report.md`에 이미 정리된 A~F 등급 항목(특히 B-1/B-2 narrowing/widening 계열, F-1~F-6 플랫폼 불가피 패턴)과 대조:
 
 - **동일한 항목이 나오면**: 이미 처리/문서화된 것이므로 스킵.
 - **Windows에서 안 보이던 새 항목**: 플랫폼 고유 이슈 — 신규 등급 부여 후 처리 (예: `G-1` 등 새 섹션으로 문서 추가).
@@ -425,7 +425,7 @@ Android/Telechips/Renesas 전부 설치 완료되어 5.3~5.5로 편입됨(환경
 
 ## 9. 관련 문서
 
-- `260702_황인성_clangtidy_cppcheck_verification_report.md` — Windows MSVC 기준 기존 검증 결과 (A~F 등급 전체)
+- `260706_황인성_clangtidy_cppcheck_verification_report.md` — Windows MSVC 기준 기존 검증 결과 (A~F 등급 전체)
 - [06-clang-tidy-guide.md](06-clang-tidy-guide.md) — Clang-Tidy 옵션/사용법 상세 (Windows 기준, 대부분 Linux에도 적용됨)
 - [07-cppcheck-guide.md](07-cppcheck-guide.md) — Cppcheck 옵션/사용법 상세 (Windows 기준, 대부분 Linux에도 적용됨)
 - `C:\private\grapi-base\intro.md` — 플랫폼별 SDK 설치/빌드 가이드 원본(Android NDK 버전, Emscripten, Renesas/Telechips 툴체인 설치 스크립트 출처). 이 문서의 3장/5.3/5.4/7장 내용의 근거

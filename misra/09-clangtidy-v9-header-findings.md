@@ -1,6 +1,6 @@
 # Clang-Tidy v9 — HeaderFilterRegex 수정 후 신규 발견 (예비 문서)
 
-> **이 문서는 예비 정리본**. 검토/처리는 전부 완료되어 `260702_황인성_clangtidy_cppcheck_verification_report.md`(이하 "본 리포트")에 병합 완료됨 (A-16/A-17, D-26, D-22~D-28, F-9).  
+> **이 문서는 예비 정리본**. 검토/처리는 전부 완료되어 `260706_황인성_clangtidy_cppcheck_verification_report.md`(이하 "본 리포트")에 병합 완료됨 (A-16/A-17, D-26, D-22~D-28, F-9).  
 > **최종 상태 (2026-07-02)**: 2장의 잠재 버그 후보 6건 전수 처리 완료 — 실버그 2건(구 A-18/A-19)은 본 리포트 A-16/A-17로 병합, 구 A-16(예외탈출 3건)은 D-26 Rule of Five에 통합, 구 A-17(use-after-move)은 오탐으로 F-9 신규 등록. 3장 대량 카테고리(D-22~D-27, 1,723건)와 4장 개별 소량 카테고리(D-28, 19종 100건) 전부 코드 수정 + `clangtidy_v10`~`v14` 재검증까지 완료. 상세 내용은 본 리포트 6장(D-22~D-28) 참고.
 > 원시 결과: `C:\working\grapi-base\clangtidy_v9.txt` (2026-07-02, Windows `windows-msvc-x64-release`, LLVM 19)  
 > 비교 대상: `clangtidy_v8`까지의 "유저 코드 경고 0건" 결과, WSL `clangtidy_linux-clang_v1.txt`
@@ -163,7 +163,7 @@ A-8과 동일 패턴. `components/joint_component.h` 등.
 
 ## 6. 관련 문서
 
-- `260702_황인성_clangtidy_cppcheck_verification_report.md` — 병합 대상 본 리포트
+- `260706_황인성_clangtidy_cppcheck_verification_report.md` — 병합 대상 본 리포트
 - [08-multiplatform-verification-plan.md](08-multiplatform-verification-plan.md) — 이 버그를 발견하게 된 멀티플랫폼 검증 작업
 - 원시 결과: `C:\working\grapi-base\clangtidy_v9.txt` (Windows, 수정된 HeaderFilterRegex 적용 후 첫 스캔)
 - 원시 결과: `\\wsl.localhost\Ubuntu\home\insung52\grapi-base\clangtidy_linux-clang_v1.txt` (Linux, 비교 참고용)

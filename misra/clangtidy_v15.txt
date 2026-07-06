@@ -1,0 +1,881 @@
+Enabled checks:
+    bugprone-argument-comment
+    bugprone-assert-side-effect
+    bugprone-assignment-in-if-condition
+    bugprone-bad-signal-to-kill-thread
+    bugprone-bool-pointer-implicit-conversion
+    bugprone-branch-clone
+    bugprone-casting-through-void
+    bugprone-chained-comparison
+    bugprone-compare-pointer-to-member-virtual-function
+    bugprone-copy-constructor-init
+    bugprone-crtp-constructor-accessibility
+    bugprone-dangling-handle
+    bugprone-dynamic-static-initializers
+    bugprone-easily-swappable-parameters
+    bugprone-empty-catch
+    bugprone-exception-escape
+    bugprone-fold-init-type
+    bugprone-forward-declaration-namespace
+    bugprone-forwarding-reference-overload
+    bugprone-implicit-widening-of-multiplication-result
+    bugprone-inaccurate-erase
+    bugprone-inc-dec-in-conditions
+    bugprone-incorrect-enable-if
+    bugprone-incorrect-roundings
+    bugprone-infinite-loop
+    bugprone-integer-division
+    bugprone-lambda-function-name
+    bugprone-macro-parentheses
+    bugprone-macro-repeated-side-effects
+    bugprone-misplaced-operator-in-strlen-in-alloc
+    bugprone-misplaced-pointer-arithmetic-in-alloc
+    bugprone-misplaced-widening-cast
+    bugprone-move-forwarding-reference
+    bugprone-multi-level-implicit-pointer-conversion
+    bugprone-multiple-new-in-one-expression
+    bugprone-multiple-statement-macro
+    bugprone-narrowing-conversions
+    bugprone-no-escape
+    bugprone-non-zero-enum-to-bool-conversion
+    bugprone-not-null-terminated-result
+    bugprone-optional-value-conversion
+    bugprone-parent-virtual-call
+    bugprone-pointer-arithmetic-on-polymorphic-object
+    bugprone-posix-return
+    bugprone-redundant-branch-condition
+    bugprone-reserved-identifier
+    bugprone-return-const-ref-from-parameter
+    bugprone-shared-ptr-array-mismatch
+    bugprone-signal-handler
+    bugprone-signed-char-misuse
+    bugprone-sizeof-container
+    bugprone-sizeof-expression
+    bugprone-spuriously-wake-up-functions
+    bugprone-standalone-empty
+    bugprone-string-constructor
+    bugprone-string-integer-assignment
+    bugprone-string-literal-with-embedded-nul
+    bugprone-stringview-nullptr
+    bugprone-suspicious-enum-usage
+    bugprone-suspicious-include
+    bugprone-suspicious-memory-comparison
+    bugprone-suspicious-memset-usage
+    bugprone-suspicious-missing-comma
+    bugprone-suspicious-realloc-usage
+    bugprone-suspicious-semicolon
+    bugprone-suspicious-string-compare
+    bugprone-suspicious-stringview-data-usage
+    bugprone-swapped-arguments
+    bugprone-switch-missing-default-case
+    bugprone-terminating-continue
+    bugprone-throw-keyword-missing
+    bugprone-too-small-loop-variable
+    bugprone-unchecked-optional-access
+    bugprone-undefined-memory-manipulation
+    bugprone-undelegated-constructor
+    bugprone-unhandled-exception-at-new
+    bugprone-unhandled-self-assignment
+    bugprone-unique-ptr-array-mismatch
+    bugprone-unsafe-functions
+    bugprone-unused-local-non-trivial-variable
+    bugprone-unused-raii
+    bugprone-unused-return-value
+    bugprone-use-after-move
+    bugprone-virtual-near-miss
+    cert-err34-c
+    cppcoreguidelines-avoid-c-arrays
+    cppcoreguidelines-avoid-goto
+    cppcoreguidelines-pro-bounds-array-to-pointer-decay
+    cppcoreguidelines-pro-type-const-cast
+    cppcoreguidelines-pro-type-cstyle-cast
+    cppcoreguidelines-pro-type-member-init
+    cppcoreguidelines-pro-type-reinterpret-cast
+    cppcoreguidelines-pro-type-vararg
+    cppcoreguidelines-slicing
+    cppcoreguidelines-special-member-functions
+    cppcoreguidelines-virtual-class-destructor
+    google-build-explicit-make-pair
+    google-build-namespaces
+    google-build-using-namespace
+    google-default-arguments
+    google-explicit-constructor
+    google-global-names-in-headers
+    google-objc-avoid-nsobject-new
+    google-objc-avoid-throwing-exception
+    google-objc-function-naming
+    google-objc-global-variable-declaration
+    google-readability-avoid-underscore-in-googletest-name
+    google-readability-braces-around-statements
+    google-readability-casting
+    google-readability-function-size
+    google-readability-namespace-comments
+    google-runtime-int
+    google-runtime-operator
+    google-upgrade-googletest-case
+    hicpp-exception-baseclass
+    hicpp-multiway-paths-covered
+    hicpp-signed-bitwise
+    misc-const-correctness
+    misc-no-recursion
+    misc-redundant-expression
+    misc-unused-parameters
+    modernize-make-shared
+    modernize-make-unique
+    modernize-use-emplace
+    modernize-use-equals-default
+    modernize-use-nodiscard
+    modernize-use-nullptr
+    modernize-use-override
+    performance-avoid-endl
+    performance-enum-size
+    performance-faster-string-find
+    performance-for-range-copy
+    performance-implicit-conversion-in-loop
+    performance-inefficient-algorithm
+    performance-inefficient-string-concatenation
+    performance-inefficient-vector-operation
+    performance-move-const-arg
+    performance-move-constructor-init
+    performance-no-automatic-move
+    performance-no-int-to-ptr
+    performance-noexcept-destructor
+    performance-noexcept-move-constructor
+    performance-noexcept-swap
+    performance-trivially-destructible
+    performance-type-promotion-in-math-fn
+    performance-unnecessary-copy-initialization
+    performance-unnecessary-value-param
+    portability-restrict-system-includes
+    portability-simd-intrinsics
+    portability-std-allocator-const
+    readability-const-return-type
+    readability-identifier-naming
+    readability-simplify-boolean-expr
+
+Running clang-tidy for 131 files out of 1963 in compilation database ...
+[  1/131][20.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\text\freetype_font.cc
+77654 warnings generated.
+Suppressed 77656 warnings (77654 in non-user code, 2 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  2/131][21.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\cubic_bezier_curve.cc
+76140 warnings generated.
+Suppressed 76140 warnings (76140 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  3/131][21.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\orbit_controls.cc
+76417 warnings generated.
+Suppressed 76421 warnings (76417 in non-user code, 4 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  4/131][21.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\clock.cc
+76137 warnings generated.
+Suppressed 76137 warnings (76137 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  5/131][21.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\renderer.cc
+76407 warnings generated.
+Suppressed 76410 warnings (76407 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  6/131][33.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\image.cc
+86943 warnings generated.
+Suppressed 86968 warnings (86943 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  7/131][33.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\material.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  8/131][34.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\light.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[  9/131][34.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\standard_material.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 10/131][35.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\skeleton_component.cc
+86704 warnings generated.
+Suppressed 86728 warnings (86704 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 11/131][35.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\rigidbody_component.cc
+87230 warnings generated.
+Suppressed 87259 warnings (87230 in non-user code, 29 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 12/131][35.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\sixdof_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 13/131][35.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\raycaster.cc
+89638 warnings generated.
+Suppressed 89664 warnings (89638 in non-user code, 26 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 14/131][36.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\mesh_component.cc
+87258 warnings generated.
+Suppressed 87288 warnings (87258 in non-user code, 30 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 15/131][37.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\instance_manager.cc
+87582 warnings generated.
+Suppressed 87613 warnings (87582 in non-user code, 31 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 16/131][39.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\asset_loader.cc
+C:\working\grapi-base\external\filament\libs\gltfio\src\Utility.h:30:7: warning: declaration 'DracoCache' is never referenced, but a declaration with the same name found in another namespace 'filament::gltfio' [bugprone-forward-declaration-namespace]
+   30 | class DracoCache;
+      |       ^
+C:\working\grapi-base\base\src\grapi/base/asset_loader.h:11:7: note: a declaration of 'DracoCache' is found here
+   11 | class DracoCache;
+      |       ^
+90767 warnings generated.
+Suppressed 90813 warnings (90766 in non-user code, 47 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 17/131][20.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\focused_spot_light.cc
+76390 warnings generated.
+Suppressed 76393 warnings (76390 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 18/131][24.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\custom_material_provider.cc
+78723 warnings generated.
+Suppressed 78737 warnings (78723 in non-user code, 14 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 19/131][30.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\perspective_camera.cc
+86815 warnings generated.
+Suppressed 86839 warnings (86815 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 20/131][31.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\compound_collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 21/131][31.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\rect_area_light.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 22/131][21.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\aabb.cc
+76151 warnings generated.
+Suppressed 76154 warnings (76151 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 23/131][19.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\quadratic_bezier_curve.cc
+76140 warnings generated.
+Suppressed 76140 warnings (76140 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 24/131][20.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\shape.cc
+76214 warnings generated.
+Suppressed 76214 warnings (76214 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 25/131][18.8s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\curve.cc
+76192 warnings generated.
+Suppressed 76192 warnings (76192 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 26/131][23.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\camera_component.cc
+78809 warnings generated.
+Suppressed 78822 warnings (78809 in non-user code, 13 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 27/131][21.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\animation_component.cc
+76278 warnings generated.
+Suppressed 76279 warnings (76278 in non-user code, 1 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 28/131][24.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\light_component.cc
+78877 warnings generated.
+Suppressed 78895 warnings (78877 in non-user code, 18 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 29/131][21.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\spline_curve.cc
+76149 warnings generated.
+Suppressed 76150 warnings (76149 in non-user code, 1 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 30/131][33.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\material_component.cc
+86893 warnings generated.
+Suppressed 86918 warnings (86893 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 31/131][33.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\distance_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 32/131][35.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\renderer_impl.cc
+87529 warnings generated.
+Suppressed 87559 warnings (87529 in non-user code, 30 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 33/131][30.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\basic_material.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 34/131][31.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\animation_action.cc
+86801 warnings generated.
+Suppressed 86825 warnings (86801 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 35/131][32.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\hinge_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 36/131][32.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\sun_light.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 37/131][31.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\camera.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 38/131][30.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\object_component.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 39/131][31.8s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\extended_material.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 40/131][33.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\particles.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 41/131][21.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\ray.cc
+76148 warnings generated.
+Suppressed 76152 warnings (76148 in non-user code, 4 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 42/131][34.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\triangle_mesh_collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 43/131][34.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\collider_component.cc
+87380 warnings generated.
+Suppressed 87405 warnings (87380 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 44/131][33.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\spot_light.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 45/131][37.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\actor_exporter.cc
+91468 warnings generated.
+Suppressed 91499 warnings (91468 in non-user code, 31 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 46/131][32.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\extended_material_component.cc
+86886 warnings generated.
+Suppressed 86911 warnings (86886 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 47/131][20.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\fly_controls.cc
+76410 warnings generated.
+Suppressed 76416 warnings (76410 in non-user code, 6 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 48/131][28.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\providers\ktx2_reader.cc
+82567 warnings generated.
+Suppressed 82593 warnings (82567 in non-user code, 26 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 49/131][32.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\capsule_collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 50/131][31.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\orthographic_camera.cc
+86815 warnings generated.
+Suppressed 86839 warnings (86815 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 51/131][22.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\box_geometry.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 52/131][20.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\plane_geometry.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 53/131][21.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\first_person_controls.cc
+76397 warnings generated.
+Suppressed 76402 warnings (76397 in non-user code, 5 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 54/131][22.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\catmull_rom_curve.cc
+76174 warnings generated.
+Suppressed 76174 warnings (76174 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 55/131][21.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\curve_path.cc
+76211 warnings generated.
+Suppressed 76211 warnings (76211 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 56/131][32.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\body.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 57/131][33.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\slider_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 58/131][22.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\directional_light.cc
+76390 warnings generated.
+Suppressed 76393 warnings (76390 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 59/131][32.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\sprite_component.cc
+86952 warnings generated.
+Suppressed 86979 warnings (86952 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 60/131][32.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\cone_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 61/131][22.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\name_component.cc
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:759:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  759 |     auto UTILS_UNUSED l = { (soa->elementAt<Is>(index) = std::get<Is>(rhs.elements), 0)... };
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:768:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  768 |     auto UTILS_UNUSED l = {(soa->template elementAt<Is>(index) = std::get<Is>(rhs), 0)...};
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:777:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  777 |     auto UTILS_UNUSED l = {(soa->template elementAt<Is>(index) = std::move(std::get<Is>(rhs)), 0)...};
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:787:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  787 |     auto UTILS_UNUSED l = {
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+77859 warnings and 4 errors generated.
+Error while processing C:\working\grapi-base\base\src\grapi\base\components\name_component.cc.
+Suppressed 77867 warnings (77859 in non-user code, 8 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+Found compiler error(s).
+
+[ 62/131][27.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\scene.cc
+83597 warnings generated.
+Suppressed 83604 warnings (83597 in non-user code, 7 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 63/131][30.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\sprite.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 64/131][19.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\sphere.cc
+76489 warnings generated.
+Suppressed 76497 warnings (76489 in non-user code, 8 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 65/131][22.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\asset_impl.cc
+77225 warnings generated.
+Suppressed 77229 warnings (77225 in non-user code, 4 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 66/131][31.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\swing_twist_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 67/131][31.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\texture_component.cc
+86742 warnings generated.
+Suppressed 86766 warnings (86742 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 68/131][19.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\hitbox_2d.cc
+76481 warnings generated.
+Suppressed 76486 warnings (76481 in non-user code, 5 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 69/131][33.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\component_factory.cc
+87578 warnings generated.
+Suppressed 87604 warnings (87578 in non-user code, 26 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 70/131][18.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\keyframe_track.cc
+76158 warnings generated.
+Suppressed 76158 warnings (76158 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 71/131][21.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\resource_manager.cc
+79158 warnings generated.
+Suppressed 79171 warnings (79158 in non-user code, 13 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 72/131][28.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\actor.cc
+87215 warnings generated.
+Suppressed 87244 warnings (87215 in non-user code, 29 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 73/131][21.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\view.cc
+76478 warnings generated.
+Suppressed 76483 warnings (76478 in non-user code, 5 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 74/131][20.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\text\text_field.cc
+76234 warnings generated.
+Suppressed 76235 warnings (76234 in non-user code, 1 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 75/131][30.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\text.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 76/131][31.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\cylinder_collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 77/131][19.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\capsule_geometry.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 78/131][29.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\custom_material_component.cc
+87008 warnings generated.
+Suppressed 87033 warnings (87008 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 79/131][29.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\physical_material.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 80/131][19.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\sphere_geometry.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 81/131][32.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\object_factory.cc
+88166 warnings generated.
+Suppressed 88208 warnings (88166 in non-user code, 42 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 82/131][30.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\texture.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 83/131][28.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\sphere_collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 84/131][29.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\transform_component.cc
+86948 warnings generated.
+Suppressed 86975 warnings (86948 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 85/131][28.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\text_component.cc
+86995 warnings generated.
+Suppressed 87022 warnings (86995 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 86/131][20.8s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\providers\ktx2_provider.cc
+83260 warnings generated.
+Suppressed 83276 warnings (83260 in non-user code, 16 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 87/131][28.8s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\nine_patch.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 88/131][27.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\animation_clip.cc
+86816 warnings generated.
+Suppressed 86840 warnings (86816 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 89/131][28.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\axes_helper.cc
+86785 warnings generated.
+Suppressed 86809 warnings (86785 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 90/131][29.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\geometry.cc
+86882 warnings generated.
+Suppressed 86906 warnings (86882 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 91/131][28.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\fixed_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 92/131][28.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\animation_mixer.cc
+86963 warnings generated.
+Suppressed 86993 warnings (86963 in non-user code, 30 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 93/131][19.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\controls.cc
+76143 warnings generated.
+Suppressed 76144 warnings (76143 in non-user code, 1 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 94/131][30.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\joint_component.cc
+87468 warnings generated.
+Suppressed 87496 warnings (87468 in non-user code, 28 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 95/131][30.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\particles_component.cc
+87941 warnings generated.
+Suppressed 87975 warnings (87941 in non-user code, 34 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 96/131][30.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 97/131][27.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\convexhull_collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 98/131][30.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\view_impl.cc
+87184 warnings generated.
+Suppressed 87215 warnings (87184 in non-user code, 31 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[ 99/131][18.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\random.cc
+76137 warnings generated.
+Suppressed 76137 warnings (76137 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[100/131][28.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\font.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[101/131][29.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\mesh.cc
+86786 warnings generated.
+Suppressed 86812 warnings (86786 in non-user code, 26 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[102/131][29.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\box_collider.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[103/131][17.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\capsule.cc
+76489 warnings generated.
+Suppressed 76498 warnings (76489 in non-user code, 9 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[104/131][18.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\extrude_geometry.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[105/131][26.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\object.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[106/131][27.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\skeleton.cc
+86780 warnings generated.
+Suppressed 86805 warnings (86780 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[107/131][28.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\vehicle.cc
+87172 warnings generated.
+Suppressed 87199 warnings (87172 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[108/131][17.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\ellipse_curve.cc
+76140 warnings generated.
+Suppressed 76142 warnings (76140 in non-user code, 2 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[109/131][27.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[110/131][17.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\torus_geometry.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[111/131][17.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\frustum.cc
+76151 warnings generated.
+Suppressed 76152 warnings (76151 in non-user code, 1 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[112/131][17.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\path.cc
+76191 warnings generated.
+Suppressed 76192 warnings (76191 in non-user code, 1 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[113/131][27.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\physical_material_component.cc
+86886 warnings generated.
+Suppressed 86911 warnings (86886 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[114/131][33.8s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\context.cc
+C:\working\grapi-base\external\filament\libs\gltfio\src\Utility.h:30:7: warning: declaration 'DracoCache' is never referenced, but a declaration with the same name found in another namespace 'filament::gltfio' [bugprone-forward-declaration-namespace]
+   30 | class DracoCache;
+      |       ^
+C:\working\grapi-base\base\src\grapi/base/asset_loader.h:11:7: note: a declaration of 'DracoCache' is found here
+   11 | class DracoCache;
+      |       ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:759:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  759 |     auto UTILS_UNUSED l = { (soa->elementAt<Is>(index) = std::get<Is>(rhs.elements), 0)... };
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:768:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  768 |     auto UTILS_UNUSED l = {(soa->template elementAt<Is>(index) = std::get<Is>(rhs), 0)...};
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:777:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  777 |     auto UTILS_UNUSED l = {(soa->template elementAt<Is>(index) = std::move(std::get<Is>(rhs)), 0)...};
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/StructureOfArrays.h:787:10: error: 'maybe_unused' attribute cannot be applied to types [clang-diagnostic-error]
+  787 |     auto UTILS_UNUSED l = {
+      |          ^
+C:\working\grapi-base\external\filament\libs\utils\include\utils/compiler.h:192:28: note: expanded from macro 'UTILS_UNUSED'
+  192 |     #define UTILS_UNUSED [[maybe_unused]]
+      |                            ^
+94085 warnings and 4 errors generated.
+Error while processing C:\working\grapi-base\base\src\grapi\base\context.cc.
+Suppressed 94117 warnings (94084 in non-user code, 33 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+Found compiler error(s).
+
+[115/131][26.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\physics_context.cc
+86705 warnings generated.
+Suppressed 86737 warnings (86705 in non-user code, 32 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[116/131][20.4s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\ibl.cc
+78763 warnings generated.
+Suppressed 78785 warnings (78763 in non-user code, 22 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[117/131][17.8s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\asset.cc
+C:\working\grapi-base\external\filament\libs\gltfio\src\Utility.h:30:7: warning: declaration 'DracoCache' is never referenced, but a declaration with the same name found in another namespace 'filament::gltfio' [bugprone-forward-declaration-namespace]
+   30 | class DracoCache;
+      |       ^
+C:\working\grapi-base\base\src\grapi/base/asset_loader.h:11:7: note: a declaration of 'DracoCache' is found here
+   11 | class DracoCache;
+      |       ^
+77025 warnings generated.
+Suppressed 77024 warnings (77024 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[118/131][16.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\plane.cc
+76489 warnings generated.
+Suppressed 76497 warnings (76489 in non-user code, 8 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[119/131][17.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\line_curve.cc
+76141 warnings generated.
+Suppressed 76141 warnings (76141 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[120/131][18.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\cylinder_geometry.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[121/131][26.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\point_joint.cc
+87160 warnings generated.
+Suppressed 87187 warnings (87160 in non-user code, 27 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[122/131][30.7s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\scene_impl.cc
+88210 warnings generated.
+Suppressed 88246 warnings (88210 in non-user code, 36 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[123/131][16.0s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\font_component.cc
+77818 warnings generated.
+Suppressed 77819 warnings (77818 in non-user code, 1 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[124/131][25.5s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\vehicle_component.cc
+87197 warnings generated.
+Suppressed 87238 warnings (87197 in non-user code, 41 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[125/131][19.8s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\geometry_component.cc
+79473 warnings generated.
+Suppressed 79506 warnings (79473 in non-user code, 33 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[126/131][14.9s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\map_controls.cc
+76156 warnings generated.
+Suppressed 76156 warnings (76156 in non-user code).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[127/131][24.3s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\custom_material.cc
+86807 warnings generated.
+Suppressed 86831 warnings (86807 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[128/131][24.1s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\point_light.cc
+86780 warnings generated.
+Suppressed 86804 warnings (86780 in non-user code, 24 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[129/131][13.6s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\engine.cc
+76386 warnings generated.
+Suppressed 76389 warnings (76386 in non-user code, 3 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[130/131][22.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\text\typesetter.cc
+86853 warnings generated.
+Suppressed 86878 warnings (86853 in non-user code, 25 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
+[131/131][20.2s] C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\Llvm\x64\bin\clang-tidy.exe -extra-arg=/vctoolsdirC:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.38.33130 -p=out/build/windows-msvc-x64-release C:\working\grapi-base\base\src\grapi\base\components\nine_patch_component.cc
+87014 warnings generated.
+Suppressed 87042 warnings (87014 in non-user code, 28 NOLINT).
+Use -header-filter=.* to display errors from all non-system headers. Use -system-headers to display errors from system headers as well.
+
