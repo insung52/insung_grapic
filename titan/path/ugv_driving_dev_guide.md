@@ -67,6 +67,15 @@ RCWS/UAV 카메라 화면에 뜨는 아군/적군 바운딩 박스(객체 탐지
 > **명시적 `EUGVDriveMode`(Idle/Manual/Auto) 상태 + 커맨드 전환** 방식으로 대체됨 —
 > 11절 참고. 오프로드 속도 처리 방식도 12절에서 재변경. 신규로 맵 이탈 방지(도로
 > 경계 텔레포트)를 13절에 추가.
+>
+> **2026-07-12 업데이트**: **기어 시스템(P/R/N/1~5단)을 14절에 신규 추가** — 8절의
+> 단일 `EngineForceMagnitude` 힘 모델이 기어별 토크 테이블 기반으로 확장됨. 조향력을
+> 엔진 토크에서 완전히 분리(15절), 스로틀 힘에 램프 + 방향전환 리셋 추가(16절),
+> 브레이크를 인위적 힘 주입 방식에서 **마찰력(Coulomb friction) 기반**으로 전면
+> 재작성(17절, 12절에서 만든 `PhysicalMaterial` 스위칭 메커니즘 재사용) — 8.4절의
+> 마찰 관련 내용은 이제 브레이크 쪽에도 적용되니 같이 참고. UGV 질량도 15톤 placeholder
+> 에서 **3톤으로 확정**되고 그에 맞춰 힘 관련 파라미터 전체가 재튜닝됨(18절) — 8절의
+> `EngineForceMagnitude=2,000,000` 등 예시 수치는 이제 18절 값으로 대체됨.
 
 `titan_example` 프로젝트에 추가한 UGV(무인 지상 탱크) 주행 시스템 — WASD 수동 조종과
 NavMesh 기반 자동 경로 주행을 같은 물리 모델로 통합 구현. `path.md`의 1차 목표
@@ -628,4 +637,161 @@ if (World->LineTraceSingleByChannel(Hit, BestPoint+(0,0,5000), BestPoint-(0,0,50
 `OnLeftDesignatedArea()` (`BlueprintImplementableEvent`, `BP_UGV`에서 오버라이드해
 원하는 WBP 토스트 연결 가능) + `UE_LOG` 경고 + 즉시 확인용
 `GEngine->AddOnScreenDebugMessage`("지정 구역을 벗어났습니다") 셋 다 같이 발생.
+
+## 14. 기어 시스템 — P/R/N/1~5단 (2026-07-12)
+
+memo.md 의문사항 5("최대 기어 = 속도 제한?")와 ui.md의 기어 표시 요구사항을 반영.
+8절의 단일 `EngineForceMagnitude`(트랙당 고정 힘)를 **기어별 토크 테이블** 기반으로
+확장 — 기어마다 자기 자신의 최고속도/토크를 갖고, 자동으로 변속됨.
+
+### 14.1 상태 정의
+```cpp
+UENUM(BlueprintType)
+enum class EUGVGear : uint8 { Park, Reverse, Neutral, Gear1, Gear2, Gear3, Gear4, Gear5 };
+
+USTRUCT(BlueprintType)
+struct FUGVGearParams
+{
+    float MaxSpeedKmH = 20.f;      // 이 기어의 토크 커브가 ~0에 도달하는 속도
+    float TorqueMultiplier = 1.f;  // EngineForceMagnitude에 곱하는 배수
+};
+```
+`GearTable`(`TArray<FUGVGearParams>`, 인덱스 0=1단)로 1~5단 관리. **R(후진)은 별도
+엔트리 없이 `GearTable[0]`(1단) 값을 그대로 재사용** — 스펙: "R 후진은 1단과 같은
+토크, 속력". `MaxGear`로 자동변속이 도달 가능한 최고 기어를 제한(콘솔 `SetUGVMaxGear
+<N>`) — 의문사항 5가 여기서 해결됨: 기어마다 자기 최고속도가 있으니, `MaxGear`를
+낮추면 더 빠른(높은) 기어로 못 올라가서 자동으로 속도 제한이 걸림.
+
+### 14.2 상태 전환 (`UpdateGear`, 매 틱 `ApplyTrackForces` 전에 호출)
+```
+DriveMode == Idle                                          → Park
+ThrottleInput < -ReverseThrottleThreshold(0.05)             → Reverse
+정지 근접(<NeutralSpeedThresholdKmH=1) && Throttle/Steer 둘 다 ~0 → Neutral
+그 외                                                        → Gear1~5 (히스테리시스 자동변속)
+```
+Gear1~5 변속: `UpshiftSpeedFraction`(기본 0.85)만큼 현재 기어 자신의 `MaxSpeedKmH`에
+도달하면 상위 기어로, 하위 기어 진입은 그 기어 자신의 upshift 지점보다
+`GearHysteresisKmH`(기본 3) 아래로 떨어져야 — 경계에서 매 틱 왔다갔다하는 플리커
+방지(`UTargetDetectionComponent`의 Acquire/LoseConfidenceThreshold와 동일한 아이디어).
+
+**Neutral은 의도적으로 아무 힘도/고정력도 안 걺** — 실제 자동차의 N처럼 경사에서
+중력 따라 구름. Park(Idle 모드)만 브레이크로 고정됨(17절). 처음엔 Neutral도
+고정시켰다가("브레이크 뗐더니 서서히 미끄러짐" 버그로 오인) 사용자가 "N은 원래
+굴러가는 게 맞다"고 정정 — 되돌림.
+
+### 14.3 토크 커브 (`ComputeGearForceMagnitude`)
+```cpp
+TorqueFactor = (1 - SpeedFraction)^TorqueFalloffExponent;   // 기본 지수 3
+Force = EngineForceMagnitude * GearTable[i].TorqueMultiplier * TorqueFactor;
+```
+정지 시(SpeedFraction=0) 풀토크, 그 기어의 `MaxSpeedKmH`에 가까워질수록 토크가
+지수형으로 감소(`TorqueFalloffExponent`가 클수록 대부분 구간은 토크 유지하다가
+막판에 급격히 떨어짐) — 실제 achieved 최고속도는 항력이 줄어드는 토크를 따라잡는
+지점에서 `MaxSpeedKmH`보다 살짝 낮게 형성됨(8.3절과 같은 원리).
+
+**함정 — 절대속도 vs 방향정렬 속도**: 처음엔 `SpeedFraction = Abs(CurrentSpeed) /
+MaxSpeedKmH`로 계산했는데, 이러면 40km/h로 전진 중 후진(S)을 걸 때 `Abs(40)/12`(R은
+1단 기준 최고속도 12)가 1.0을 훌쩍 넘겨 클램프되어 **토크가 거의 0으로 나와 브레이크
+대비 후진 감속력이 10배 이상 약해지는** 버그가 있었음. **해결**: 그 기어의 "자기
+방향" 기준으로 부호 있는 속도를 계산하고 0 미만은 0으로 클램프 —
+```cpp
+GearDirectionSign = (CurrentGear == Reverse) ? -1.f : 1.f;
+AlignedSpeedKmH = Max((CurrentSpeed * 0.036f) * GearDirectionSign, 0.f);
+SpeedFraction = Clamp(AlignedSpeedKmH / EffectiveMaxSpeedKmH, 0, 1);
+```
+반대 방향으로 움직이는 중이면 "이미 그 기어 최고속도 초과"가 아니라 "그 기어
+방향으로는 아직 0에서 시작"으로 읽혀서 자연스럽게 풀토크. 모든 기어에 공통 적용되는
+일반 공식(후진 전용 특례 아님).
+
+### 14.4 대시보드 연동
+`FUGVStatusData::GearLabel`(FString, "P"/"R"/"N"/"1".."5") +
+`MaxGear`(int32) — `UUGVMovementComponent::GetGearLabel()` →
+`AUGVPawn::UpdateUGVStatusData` → `UUGVStatusComponent::SetGearData(GearLabel,
+MaxGear)`. `UMonitor1Widget`(활성 대시보드 — `MissionDashboardWidget`은 회귀테스트용
+레거시)에 `UGVSpeedText`/`UGVCurrentGearText`/`UGVMaxGearText` 3개 텍스트 위젯
+추가(`BindWidgetOptional`).
+
+## 15. 조향력을 엔진 토크에서 분리 (2026-07-12)
+
+**버그**: 조향(A/D)이 `ComputeGearForceMagnitude()`(14.3절, 기어/속도에 따라 변하는
+토크 커브)를 그대로 곱해서 썼음 — 저속(토크 풀)에서는 각속도가 과하게 빠르고,
+고속(현재 기어 최고속도 근처, 토크가 0에 수렴)에서는 조향이 거의 안 먹는 현상.
+
+**해결**: 조향 전용 고정 힘 `SteerForceMagnitude`(기본 200만) 신설 — 기어/속도와
+완전히 무관, 항상 일정. `LeftForce = ThrottleForce - SteerForce`, `RightForce =
+ThrottleForce + SteerForce`로 스로틀 힘과 완전히 독립적으로 합산.
+
+## 16. 스로틀 힘 램프 + 방향전환 반동(rubber-band) 방지 (2026-07-12)
+
+**버그 1**: 전진↔후진을 빠르게 왔다갔다하면 관성을 완전히 무시하고 순간적으로 속도가
+튀는 느낌. **해결**: `MaxThrottleForceChangeRatePerSecond`(기본 4000만/초)로 실제
+적용되는 힘(`SmoothedThrottleForce`)이 목표 힘으로 순간이동하지 않고 서서히
+램프업/다운되도록 제한. **조향은 이 램프 대상이 아님** — 즉각 반응 유지(이 프로젝트의
+"수동 입력은 항상 즉각적이어야 한다"는 기존 철학과 일치).
+
+**버그 2 (버그 1의 부작용) — "고무줄 반동"**: 램프를 추가하고 나니, 고속(예:
+50km/h)으로 전진하다 후진을 걸면 감속은 부드러운데, **정확히 0을 통과해서 실제
+후진이 시작되는 순간 원래 전진 속도에 비례해서 확 튕겨나가는** 현상 발생. 원인:
+14.3절의 방향정렬 속도 계산상 "전진 중에는 속도가 얼마든 반대방향으로 취급 → 목표
+힘이 항상 풀토크로 고정" → 감속에 걸리는 시간이 길수록(원래 속도가 빠를수록)
+램프가 그 풀토크를 향해 그만큼 더 오래 쌓임 → 실제로 방향이 바뀌는 순간 그 쌓인
+큰 힘이 새 방향에 그대로 얹힘.
+
+**해결**: 실제 속도의 부호가 뒤바뀌는 순간을 감지해서 그 시점에 램프값을 0으로
+리셋:
+```cpp
+// PreviousSpeedSign 멤버로 프레임 간 부호 추적, 5cm/s 데드존으로 노이즈 방지
+if (CurrentSpeedSign != 0 && PreviousSpeedSign != 0 && CurrentSpeedSign != PreviousSpeedSign)
+    SmoothedThrottleForce = 0.f;
+```
+"아직 감속(브레이크처럼 작동) 중"과 "이제 진짜 반대 방향으로 새로 가속 시작"을
+구분해서, 후자는 항상 0부터 다시 시작 — 감속 단계에서 쌓인 힘이 가속 단계로
+새어나가지 않음.
+
+## 17. 브레이크 — 마찰력(Coulomb friction) 기반으로 전면 재작성 (2026-07-12)
+
+**버그**: 기존 브레이크는 매 틱 `FMath::Sign(현재속도)` 방향으로
+`BrakeForceMagnitude`(고정값)를 그대로 꽂는 On/Off 방식이었음 — 경사에 정지해있으면
+중력이 미세하게 미는 속도조차 매 틱 최대 힘으로 반대로 튕겨내면서 격렬하게
+떨리는(bang-bang 진동) 현상 발생.
+
+**해결 — 인위적 힘 대신 실제 마찰력을 올림**: 8.4절에서 만든 트랜지언트
+`PhysicalMaterial` 스위칭 메커니즘을 재사용해서, 평소 주행용 저마찰
+`GroundContactMaterial`과 별도로 고마찰 `BrakeContactMaterial`(`BrakeFriction`,
+기본 1.75)을 만들고, `bBraking`이 바뀌는 **전환 시점에만**(매 틱 아님)
+`BodyInstance.SetPhysMaterialOverride()`로 교체. 감속과 정지 유지 둘 다 물리
+엔진의 접촉 솔버가 처리 — 인위적인 `AddForceAtLocation` 없음, 그래서 진동도
+원천적으로 없음.
+
+**정지마찰(Coulomb friction)의 물리적 성질이 정확히 원하는 동작과 일치**: 버틸 수
+있는 최대 경사각은 `atan(BrakeFriction)`로 결정됨 — 즉 웬만한 경사에서는 완전히
+정지, 아주 가파른 경사에서만 자연스럽게 미끄러짐. `FrictionCombineMode`는 평소
+주행용과 동일하게 **Min 유지**(낮은 쪽이 이김) — 물리적으로 이게 정석(빙판 위에서는
+브레이크를 걸어도 미끄러지는 게 현실적)이고, 지금 프로젝트엔 어차피 지형에 별도
+`PhysicalMaterial`이 지정된 게 없어서 경쟁 상대가 없는 상태라 Max로 바꿀 실익도
+없음.
+
+기존 `BrakeForceMagnitude` 프로퍼티는 완전히 제거됨(대체된 게 아니라 이 방식 자체가
+다른 메커니즘이라 새 값 `BrakeFriction`으로 대체).
+
+## 18. 질량 3톤 확정 + 물리 파라미터 재튜닝 (2026-07-12)
+
+8절 도입 당시 15톤은 placeholder였음 — **3톤으로 확정**, 사용자가 에디터에서 직접
+테스트하며 아래 값들을 재튜닝하고 저장. 실제 배치된 `BP_UGV` 인스턴스에서 MCP로 값을
+읽어와 C++ 기본값도 동일하게 반영(향후 새 인스턴스나 리셋 시에도 이 값에서 시작하도록):
+
+| 값 | 기존(15톤 기준) | 신규(3톤, 2026-07-12) |
+|---|---|---|
+| `EngineForceMagnitude` | 200만 | **400만** |
+| `AirResistanceCoefficient` | 7.8 | **0.01** |
+| `GroundFriction` | 0.15 | **0.01** |
+| `OffRoadAirResistanceMultiplier` | 3 | **10** |
+| `OffRoadTopSpeedMultiplier` | 0.6 | **1**(비활성화 — 저항 배율만으로 온/오프로드 차등 충분하다고 판단) |
+| `UpshiftSpeedFraction` | 0.9 | **0.85** |
+| `GearTable`(1~5단, 속도km/h·토크배수) | 12·1.0 / 24·0.85 / 38·0.7 / 55·0.55 / 75·0.45 | **12·5.0 / 24·2.5 / 36·1.67 / 48·1.25 / 60·1.0** |
+
+`SteerForceMagnitude`/`TrackOffset`/`TrackLengthOffset`/`LateralGripStrength`/
+`OffRoadSpeedDecayPerTick`/`TorqueFalloffExponent`/`GearHysteresisKmH`/`MaxGear`는
+15톤 기준 기본값과 이미 동일해서 안 건드림. `BodyMesh->SetMassOverrideInKg`도
+15000 → 3000으로 수정.
 
