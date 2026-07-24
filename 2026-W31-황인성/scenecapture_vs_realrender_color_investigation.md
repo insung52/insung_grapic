@@ -89,7 +89,7 @@ float UTextureRenderTarget2D::GetDisplayGamma() const
 
     EPixelFormat Format = GetFormat();
     if (Format == PF_FloatRGB || Format == PF_FloatRGBA || bForceLinearGamma)
-        return 1.0f;   // "나는 리니어 데이터를 담고 있다" — 감마 인코딩 생략
+        return 1.0f;   // "나는 리니어 데이터를 담고 있다" — 감마 인코딩 생략 
 
     return UTextureRenderTarget::GetDefaultDisplayGamma(); // 2.2 — "나는 감마 인코딩된 디스플레이용 데이터를 담는다"
 }
