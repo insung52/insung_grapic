@@ -51,12 +51,21 @@ PDF/PPTX 원본 참고).
 
 ## 3. 문서 인덱스 (주제별)
 
-### 최근 작업 — 카메라 파이프라인 (2026-07-21~23, 최신)
-- **`C:\private\2026-W30-황인성\camera_pipeline_overhaul_2026-07.md`** ← **가장 최근/종합
-  정리본, 카메라 관련해서는 이 문서부터 볼 것.** CineCamera 아키텍처 통일, RCWS Lumen 버벅임
-  버그 → UGV RCWS를 씬캡쳐 대신 진짜 메인 렌더링(`ULocalPlayer` 서브렉트)으로 전환, TitanTruck/
-  UAV까지 확장 시도 후 롤백한 경위, 씬캡쳐 지글거림(TAA 기본 꺼짐) 및 UAV 라이팅 버그 수정,
-  아직 안 풀린 씬캡쳐-vs-실제렌더링 색감 불일치 이슈까지 전부 포함.
+### 최근 작업 — 씬캡쳐 vs 실제 렌더링 색감 불일치 (2026-07-24~26, 완전 해결)
+- **`C:\working\insung_grapic\2026-W31-황인성\scenecapture_vs_realrender_color_investigation.md`**
+  ← TitanTruck RCWS/UAV/QuadCam 씬캡쳐 화면이 실제 렌더링보다 색이 진하고 어둡게 나오던 문제,
+  **완전히 해결됨**(사후 보정값 없이 완전 동일). 최종 원인 두 가지: (1) 엔진이 모든 씬캡쳐의
+  Lumen GI/Reflections를 기본 OFF시킴, (2) 렌더타겟의 `GetDisplayGamma()`를 Slate(UI 표시)와
+  톤매퍼(색상 계산)가 서로 반대 목적으로 읽어서 생기는 구조적 충돌 — 렌더타겟 프로퍼티가 아니라
+  UMG에서 렌더타겟을 그리는 방식을 텍스처 브러시 → 머티리얼 브러시(`M_SceneCaptureDisplay`)로
+  바꿔서 해결. 아래 4절의 "미해결 이슈" 항목이었던 것 — 이제 해결됨.
+
+### 카메라 파이프라인 전반 (2026-07-21~23)
+- **`C:\private\2026-W30-황인성\camera_pipeline_overhaul_2026-07.md`** ← 카메라 관련 종합
+  정리본. CineCamera 아키텍처 통일, RCWS Lumen 버벅임 버그 → UGV RCWS를 씬캡쳐 대신 진짜 메인
+  렌더링(`ULocalPlayer` 서브렉트)으로 전환, TitanTruck/UAV까지 확장 시도 후 롤백한 경위, 씬캡쳐
+  지글거림(TAA 기본 꺼짐) 및 UAV 라이팅 버그 수정 등. **씬캡쳐-vs-실제렌더링 색감 불일치는 이
+  문서(6절)에서 미해결로 남겨뒀었으나, 위 최신 문서에서 완전히 해결됨.**
 - (참고용, 최신 문서로 대체됨) `C:\private\2026-W30-황인성\rcws_quadcam_uav_cinecamera_overhaul.md`,
   `rcws_lumen_scenecapture_stutter_investigation.md` — 위 종합 문서에 다 흡수됨, 개별 조회 불필요.
 
@@ -101,10 +110,6 @@ PDF/PPTX 원본 참고).
 
 ## 4. 알려진 미해결 이슈 (다음 세션에서 참고)
 
-- **씬캡쳐 화면(TitanTruck RCWS/UAV) vs UGV RCWS(실제 렌더링) 색감/밝기 불일치** — 코드 문제는
-  아닌 것으로 확인됨, 레벨 라이팅 세팅(HDRIBackdrop Intensity=150, Skylight Intensity=900을
-  PostProcessVolume의 EV100 강제 고정으로 상쇄시켜둔 상태)이 유력 원인. 사용자가 나중에 처리하기로
-  보류. 상세: `camera_pipeline_overhaul_2026-07.md` 6절.
 - **UGV 공중에 뜬 바퀴가 계속 회전** — deprioritized, 재조사 보류 요청 상태.
 - QuadCam 4분할 CCTV의 라운드로빈 캡쳐 최적화 — 아이디어만 기록됨, 미착수
   (`camera_pipeline_overhaul_2026-07.md` 3절 끝).

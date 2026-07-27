@@ -1,36 +1,115 @@
-# 씬캡쳐 vs 실제 렌더링 색감/음영 불일치 — 완전 조사 기록 (2026-07-24)
+# 씬캡쳐 vs 실제 렌더링 색감/음영 불일치 — 완전 해결 기록 (2026-07-24 조사 시작 → 2026-07-26 완전 해결)
 
-> `titan_example` 프로젝트. `camera_pipeline_overhaul_2026-07.md` 6절에서 보류했던 문제
-> ("TitanTruck RCWS/UAV 짐벌 씬캡쳐가 UGV RCWS 실제 렌더링보다 색감이 진하고 그림자가 어둡다")를
-> 엔진 소스 기준으로 끝까지 판 기록. **완전히 해결되지는 않았지만**, 원인을 두 개의 독립된 축으로
-> 명확히 분리하고 각각 실제로 고칠 수 있는 만큼 고쳤다. 남은 건 실용적 보정값(오토익스포저
-> 바이어스 -1.0)으로 눈으로 보며 조정하는 단계.
+> `titan_example` 프로젝트. TitanTruck RCWS/UAV 짐벌/QuadCam 씬캡쳐 화면이 실제 렌더링보다 색이
+> 진하고 그림자가 어둡게(또는, 잘못 고친 중간 단계에서는 반대로 살짝 밝게) 나오던 문제.
 >
-> **이 조사 전체의 핵심 한 줄**: 증상의 대부분(사용자 체감 90%+ 이상)은 Lumen이나 노출 같은
-> "라이팅 계산"의 차이가 아니라, **`bForceLinearGamma`라는 프로퍼티 하나가 런타임 생성 렌더타겟에서
-> 절대 꺼지지 않던 순수 인코딩 버그**였다. 2절에 이걸 왜 그렇게 판단하는지, 정확히 무엇이고 왜
-> 씬캡쳐와 메인뷰가 이 점에서 다르게 동작하는지를 집중적으로 정리했다.
+> **2026-07-26, 완전히 해결됨 — `AutoExposureBias` 등 어떤 사후 보정값도 없이 씬캡쳐와 실제
+> 렌더링이 완전히 동일하게 나온다.** 회색/빨강뿐 아니라 민트색 등 임의의 색상으로도 검증 완료.
+>
+> 최종 원인은 완전히 독립적인 세 개가 겹쳐 있었다:
+> 1. **엔진이 모든 씬캡쳐의 Lumen GI/Reflections를 기본적으로 강제 OFF시킴** — 뷰마다 독립적으로
+>    수렴하는 게 아니라, **간접광 계산 자체가 한 번도 돈 적이 없었음.**
+>   - titan example 에서는 강제로 lumen 을 켜서 이전에 해결.
+> 2. **`UTextureRenderTarget2D::GetDisplayGamma()`를 서로 다른 목적으로 읽는 두 시스템(Slate의
+>    UImage 인코딩 / 톤매퍼 자체의 감마 커브 적용)이 정반대의 값을 원함** — 한쪽을 고치면 다른
+>    쪽이 깨지는 구조적 충돌이었고, **렌더타겟 프로퍼티 하나로는 절대 둘 다 만족시킬 수 없었다.**
+>    진짜 해결은 렌더타겟 프로퍼티가 아니라 *렌더타겟을 화면에 그리는 방식 자체*를 바꾸는 것이었다
+>    (텍스처 브러시 → 머티리얼 브러시, `M_SceneCaptureDisplay`).
+> 3. 텍스처 스트리밍 미등록 (해상도 문제, 색감과 무관, 1절)
+>
+> 이 문서는 두 라운드의 조사를 거쳤다: 2026-07-24에 1번을, 2026-07-26 오전에 2번의 "절반"
+> (`bForceLinearGamma=true`+`RTF_RGBA16f`)을 고쳤다고 착각했다가, 같은 날 오후 재검증 과정에서
+> **그 "절반짜리 수정"도 실은 또 다른 형태로 틀렸다는 것**을 발견하고 진짜 원인(2번)을 완전히
+> 규명해서 고쳤다. 아래 각 절에 "당시엔 맞다고 믿었지만 나중에 틀린 것으로 밝혀짐" 기록을 접은
+> `<details>` 블록으로 그대로 남겨뒀다 — 오답에 빠졌던 경위 자체가 다음에 비슷한 버그를 만났을 때
+> 유용한 교훈이기 때문.
 
 ---
 
-## TL;DR
+## TL;DR (최종)
 
-1. **텍스처 스트리밍 등록 누락** — 씬캡쳐는 메인뷰와 달리 텍스처 스트리밍 시스템에 자기 위치를
-   전혀 등록 안 함(엔진 구조적 한계, 커뮤니티에서도 알려진 이슈). **고침.** 색감/음영과는 무관한
-   별개 축(해상도/선명도 문제).
-2. **렌더타겟 감마 인코딩 버그** — 런타임 생성 렌더타겥의 `bForceLinearGamma`가 에디터 전용
-   동기화 로직 때문에 절대 안 꺼지고 있었음. **진짜 코드 버그였고, 고쳤다.** (단, 이것만으로는
-   부족했고 격리 과정에서 한 번 방향이 반대로 튀는 우여곡절이 있었음 — 아래 상세 기록.)
-3. **뷰별 독립 Lumen GI/노출** — 씬캡쳐는 메인뷰와 Lumen 씬 데이터·노출 히스토리를 절대
-   공유하지 않음(엔진 아키텍처, `CaptureSource`를 뭘 쓰든 무관 — 증명됨). **고칠 방법이 없음.**
-   사용자의 정밀한 실측(노출 자유/광원색 조작 실험)으로 이게 진짜 원인이라는 것까지 확인됨.
-4. **최종 실용 조치**: CineCamera의 `AutoExposureBias = -1.0`(EV100 값 직접 오프셋 대신 —
-   PostProcessVolume의 EV100 락 값이 나중에 바뀌어도 안전하도록) 오버라이드로 임시 보정.
-   **완벽한 값은 아니며, 여러 위치를 보면서 추후 조정 필요.**
+1. **Lumen GI/Reflections가 씬캡쳐에서 기본적으로 완전히 꺼져 있었음.**
+   `SceneCaptureRendering.cpp`의 `SetupViewFamilyForSceneCapture()`에 다음이 있다:
+   ```cpp
+   // By default, Lumen is disabled in scene captures, but can be re-enabled with the post
+   // process settings in the component.
+   View->FinalPostProcessSettings.DynamicGlobalIlluminationMethod = EDynamicGlobalIlluminationMethod::None;
+   View->FinalPostProcessSettings.ReflectionMethod = EReflectionMethod::None;
+   View->FinalPostProcessSettings.LumenSurfaceCacheResolution = 0.5f;
+   ```
+   엔진이 **의도적으로, 명시적으로** 모든 씬캡쳐의 Lumen을 기본 OFF로 강제한다(성능 때문으로 보임 —
+   거울/보안카메라 등 저비용 용도가 씬캡쳐의 주 사용처). `ShowFlags`로는 전혀 제어 안 되는, 완전히
+   별개의 메커니즘이라 찾기 어려웠다.
+   **고침**: `SightCamera`/`GimbalCamera`/QuadCam 4개 카메라 전부 `SyncLensFromCineCamera(s)`에서
+   매 틱 `bOverride_DynamicGlobalIlluminationMethod=true`+`Lumen`,
+   `bOverride_ReflectionMethod=true`+`Lumen`을 강제.
 
+2. **`GetDisplayGamma()`를 읽는 두 시스템의 목적 충돌 (진짜 최종 원인).**
+   `UTextureRenderTarget2D::GetDisplayGamma()`(`TextureRenderTarget2D.cpp`) 하나의 값을 서로
+   무관한 두 곳이 정반대 의미로 읽는다:
+   - **Slate** (`SlateRHIRenderingPolicy.cpp`): `UImage` 브러시로 텍스처를 그릴 때
+     `GetDisplayGamma()==1.0`이면 "이미 디스플레이용으로 인코딩 끝났다, 다시 건들지 마"로 해석해서
+     아무것도 안 하고, `!=1.0`이면 자체적으로 감마 인코딩을 한 번 더 건다. (`SViewport`에는
+     `bEnableGammaCorrection`이라는 탈출구가 있지만 `UImage`엔 없음.)
+   - **톤매퍼 자체** (`PostProcessTonemap.cpp`의 `GetTonemapperOutputDeviceParameters()` →
+     `PostProcessCombineLUTs.usf`의 Filmic 경로: `pow(FilmColorNoGamma, InverseGamma.y)`,
+     `InverseGamma.y = 2.2 / GetDisplayGamma()`): `GetDisplayGamma()==1.0`이면 "이 렌더타겟은
+     아직 감마 커브가 하나도 안 씌워졌다, 여기서 내가 직접 `pow(x, 2.2)`를 걸어줘야 한다"로
+     해석한다. 실제 뷰포트 백버퍼는 `GetDisplayGamma()~=2.2`라서 `InverseGamma.y=1.0`이 되어
+     이 단계가 아무 일도 안 하고 지나간다.
+
+   즉 **`bForceLinearGamma=true`(또는 float 포맷)로 `GetDisplayGamma()`를 1.0으로 만들면 Slate
+   쪽은 고쳐지지만, 그 순간 톤매퍼가 실제 뷰에는 없는 `pow(x, 2.2)`를 씬캡쳐 색상에만 추가로
+   걸어버린다.** `pow(x, 2.2)`는 x가 1(밝음/직사광)에 가까울수록 거의 안 변하고 x가 작을수록
+   (그림자·어두운 노출) 급격히 더 어두워지는 곡선이라, "그림자만 유독 어둡고 EV100을 올릴수록
+   (전체를 어둡게 할수록) 차이가 커지는" 정확히 그 증상을 만든다 — Lumen을 완전히 꺼도, 노출을
+   완전히 고정해도 사라지지 않는 이유가 이것.
+
+   **`GetDisplayGamma()` 하나로는 이 두 시스템을 동시에 만족시킬 방법이 없다** (하나는 1.0을
+   원하고 하나는 ~2.2를 원함). 그래서 렌더타겟 프로퍼티가 아니라 **렌더타겟을 화면에 그리는
+   방식**을 바꿔서 해결했다:
+   - 렌더타겟은 `RenderTargetFormat=RTF_RGBA8`, `bForceLinearGamma=false`, `SRGB=true`로
+     되돌린다 → `GetDisplayGamma()~=2.2`가 되어 **톤매퍼가 실제 뷰와 완전히 동일하게 동작**한다
+     (`InverseGamma.y=1.0`, 추가 `pow` 없음).
+   - 대신 UMG에서 이 렌더타겟을 **일반 텍스처 브러시가 아니라 머티리얼 브러시**로 표시한다
+     (`M_SceneCaptureDisplay`, `/Game/UI/Materials/`). 머티리얼은 자기만의 컴파일된 셰이더로
+     텍스처를 샘플링하기 때문에 `SlateRHIRenderingPolicy`의 `GetDisplayGamma()` 기반 자동
+     재인코딩 경로를 아예 타지 않는다 — 그 대신 머티리얼 안에서 **명시적으로** sRGB 디코드를
+     한 번 해준다 (`UTextureRenderTarget2D::SRGB` 플래그는 실제 GPU 리소스에는 전혀 반영 안 되는
+     죽은 프로퍼티라서 — `TextureRenderTarget2D.cpp` 주석: *"Resource has a bSRGB field which is
+     not set or checked in the RenderTarget code"* — 하드웨어 자동 디코드에 의존할 수 없기
+     때문). 이렇게 하면 톤매퍼(1번 인코딩) → 머티리얼의 명시적 디코드(1번 디코드) → UI
+     컴포지팅이 정확히 한 번씩만 걸려서, 두 시스템이 서로 다른 값을 원하는 충돌 자체가 사라진다.
+
+   ![graph.png](graph.png)
+
+   머티리얼 안의 sRGB 디코드는 단순 `pow(x, 2.2)` 근사가 아니라 **정확한 sRGB 피스와이즈
+   커브**(어두운 영역은 선형 구간)로 구현했다 — 단순 `pow(2.2)` 근사만으로도 대부분 맞지만
+   미세한 잔차가 남았고(EV100을 극단적으로 올렸을 때 실제 렌더링이 아주 살짝 더 밝게 보임),
+   정확한 커브로 바꾸자 그 잔차까지 완전히 사라졌다.
+   ```hlsl
+   float3 c = max(In, 0.0);
+   float3 lo = c / 12.92;
+   float3 hi = pow((c + 0.055) / 1.055, 2.4);
+   float3 mask = step(c, 0.04045);
+   return lerp(hi, lo, mask);
+   ```
+
+3. **텍스처 스트리밍 등록 누락 (2026-07-24, 여전히 유효, 색감과는 무관).** 씬캡쳐가 텍스처
+   스트리밍 시스템에 자기 위치를 전혀 등록 안 함 — 해상도/선명도 문제. 고침, 유지. (1절)
+
+4. **최종 결과**: 위 1, 2번을 전부 고치자 `AutoExposureBias` 등 어떤 사후 보정값도 필요 없이
+   씬캡쳐와 실제 렌더링이 완전히 동일하게 나왔다 — 회색/빨강뿐 아니라 민트색 큐브로도 재검증
+   완료(사용자 실측 확인, 2026-07-26).
+
+   변경 전 (ev100 7 고정)
+   ![l_t_ev100_7.png](l_t_ev100_7.png)
+
+   변경 후 (ev100 7 고정, 중간에 민트색 cube 추가)
+   ![pow.png](pow.png)
 ---
 
-## 1. 텍스처 스트리밍 등록 누락 (해결)
+## 1. 텍스처 스트리밍 등록 누락 (해결, 유지)
 
 ### 발견
 엔진 전체에서 `AddStreamingViewInfo()`(뷰 위치를 텍스처 스트리밍 매니저에 등록)를 호출하는
@@ -54,289 +133,213 @@ const float FOVScreenSize = ScreenSize / FMath::Tan(HorizontalFOVRadians * 0.5f)
 const float StreamingScale = 1.f / FMath::Clamp(SightCamera->LODDistanceFactor, 0.2f, 1.f);
 IStreamingManager::Get().AddViewInformation(SightCamera->GetComponentLocation(), ScreenSize, FOVScreenSize, StreamingScale);
 ```
-(`ScreenSize`/`FOVScreenSize` 공식은 `UnrealClient.cpp`의 `AddStreamingViewInfo()` 실제 구현을
-그대로 게임 스레드 버전으로 이식한 것.) `#include "ContentStreaming.h"` 추가.
-
 **색감/음영과는 무관한 별개 축**(해상도/선명도 문제) — 확인 완료, 유지.
 
-### 배제한 관련 가설
-- **`LODDistanceFactor`**(팀장님이 언급한 LOD bias) — 라이브 값 확인 결과 `1.0`(기본값 그대로,
-  메인뷰와 동일). 우리 코드가 이 값을 건드린 적이 없어서 발동 안 하고 있었음. **원인 아님.**
+---
+
+## 2. 렌더타겟 감마/디스플레이 인코딩 버그 — 최종 원인 및 해결
+
+> 이 절은 두 번 틀렸다가 세 번째에 진짜 원인을 찾았다. 아래 두 개의 접은 블록은 각각
+> "이중 감마"라는 진단까지는 맞았지만 최종 결론이 틀렸던 두 번의 실패 기록이다. **진짜 정답은
+> 위 TL;DR 2번 참고.**
+
+<details>
+<summary>1차 시도 (2026-07-24): "bForceLinearGamma=false가 정답" — 틀림</summary>
+
+`SCS_FinalColorLDR`는 톤매핑+감마 인코딩까지 이미 적용된 최종 이미지이므로
+`bForceLinearGamma=false`가 맞다고 결론 냈었다. 당시 Lumen이 완전히 꺼져 있어서 전체적으로
+어두웠던 상태 + `AutoExposureBias=-1.0` 보정이 우연히 이중 감마로 인한 과다노출을 어느 정도
+상쇄해준 상태에서 "95% 맞다"고 판단한 것이었다 — 실제로는 이중 감마가 그대로 남아있었다.
+
+</details>
+
+<details>
+<summary>2차 시도 (2026-07-26 오전): "bForceLinearGamma=true + RTF_RGBA16f가 정답" — 이것도 틀림</summary>
+
+Slate가 `UImage`로 텍스처를 그릴 때 `GetDisplayGamma()` 기준으로 자체적으로 한 번 더 감마
+인코딩을 건다(`SlateRHIRenderingPolicy.cpp`)는 진단까지는 맞았다. `bForceLinearGamma=true`로
+바꿔서 `GetDisplayGamma()`가 1.0을 반환하게 만들면 Slate의 재인코딩이 없어지니 문제가
+해결된다고 결론 냈다. 다만 8비트 정수 포맷에 리니어 값을 그대로 저장하면 그림자/GI 디테일의
+정밀도가 뭉개지는 새 문제가 생겨서(감마 인코딩은 원래 어두운 영역에 비트를 더 배분해주는 역할도
+하기 때문), 렌더타겟 포맷을 `RTF_RGBA8` → `RTF_RGBA16f`(float, 정밀도 손실 없음)로 같이 바꿨다.
+
+titan_example에 적용 직후엔 완벽해 보였다(사용자 확인, "노출조정 없이도 완벽하게 똑같은
+퀄리티로 보여"). **그런데 나중에 titan_example을 다시 켜보니 예전 증상이 재발한 것처럼
+보였고**, 재조사 결과 사실 이 "완벽했던" 순간은 착시였다 — 밝은 노출값에서는 문제가 클리핑에
+가려 안 보였을 뿐, 노출을 낮춰서(EV100을 올려서) 다시 보니 그림자 영역에서 씬캡쳐가 계속 더
+어둡게 나오는 게 확인됐다. 원인은 `bForceLinearGamma=true`가 Slate 쪽 문제는 고쳤지만,
+**톤매퍼 자체의 감마 커브 적용 로직에 새로운 문제를 만들고 있었기 때문**(TL;DR 2번 참고) —
+`RTF_RGBA16f`로 정밀도 손실을 없앤 건 사실이었지만, 애초에 "리니어 값을 저장해야 한다"는
+전제 자체가 틀렸다.
+
+</details>
 
 ---
 
-## 2. 렌더타겟 감마 인코딩 버그 — `bForceLinearGamma` (이번 조사 전체의 핵심)
+## 3. ~~뷰별 독립 Lumen GI / 노출~~ — 결론이 틀렸음, 정정함
 
-이번 세션에서 확인한 모든 원인 후보(LOD bias, 스크린퍼센티지, 오클루전 쿼리, Lumen 품질 기본값,
-카드 갱신 예산, 카메라컷, Lumen 씬 콜드스타트, 텍스처 스트리밍) 중에서 **실제 체감 차이의
-대부분을 설명하는 건 이것 하나뿐**이었다. 나머지는 전부 "이론상 존재하지만 이번 증상의 주 원인은
-아님"으로 배제되거나 부수적인 축(해상도)이었던 반면, 이건 **매 프레임 매 픽셀에 예외 없이 적용된
-순수 인코딩 버그**라서 위치·시점·씬 콘텐츠와 무관하게 항상 같은 방향으로 어긋난다 — "일정하게
-편향적"이라는 사용자의 관찰과 정확히 들어맞는 유일한 후보였다.
+> **2026-07-24의 이 절 전체 결론("구조적으로 해결 불가능")은 틀렸다.** 아래 원본 기록은 "왜 틀린
+> 결론에 도달했는지" 참고용으로만 남겨둔다. 실제로는 Lumen 씬 데이터가 뷰마다 "다르게 수렴"한 게
+> 아니라, 씬캡쳐 쪽 Lumen이 **애초에 완전히 꺼져 있었다** (1절 TL;DR, 5절 참고).
+>
+> (2026-07-26 오후 추가 확인: `SceneCaptureRendering.cpp`에서 Lumen GI/Reflection이 켜져 있는
+> 씬캡쳐는 `FSceneViewState::AddLumenSceneData()`를 통해 메인뷰의 `DefaultLumenSceneData`와는
+> **별개의, 자기 전용 `FLumenSceneData` 인스턴스**를 갖는다는 것도 확인했다 — 메인뷰 걸 최초 1회
+> 복사해서 시작한 뒤로는 독립적으로 갱신된다. 이 메커니즘 자체는 실재하지만, 최종적으로 확인한
+> 결과 이번 증상의 원인은 아니었다 — 원인은 TL;DR 2번의 `GetDisplayGamma()` 충돌이었고, 그 증거로
+> **Lumen을 양쪽 다 완전히 꺼도, 심지어 직사광만 받는 벽에서도 동일한 증상이 재현됐다.**)
 
-### 2.1 `bForceLinearGamma`가 정확히 무엇인가
-
-`UTextureRenderTarget2D`(`TextureRenderTarget2D.h:129`)의 `uint8:1` 비트필드 프로퍼티,
-생성자 기본값 `true`(`TextureRenderTarget2D.cpp:48`). 이 프로퍼티가 하는 일은 딱 하나:
-**"이 렌더타겟에 저장되는 픽셀 데이터가 이미 리니어(선형) 값인지, 아니면 디스플레이용으로 감마
-인코딩되어야 하는 값인지"**를 엔진에게 알려주는 스위치다. 실제 소비 지점은
-`UTextureRenderTarget2D::GetDisplayGamma()`(`TextureRenderTarget2D.cpp:704`):
-```cpp
-float UTextureRenderTarget2D::GetDisplayGamma() const
-{
-    if (TargetGamma > UE_KINDA_SMALL_NUMBER * 10.0f)
-        return TargetGamma;                              // 명시적 오버라이드, 기본 0(안 씀)
-
-    EPixelFormat Format = GetFormat();
-    if (Format == PF_FloatRGB || Format == PF_FloatRGBA || bForceLinearGamma)
-        return 1.0f;   // "나는 리니어 데이터를 담고 있다" — 감마 인코딩 생략 
-
-    return UTextureRenderTarget::GetDefaultDisplayGamma(); // 2.2 — "나는 감마 인코딩된 디스플레이용 데이터를 담는다"
-}
-```
-`bForceLinearGamma=true`가 **왜 기본값인가**: 게임 코드가 `NewObject<UTextureRenderTarget2D>()`로
-직접 만드는 렌더타겟은 대부분 "화면에 보여줄 그림"이 아니라 **HDR 씬컬러, 커스텀 포스트프로세스
-중간 버퍼, GPU 컴퓨트 출력, VFX 시뮬레이션 데이터** 같은 순수 숫자 데이터 용도다. 이런 용도에선
-감마 곡선이 걸리면 오히려 계산이 틀어지므로, 엔진 입장에서 "일단 리니어로 취급"이 더 안전한
-기본값이다 — 즉 **이건 버그가 아니라 의도된, 합리적인 기본값**이다. 문제는 우리가 이 기본값을
-안 바꾸고 그대로 뒀다는 것.
-
-### 2.2 왜 `SCS_FinalColorLDR`에서는 이 기본값이 틀렸는가 — 씬캡쳐와 메인뷰가 갈라지는 정확한 지점
-
-`SCS_FinalColorLDR`는 "톤매핑까지 끝나고 **감마 인코딩까지 이미 적용된**, 화면에 그대로 띄우면
-되는 최종 이미지"를 뽑는 캡쳐소스다(HDR 계열인 `FinalColorHDR`/`FinalToneCurveHDR`과 대비해서
-"LDR"이라는 이름 자체가 이 의미). 그런데 실제로 **그 감마 인코딩을 몇 번 걸지는 톤매퍼가 매번
-계산 시점에 목적지 렌더타겟에게 직접 물어본다** — `PostProcessTonemap.cpp`의
-`GetTonemapperOutputDeviceParameters()`:
-```cpp
-float Gamma = ...;
-InvDisplayGammaValue.X = 1.0f / Family.RenderTarget->GetDisplayGamma();
-```
-같은 "Final*" 톤매퍼 코드 경로가 실제 게임 백버퍼, 무비렌더큐 출력, 씬캡쳐 등 **여러 종류의
-목적지에 재사용**되기 때문에, "이 캡쳐소스면 무조건 감마 2.2"라고 하드코딩하지 않고 목적지
-렌더타겟의 `GetDisplayGamma()`를 그대로 신뢰하는 설계다.
-
-- **메인 게임 뷰포트**(UGV RCWS가 쓰는 진짜 렌더링)의 목적지는 `UTextureRenderTarget2D`가 아니라
-  `FViewport`/`FSceneViewport`가 소유한 진짜 스왑체인 리소스다. 이건 정말로 모니터에 표시될
-  데이터라서 `GetDisplayGamma()`가 진짜 디스플레이 감마(~2.2)를 정확히 반환한다.
-- **우리 `SightRenderTarget`/`CameraRenderTarget`**은 `NewObject`로 만든 평범한
-  `UTextureRenderTarget2D`다. `bForceLinearGamma`를 아무도 명시적으로 끈 적이 없어서 기본값
-  `true`가 그대로 남아있었고, `GetDisplayGamma()`가 **1.0을 반환** — 톤매퍼에게 "나는 리니어
-  데이터를 원한다"고 잘못 알려준 것.
-
-**결과**: Lumen GI 계산, 톤매핑, 노출 계산까지 — 위 단계 전부 메인뷰와 씬캡쳐가 완전히 동일한
-코드로 동일하게 실행된다. 유일하게 갈라지는 지점은 **맨 마지막, "이 값에 감마 곡선을 씌울지
-말지"를 결정하는 그 한 줄**뿐이다. 즉 이건 라이팅/노출/Lumen과 전혀 무관한, 순수하게 "출력 인코딩
-단계의 설정값 하나"가 부른 문제였다.
-
-### 2.3 왜 하필 "그림자가 더 어둡고 색감이 진해지는" 증상으로 나타나는가 (수학적 이유)
-
-감마 인코딩은 `E = L^(1/2.2)` 형태(L=리니어 밝기, 0~1)다. `0<L<1` 구간에서 `1/2.2 ≈ 0.4545`
-지수는 값을 **끌어올린다** — 예를 들어 `L=0.5`면 `E ≈ 0.73`. 우리 씬캡쳐는 이 인코딩을 생략하고
-`L`을 그대로 저장했으므로, 나중에 그 값이 화면에 "이미 감마 인코딩된 것"처럼 취급되어 표시되면
-**의도한 값(E)보다 항상 어둡게(L<E)** 보인다.
-
-이 감마 곡선은 **어두운 영역일수록 곡선의 기울기가 훨씬 가파르다** — 즉 그림자처럼 `L`이 작은
-영역에서, 인코딩을 빼먹었을 때 생기는 절대적인 밝기 손실이 하이라이트보다 훨씬 크다. 이게 정확히
-"그림자가 유독 더 어둡게 보인다"는 증상의 수학적 이유다. 그리고 이렇게 어두운 쪽으로 눌린 상태에서
-채널 간 상대적인 밝기 차(=색의 채도감)는 그대로 유지되거나 오히려 두드러지게 되어, 육안으로는
-"색이 더 진하다/선명하다"로 인지된다 — 이것도 색공간 문헌에서 "리니어 이미지를 감마 보정 없이
-그대로 표시하면 어둡고 대비/채도가 과하게 보인다"로 잘 알려진 전형적인 증상과 정확히 일치한다.
-
-### 2.4 1차 수정과 과보정 (실패, 원인 규명 후 재수정)
-
-`bForceLinearGamma=false`만 추가(기존 `RenderTargetFormat=RTF_RGBA8_SRGB`+`SRGB=true`는
-유지한 채) → 빌드 결과 **오히려 훨씬 밝게 과다노출**됨.
-
-원인 추적 결과: `UTextureRenderTarget2D::IsSRGB()`(GPU 텍스처의 `TexCreate_SRGB` 하드웨어
-플래그를 실제로 결정하는 함수)가 `InitAutoFormat` 대상(`OverrideFormat==PF_Unknown`, 우리 경우)
-에서는:
-```cpp
-if (OverrideFormat == PF_Unknown)
-    return RenderTargetFormat == RTF_RGBA8_SRGB;  // 원시 SRGB 프로퍼티는 아예 안 봄
-```
-엔진 자체 주석: *"in theory you'd like the 'bool SRGB' variable to == this, but it does not"*.
-즉 **`SRGB` 원시 프로퍼티를 아무리 바꿔도 하드웨어 디코드 플래그는 안 바뀌고, 오직
-`RenderTargetFormat`만 본다.** `RTF_RGBA8_SRGB`를 유지한 채 `bForceLinearGamma`만 고치니:
-쓸 때(톤매퍼)는 이제 제대로 감마 인코딩하는데, 읽을 때(Slate가 샘플링) GPU가 **또 한 번**
-sRGB→리니어 디코드를 해서 두 단계가 서로 다른 가정 위에서 겹쳐 과다노출이 남.
-
-**재수정**: `RenderTargetFormat`을 `RTF_RGBA8`(plain, `_SRGB` 아님)로 되돌림 — `bForceLinearGamma`
-는 `false` 유지. 이러면 하드웨어 디코드가 아예 안 걸려서, 톤매퍼가 쓴 감마 인코딩된 바이트가
-그대로(추가 처리 없이) 화면에 표시됨. `SRGB` 원시 프로퍼티도 `false`로 되돌려 일관성 유지(어차피
-`IsSRGB()`가 무시하지만).
-
-### 2.5 최종 재검증 — 파이프라인 전체 재확인 (2026-07-24)
-
-사용자 요청으로 전체 조합을 다시 처음부터 재검증:
-- **`RTF_RGBA8` vs `RTF_RGBA8_SRGB`가 실제로 다른 픽셀 포맷인지**: `TextureRenderTarget2D.h:52-53`
-  확인 결과 **둘 다 `PF_B8G8R8A8`로 동일** — sRGB 플래그만 격리되어 바뀌고 저장 정밀도/채널
-  순서는 무관, 부수효과 없음 확인.
-- **`InitAutoFormat()` 호출 순서**: `bForceLinearGamma=false` 설정 직후 호출하는데 혹시 내부에서
-  다시 리셋하는지 확인 → 리셋 로직 자체가 주석 처리되어 죽어있음(`//bForceLinearGamma = true;`).
-  순서 문제 없음.
-- **`TargetGamma`**(별도의 명시적 감마 오버라이드): 기본값 `0.f`("0이면 리소스에서 상속") —
-  아무것도 오버라이드 안 함, 확인 완료.
-- **`CaptureSource=SCS_FinalColorLDR`의 정의**: HDR 계열(`FinalColorHDR`="Linear Working Color
-  Space", `FinalToneCurveHDR`="Linear sRGB gamut")과 대비해 리니어가 아님(=감마 인코딩된
-  디스플레이용)이 재확인됨 — 우리 선택 자체는 맞음.
-
-**최종 상태**: `SCS_FinalColorLDR` + `RTF_RGBA8`(plain) + `SRGB=false` + `bForceLinearGamma=false`
-— 내적으로 일관됨, 더 이상 모순 지점 없음. **이 축은 완료로 결론.**
-
-### 2.6 CaptureSource를 FinalToneCurveHDR로 바꾸면 완전히 동일해질 수 있는지 (조사 완료 — 불가능하다는 게 증명됨)
-
-`SceneCaptureRendering.cpp:230-233`:
-```cpp
-static bool CaptureNeedsSceneColor(ESceneCaptureSource CaptureSource)
-{
-    return CaptureSource != SCS_FinalColorLDR && CaptureSource != SCS_FinalColorHDR && CaptureSource != SCS_FinalToneCurveHDR;
-}
-```
-`FinalColorLDR`/`FinalColorHDR`/`FinalToneCurveHDR` **셋 다 `EngineShowFlags.PostProcessing`을
-안 끔** — 디퍼드 라이팅+Lumen GI+톤매핑까지 완전히 동일한 파이프라인을 다 돌린 뒤, 그 체인의
-어느 지점에서 뽑아내느냐만 다름. Lumen GI 계산 자체는 포스트프로세스보다 훨씬 앞단이라
-`CaptureSource`가 뭐든 전혀 영향 안 받음. 그리고 3절의 독립 Lumen 씬 메커니즘 코드에도
-`CaptureSource`를 체크하는 조건문이 단 하나도 없음. **결론: CaptureSource를 바꿔도 3절의
-근본 원인(독립 Lumen/노출)은 전혀 해결 안 됨 — 증명됨, 이 방향은 실익 없음.**
-
----
-
-## 3. 뷰별 독립 Lumen GI / 노출 — 근본 원인 (구조적으로 해결 불가능함이 증명됨)
+<details>
+<summary>2026-07-24 원본 기록 (결론은 틀렸지만 조사 과정 참고용으로 보존)</summary>
 
 ### 3.1 독립 Lumen 씬 데이터 — 공유할 방법이 없음
-
 `SceneViewState.h:100-102` 주석: *"Cube map captures share an origin, allowing them to share
 things like global distance fields and Lumen scene data. Otherwise, this will just be the same
-as UniqueID."* 실제 공유 코드(`SceneCaptureComponent.cpp:414`)는:
-```cpp
-if ((ViewStates.Num() > 1) && IsCube())
-    ViewStates.Last().ShareOrigin(&ViewStates[0]);
-```
-**큐브맵 캡쳐 6면끼리만** 공유 — 일반 2D 캡쳐(우리 SightCamera/GimbalCamera)가 메인뷰와 공유할
-경로는 **엔진에 아예 없음.** `FSceneViewState`(`RendererScene.cpp:378-386`) 생성 시
-`ShareOriginTarget`이 없으면 `ShareOriginUniqueID = UniqueID`(자기 자신) — 각 뷰가 무조건 자기만의
-`FLumenSceneData`를 가짐.
+as UniqueID."* 실제 공유 코드(`SceneCaptureComponent.cpp:414`)는 큐브맵 캡쳐 6면끼리만 공유 —
+일반 2D 캡쳐가 메인뷰와 공유할 경로는 엔진에 아예 없음.
 
-- **콜드스타트 가설**: 배제됨. `AddLumenSceneData()`(`SceneViewState.cpp:557`)가
-  `SceneData->CopyInitialData(*Scene->DefaultLumenSceneData)`로 메인뷰 데이터를 최초 1회
-  복사해서 시작 — 0에서 시작하는 게 아님. 그 이후로만 독립적으로 갈라짐.
-- **카드 갱신 예산 경합 가설**: 배제됨. `UpdateSurfaceCacheMeshCards(FLumenSceneData&, ...)`가
-  `FLumenSceneData` 인스턴스마다 별도 호출되고 예산 카운터가 매 호출 로컬 초기화 — 메인뷰와
-  캡쳐가 프레임당 카드 갱신 예산을 각자 100% 독립적으로 받음, 경합 없음.
-- **카메라컷 리셋 가설**: 배제됨. `bCameraCutThisFrame`을 `true`로 세팅하는 코드가 엔진 전체에
-  0건, 우리 코드도 안 건드림 — 항상 `false`, 컷 없이 이어지는 히스토리 정상 유지.
-- **Lumen 수렴 속도(`LumenSceneLightingUpdateSpeed`/`LumenFinalGatherLightingUpdateSpeed`) 가설**:
-  실제로 존재하는 진짜 노브(카드 갱신 배수/디퓨즈 GI 히스토리 누적 프레임 수 조절, 최대치로
-  올리면 수렴이 빨라짐)이지만, **사용자가 일정하게 편향된 차이(위치 무관하게 늘 같은 방향)라고
-  재확인**해서 이 시간적 수렴/노이즈 계열 가설 자체가 기각됨 — 일정한 편향은 수렴 속도가 아니라
-  구조적인 차이를 가리킴.
+(참고: 이 사실 자체는 여전히 맞다 — 다만 "그래서 수렴 결과가 달라진다"가 이번 증상의 실제
+원인은 아니었다는 게 나중에 밝혀짐. Lumen 자체가 안 돌고 있었으니 "다르게 수렴"할 대상 자체가
+없었다.)
 
 ### 3.2 독립 노출(PreExposure) 히스토리
+`FViewInfo::UpdatePreExposure()`가 뷰스테이트마다 독립 관리 — 이것도 사실이지만, 2026-07-26
+재조사에서 노출값을 강제로 고정(`AutoExposureMinBrightness=MaxBrightness`)해도 증상이 전혀
+안 바뀌는 것으로 확인되어 이번 증상의 원인에서 제외됨.
 
-`FViewInfo::UpdatePreExposure()`(`PostProcessEyeAdaptation.cpp:1504`)가
-`ViewState->PreExposure`에 매 프레임 저장 — 뷰스테이트(캡쳐 하나당 하나)마다 독립 관리.
-공식 자체(`GlobalExposure = GetLastEyeAdaptationExposure()`)엔 `bIsSceneCapture` 분기가 전혀
-없음(순수 알고리즘은 동일) — 차이는 오직 **각자의 누적 히스토리**에서만 발생.
+### 3.3 결정적 실험 — 사용자가 직접 확인 (2026-07-24, 재해석 필요)
+- HDRI/Skylight 강도 0 + PostProcessVolume EV100 락 해제 + 오토익스포저 자유 → 그림자 음영 차이는
+  여전히 존재.
+- 광원 색을 어둡게 → 색감 진해짐, 어두운 부분 더 어두워짐.
 
-### 3.3 결정적 실험 — 사용자가 직접 확인 (2026-07-24)
+**2026-07-26 재해석**: 이 실험들은 Lumen이 꺼진 상태에서 진행됐다. Lumen 없이 직사광만 있는
+상태에서 광원 세기/색을 바꾸면 당연히 결과가 바뀌므로, 이 실험이 "독립 Lumen 수렴"을 증명한 게
+아니라 그냥 "직사광 세팅이 최종 그림에 영향을 준다"는 당연한 사실을 보여준 것이었다.
 
-- **HDRI/Skylight 강도 0 + PostProcessVolume EV100 락 해제 + 오토익스포저 자유** → 노출값이
-  최대한 밝게 잡혀서 색감 차이는 하이라이트로 날아가 안 보이지만, **그림자 음영 차이는 여전히
-  존재.** 노출이 자유롭게 최대치로 풀렸는데도 어두운 부분 차이가 안 사라짐 = 노출값(EV100) 문제가
-  아님.
-- **광원 색을 어둡게(노출은 안 건드림)** → EV100 강제고정 때와 동일한 증상(색감 진해짐, 어두운
-  부분 더 어두워짐) 재현.
-
-이 둘을 합치면: **차이의 실체는 노출값이 아니라 Lumen GI가 실제로 만들어내는 밝기/색 값 자체**
-— 3.1의 독립 Lumen 씬 메커니즘과 정확히 부합. **이 조사에서 가장 강력한 실증적 증거.**
-
-### 3.4 결론 — 엔진 아키텍처상 완전한 해결 불가능
-
-`ShareOriginUniqueID`/`FLumenSceneData` 독립 메커니즘은 일반 2D 씬캡쳐에 대해 메인뷰와 공유할
-공개 API가 존재하지 않음(2.6절에서 CaptureSource로도 우회 불가능함이 증명됨). **코드로 완전히
-없앨 수 있는 문제가 아님** — 남은 선택지는 두 독립 계산이 실제로 비슷한 답에 수렴하도록
-입력(레벨 라이팅)을 안정시키거나, 결과 차이를 사후 보정하는 것뿐.
+</details>
 
 ---
 
-## 4. 최종 조치 — 오토익스포저 바이어스 보정 (2026-07-24, 임시)
+## 4. ~~최종 조치 — 오토익스포저 바이어스 보정~~ (더 이상 필요 없음, 제거함)
 
-사용자가 TitanTruck RCWS/UAV 짐벌의 CineCamera(`RCWSSightCineCamera`/`GimbalCineCamera`)
-PostProcessSettings에 **`AutoExposureBias = -1.0`** 오버라이드를 적용. `bForceLinearGamma` 수정
-이후 이 보정 하나만으로 육안상 95% 이상 일치하는 결과를 얻음.
-
-**EV100 절대값 오프셋이 아니라 바이어스(상대 보정)를 택한 이유**: 레벨의 PostProcessVolume이
-잠가둔 EV100 절대값(현재 10)은 나중에 라이팅 작업하면서 바뀔 수 있음 — 절대값 오프셋(예:
-"항상 13으로 고정")은 그 락 값이 바뀌면 다시 안 맞게 되지만, **바이어스(상대 보정, 현재 -1.0)는
-락 값이 얼마로 바뀌든 그 값 기준으로 상대적으로 계속 적용**되어 더 안전함.
-
-### 4.1 왜 단 하나의 상수 보정값으로 95% 이상 맞아떨어지는가 — 코드로 뒷받침되는 설명
-
-`bForceLinearGamma`를 고치기 전에는 EV100/노출값을 아무리 만져도 톤앤매너 자체가 안 맞았다(이건
-2.3절의 감마 곡선 자체가 틀렸으니 당연 — 곡선 모양이 다른 걸 밝기 스칼라 하나로는 못 고침).
-감마를 고친 지금은 곡선 자체는 맞고, 남은 차이가 오직 3절의 "뷰마다 독립적으로 수렴하는 Lumen
-GI/노출"뿐이라는 게 이 조사로 확정된 상태다. 그렇다면 **왜 그 독립 수렴 차이가 상수 하나로
-거의 다 상쇄되는가**를 코드로 뒷받침해본다.
-
-`AutoExposureBias`의 실제 소비 코드(`PostProcessEyeAdaptation.cpp:451-459`):
-```cpp
-float AutoExposureBias = Settings.AutoExposureBias;
-...
-return FMath::Pow(2.0f, AutoExposureBias);   // 최종 노출 스케일 = 2^AutoExposureBias
-```
-**`AutoExposureBias`는 순수 EV(로그2) 스케일의 덧셈값이고, 실제 밝기에는 `2^bias`라는 배율로
-곱해진다.** 이게 핵심이다: 만약 두 독립된 Lumen 씬이 만들어내는 최종 장면 밝기(간접광 포함)의
-차이가 화면 전체에 걸쳐 **대략 일정한 배율(k배)**로 어긋나는 성격이라면 — 이건 정확히
-`log2(k)`만큼의 EV(로그2) 오프셋과 수학적으로 동일한 형태다. `AutoExposureBias = -log2(k)`로
-정확히 상쇄할 수 있는, **딱 노출 보정이 원래 하도록 설계된 바로 그 종류의 오차**라는 뜻이다.
-
-**이게 우리가 지금 코드로 증명할 수 있는 것과 증명 못하는 것의 경계**:
-- **증명됨(코드)**: `AutoExposureBias`가 정확히 이런 "전역 균일 배율 보정" 메커니즘이라는 것 —
-  위 코드로 100% 확인.
-- **증명 안 됨(실측 필요, 안 함)**: 실제 두 Lumen 씬의 차이가 정말로 "대략 균일한 배율"에
-  가까운 성격인지 자체는 라이브 픽셀 비교 없이는 단정 불가. 다만 **95% 이상 일치라는 실측
-  결과 자체가, 그 가정이 이 씬/이 두 카메라 조합에 한해서는 상당히 잘 맞아떨어진다는 간접
-  증거**다. 반대로 "완벽하진 않다"는 것도 이 설명과 모순되지 않는다 — 균일 배율이 아닌 나머지
-  성분(국소적 그림자 패턴 차이 등)은 상수 하나로는 원리적으로 못 잡기 때문.
-
-즉 지금 상태는 "가장 큰 성분(감마 곡선 자체가 틀림, ~버그)은 코드로 완전히 고쳤고, 남은 두
-번째로 큰 성분(독립 Lumen 수렴의 균일 배율 오차)은 정확히 그 성질에 맞는 도구(`AutoExposureBias`)
-로 근사 보정 중"이라는 그림으로 요약된다.
-
-**주의**: 이 값(-1.0)은 정밀 튜닝된 최종값이 아님 — 여러 위치/각도에서 화면을 보면서 계속
-조정 필요. 3절에서 확인했듯 이 차이가 정확히 위치에 얼마나 의존적인지까지는 다 밝히지 못했음
-(사용자가 "일정하게 편향적"이라고 재확인했지만, 그 편향의 정확한 크기가 씬 콘텐츠에 따라
-미세하게 다를 가능성은 남아있음 — Lumen GI 자체가 결국 콘텐츠 의존적이므로).
+> 2026-07-24 당시 최종 조치였던 `AutoExposureBias=-1.0`은 **2026-07-26 근본 원인 수정 후 완전히
+> 제거했다.** 진짜 원인(Lumen 완전 비활성화 + `GetDisplayGamma()` 이중 용도 충돌)을 고치고 나니
+> 사후 보정 없이도 두 렌더링이 동일하게 나왔다 — 이 보정값은 여러 버그가 만든 오차를 우연히
+> 부분적으로만 상쇄해주던 미봉책이었을 뿐, 애초에 정확한 값을 낼 수 있는 방법이 아니었다.
 
 ---
 
-## 5. 최종 코드 상태 (2026-07-24)
+## 5. 최종 원인 규명 경위 (2026-07-26)
 
-- **`Vehicles/RCWSComponent.cpp`**: `SightRenderTarget->RenderTargetFormat = RTF_RGBA8;`(plain),
-  `SRGB = false;`, `bForceLinearGamma = false;`(BeginPlay). `TickComponent()`에
-  `IStreamingManager::Get().AddViewInformation(...)` 매 틱 호출 추가(`CaptureScene()` 직전).
-  `#include "ContentStreaming.h"` 추가.
-- **`Vehicles/UAVPawn.cpp`**: `CameraRenderTarget`에 동일 패턴(`RTF_RGBA8`/`SRGB=false`/
-  `bForceLinearGamma=false`). `Tick()`에 동일한 스트리밍 등록 추가.
-- **레벨/BP 쪽**: `RCWSSightCineCamera`(TitanTruck)/`GimbalCineCamera`(UAV)의
-  PostProcessSettings에 `AutoExposureBias = -1.0` 오버라이드 추가(사용자가 직접, 코드 아님).
-  값은 추후 조정 예정.
-- 이전 세션에 이미 적용된 `LumenSurfaceCacheResolution=1.0` 강제, `ShowFlags.SetTemporalAA(true)`
-  등은 그대로 유지.
+### 5.1 배경
+2026-07-24 조사 이후에도 titan_example 자체에서는 색감 차이가 완전히 안 잡혀서(`AutoExposureBias`로
+95% 정도만 맞춰둔 상태), 문제를 titan_example의 복잡한 대시보드/차량 로직에서 분리해서 볼 수 있는
+**최소 재현 환경**이 필요했다. `C:\working\mine\testvehicle`(UE 5.8 Vehicle Template 기반, 완전히
+새로운 일회용 샌드박스 프로젝트)에 자유이동 카메라 폰 하나로 화면 오른쪽엔 그 폰의 실제 렌더링,
+왼쪽엔 정확히 같은 위치/방향을 보는 씬캡쳐를 나란히 띄우는 재현 환경을 새로 만들었다(unreal-mcp로
+Claude Code가 직접 C++ 작성 + 에디터 조작).
+
+### 5.2 1라운드 — Lumen 비활성화 + "절반짜리" 감마 수정
+1. 처음엔 titan의 2026-07-24 설정(`bForceLinearGamma=false`, `RTF_RGBA8`) 그대로 시작 → 왼쪽
+   (씬캡쳐)이 하얗게 뜨는 것 확인. 엔진소스(`SlateRHIRenderingPolicy.cpp`)를 뒤져서 Slate가
+   `UImage`에 자체 감마 인코딩을 한 번 더 건다는 것을 발견 — 이중 감마 확정.
+2. `bForceLinearGamma=true`로 바꾸니 흰색 문제는 사라졌지만 이번엔 반대로 어둡고 색감이 진해짐
+   (8비트 정수 포맷에 리니어 저장하면서 정밀도 손실) → `RTF_RGBA16f`(float)로 포맷도 같이 바꿔서
+   해결(된 것처럼 보였음).
+3. Lumen이 씬캡쳐에서 기본 OFF라는 것을 발견(`SceneCaptureRendering.cpp::SetupViewFamilyForSceneCapture()`)
+   하고 강제 on으로 수정 → 그림자에 바운스광이 들어오며 실제 렌더링과 일치.
+4. titan_example의 `RCWSComponent.cpp`/`UAVPawn.cpp`/`QuadCamComponent.cpp`에 동일 수정 적용 →
+   사용자가 "완벽하게 똑같다"고 확인.
+
+### 5.3 2라운드 — 재발, 그리고 진짜 원인 발견
+5. 나중에 titan_example을 다시 켜보니 색감 차이가 다시 보인다는 사용자 보고 → 재조사 시작.
+   샌드박스에서도 같은 증상이 재현됨을 확인(밝은 노출에서는 클리핑에 가려 안 보였을 뿐).
+6. `bMainViewResolution`/TSR 상속, Lumen 전용 별개 씬데이터(`AddLumenSceneData`) 등 여러
+   가설을 세우고 하나씩 코드로 검증했으나 전부 기각 — 특히 **Lumen을 완전히 꺼도, 순수 노출을
+   ISO/셔터/조리개 기반 Manual 모드로 완전히 고정해도** 씬캡쳐가 계속 더 어둡게 나옴을 확인 —
+   Lumen도 노출도 원인이 아니라는 게 명확해짐.
+7. "EV100을 올릴수록(어둡게 할수록) 차이가 커지고, 직사광 받는 벽은 거의 안 다친다"는 사용자의
+   정밀 관찰이 결정적 단서였음 — 감마 커브 관련 곱셈성 오차의 전형적 시그니처. 톤매퍼 소스
+   (`PostProcessTonemap.cpp`, `PostProcessCombineLUTs.usf`)를 다시 파다가
+   `GetTonemapperOutputDeviceParameters()`가 `GetDisplayGamma()`를 읽어서
+   `pow(FilmColorNoGamma, InverseGamma.y)`를 적용한다는 것을 발견 — `bForceLinearGamma=true`가
+   Slate 문제는 고쳤지만 **이 톤매퍼 단계에 실제 뷰에는 없는 `pow(x, 2.2)`를 추가하고 있었다**
+   (TL;DR 2번 참고).
+8. 렌더타겟을 `RTF_RGBA8`/`bForceLinearGamma=false`(=톤매퍼가 실제 뷰와 동일하게 동작)로
+   되돌리고, 대신 UMG 표시 방식을 텍스처 브러시 → 머티리얼 브러시(`M_SceneCaptureDisplay`)로
+   바꿔서 Slate의 자동 재인코딩 경로 자체를 우회 → 처음엔 머티리얼에 넣은 디코드 노드가
+   실제로는 감마 디코드가 아니라 색역(gamut) 변환 노드였던 실수가 있었으나(밝기 변화 없음으로
+   확인), `Power(x, 2.2)` 근사 디코드로 교체하자 거의 일치, **정확한 sRGB 피스와이즈 디코드
+   커브**로 교체하자 완전히 일치 — 회색/빨강/민트색 전부 좌우 완전 동일 확인.
+9. titan_example의 3개 렌더타겟 파일(`RCWSComponent.cpp`/`UAVPawn.cpp`/`QuadCamComponent.cpp`)과
+   4개 위젯 헬퍼 파일(`Monitor1Widget.cpp`/`Monitor2Widget.cpp`/`MissionDashboardWidget.cpp`/
+   `QuadCamUIWidget.cpp`)에 동일 수정 적용, `M_SceneCaptureDisplay` 머티리얼을
+   `/Game/UI/Materials/`에 신규 생성 → **사용자가 titan_example에서 직접 확인, 완전히
+   해결됨(2026-07-26).**
+
+### 5.4 교훈
+- 겉보기에 "완벽하게 고쳐졌다"고 확인한 것도, 특정 노출값·특정 색상에서만 클리핑 등으로 오차가
+  가려져 있었을 뿐일 수 있다 — 노출을 의도적으로 극단까지 바꿔보고, 다양한 색상(민트색 큐브 등)
+  으로 재검증하는 과정이 진짜 결정적이었다.
+- 렌더타겟의 프로퍼티 하나(`GetDisplayGamma()`가 반환하는 값)를 **서로 무관한 두 시스템이 각자
+  다른 목적으로 읽고 있을 수 있다** — 한쪽 문제를 고치는 값이 다른 쪽엔 새 문제를 만들 수 있다는
+  걸 놓치기 쉽다. 이런 구조적 충돌은 프로퍼티를 조정하는 걸로는 근본적으로 못 푼다 — 두 시스템 중
+  하나가 그 프로퍼티를 아예 안 보게 만드는 것(머티리얼 브러시로 전환)이 진짜 해법이었다.
+- "차이가 방향성 있게 일정하게 유지되는가, 노출/설정을 바꿔도 사라지지 않는가"라는 질문이
+  Lumen(수렴 노이즈)과 감마 커브(곱셈성·결정론적 오차)를 구별하는 결정적 기준이 됐다 — 전자라면
+  랜덤하게 방향이 바뀌어야 하는데, 실제로는 항상 같은 방향으로 일정하게 나타났다.
+- `UTextureRenderTarget2D::SRGB` 프로퍼티는 실제 GPU 리소스 sRGB 뷰 생성에 전혀 반영되지 않는
+  죽은 플래그다(`TextureRenderTarget2D.cpp` 자체 주석으로 확인) — 렌더타겟에 관해서는 "SRGB만
+  true로 켜면 하드웨어가 알아서 디코드해준다"는 가정이 성립하지 않는다.
 
 ---
 
-## 6. 남은 것 / 다음 세션 참고
+## 6. 최종 코드 상태 (2026-07-26)
 
-- **AutoExposureBias 값 정밀 튜닝**: -1.0은 1차 추정치, 실제 여러 씬/각도에서 눈으로 보며 재조정
-  필요.
-- **2번째 조사 방향(멀티 씬 렌더링 N개 한계)**: 이번 세션에서 전혀 착수 안 함 — 여전히 대기 중.
-  목표는 N=3~7개 카메라를 1개 렌더링 성능/퀄리티로 처리하는 방법 조사(이전 세션에서 3개 동시
-  실제 렌더링 시 Lumen 노이즈 증폭으로 롤백한 경험 있음, `camera_pipeline_overhaul_2026-07.md`
-  3절 참고).
-- 최근 다른 작업자가 진행 중인 것으로 보이는 **레벨 라이팅 재조정 작업**(SkyLight를
-  CapturedScene 모드로 전환, SkyAtmosphere 액터 추가, EV100 락 재검증 등, task #28-35) —
-  이 문서의 3.3절 실험(HDRI/Skylight 세기 조정)과 밀접하게 연관될 수 있어 보임. 그쪽 작업
-  결과에 따라 이 문서의 AutoExposureBias 값도 재조정이 필요할 가능성 있음 — 두 작업 진행 상황을
-  서로 참고할 것.
+- **`Vehicles/RCWSComponent.cpp`**, **`Vehicles/UAVPawn.cpp`**,
+  **`Plugins/QuadCamModule/.../QuadCamComponent.cpp`** (3곳 전부 동일 패턴):
+  - `SightRenderTarget`/`CameraRenderTarget`/QuadCam 4개 RT: `RenderTargetFormat = RTF_RGBA8`,
+    `SRGB = true`(메타데이터용, 실제 GPU 리소스엔 영향 없음), `bForceLinearGamma = false`.
+  - `SyncLensFromCineCamera(s)`(매 틱 호출)에서
+    `bOverride_DynamicGlobalIlluminationMethod=true`/`DynamicGlobalIlluminationMethod=Lumen`,
+    `bOverride_ReflectionMethod=true`/`ReflectionMethod=Lumen`,
+    `bOverride_LumenSurfaceCacheResolution=true`/`LumenSurfaceCacheResolution=1.f` 유지.
+  - `TickComponent()`/`Tick()`에 `IStreamingManager::Get().AddViewInformation(...)` 매 틱 호출 유지
+    (1절, 변경 없음).
+- **`/Game/UI/Materials/M_SceneCaptureDisplay`** (신규 머티리얼, `MD_UI`/`MSM_Unlit`): 텍스처
+  파라미터 `RenderTarget` → 정확한 sRGB 디코드(Custom HLSL 노드, 피스와이즈 커브) → Emissive
+  Color. 이 머티리얼 하나를 아래 4곳 전부가 공유한다.
+- **`UI/Monitor1Widget.cpp`**, **`UI/Monitor2Widget.cpp`**, **`UI/MissionDashboardWidget.cpp`**,
+  **`Plugins/QuadCamModule/.../QuadCamUIWidget.cpp`**: 각 파일의 `SetImageRenderTarget`류 헬퍼를
+  "`FSlateBrush.SetResourceObject()`로 텍스처 브러시 직접 세팅" 방식에서 "`M_SceneCaptureDisplay`로
+  `UMaterialInstanceDynamic` 생성 → `RenderTarget` 파라미터 세팅 →
+  `Image->SetBrushFromMaterial()`" 방식으로 전환.
+  - 참고: `TestSceneCapture.cpp`/`TestCaptureWidget.cpp`(회귀테스트용 스캐폴딩)는 여전히 기존
+    텍스처 브러시 방식 — 프로덕션 경로가 아니라 의도적으로 안 건드림.
+- **레벨/BP 쪽**: `RCWSSightCineCamera`(TitanTruck)/`GimbalCineCamera`(UAV)의 `AutoExposureBias`
+  오버라이드 **제거함** — 더 이상 필요 없음.
+- 참고용 재현 환경: `C:\working\mine\testvehicle`(UE 5.8 Vehicle Template 기반 샌드박스, unreal-mcp로
+  구축) — 앞으로 비슷한 씬캡쳐/실제렌더링 비교 이슈가 생기면 titan_example 대신 여기서 먼저
+  재현해보는 걸 권장. `AInvestigationCameraPawn`(왼쪽=씬캡쳐, 오른쪽=실제 렌더링, 서브렉트로 완전히
+  동일한 위치/방향 보장)이 핵심 클래스. 여기도 동일하게 `RTF_RGBA8`/`bForceLinearGamma=false`+
+  `M_SceneCaptureDisplay` 패턴으로 맞춰져 있다.
+
+---
+
+## 7. 이 조사에서 남는 열린 질문 (더 팔 수 있으면 참고)
+
+- **왜 씬캡쳐의 뷰패밀리 생성 경로는 프로젝트의 "Lumen" 기본 GI 메서드 설정을 안 물려받는가** —
+  `FSceneView::StartFinalPostprocessSettings()`(`SceneView.cpp`)는 `r.DynamicGlobalIlluminationMethod`
+  CVar를 읽어서 모든 뷰(캡쳐 포함)에 동일하게 `Lumen`을 기본값으로 세팅하는 것까지는 확인함 — 그런데
+  `SceneCaptureRendering.cpp`가 그 직후에 명시적으로 `None`으로 **덮어쓴다**(코드 주석에 "By
+  default, Lumen is disabled in scene captures"라고 명시되어 있음). 즉 "상속이 안 되는"
+  미스터리가 아니라 **의도적으로 다시 꺼버리는 코드가 존재**하는 것 — 이 자체는 정확히 확인됐고,
+  더 팔 필요 없음.
+- `bUseRayTracingIfEnabled`(씬캡쳐 기본 false, 하드웨어 RT Lumen 사용 여부)는 이번 증상의 원인이
+  아니었던 것으로 확인됨(켜봐도 변화 없었음) — 다만 성능/품질상 real view와 맞춰두는 것 자체는
+  유효하므로 코드에는 유지.
+- Lumen GI/Reflection이 켜진 씬캡쳐가 갖는 **자기 전용 `FLumenSceneData`**(메인뷰와 완전히
+  별개, `FSceneViewState::AddLumenSceneData()`)는 이번 증상의 원인은 아니었지만 실재하는
+  메커니즘이다 — 장시간 실행 시 씬캡쳐 쪽 Lumen 씬이 메인뷰와 미세하게 다르게 수렴할 가능성은
+  이론상 여전히 남아있다(이번엔 검증 범위 밖). 나중에 정말 미세한 잔차가 남는 것처럼 보이면
+  이걸 먼저 의심해볼 것.
