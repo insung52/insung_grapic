@@ -51,6 +51,20 @@ PDF/PPTX 원본 참고).
 
 ## 3. 문서 인덱스 (주제별)
 
+### 최근 작업 — 아군 액터 애니메이션 개편 (2026-08-04, 설계 단계)
+- **`ally_character_animation_design.md`** ← `BS_Movement` 저속 슬라이딩 근본 원인
+  (`AxisToScaleAnimation=BSA_None`, 수정 완료) 진단부터 시작해서, 상체 무기 자세(들고
+  조준/내림) 토글, 웅크리기/무릎/엎드림 정리, 둘러보기 유휴 변주, 30명 동기화 문제까지
+  다음에 구현할 아군 캐릭터 애니메이션 시스템 전체 설계. **아직 구현 전, 논의용 초안.**
+
+### 최근 작업 — 시나리오 자동화 전면 정비 (2026-08-02~04, 진행 중)
+- **`scenario_implementation_status.md`** ← **가장 최신, 이 폴더에서 제일 먼저 읽을 문서.**
+  아군+UGV 동반 이동(포메이션/NavMesh 회피/RVO/물리적 안전망/UGV 에스코트 속도 제한),
+  시나리오 스텝 테이블 전체 체인, UAV 카메라 자동 프레이밍, 적군 이동 버그, MCP 편집 툴의
+  알려진 함정까지 전부 정리된 현재 상태 스냅샷. `시나리오.md`(#4-1~#4-8 스펙 원문),
+  `ally_and_scenario_system_plan.md`/`scenario_datatable_system_plan.md`(초기 설계
+  논의, 역사적 참고용)보다 우선.
+
 ### 최근 작업 — 씬캡쳐 vs 실제 렌더링 색감 불일치 (2026-07-24~26, 완전 해결)
 - **`C:\working\insung_grapic\2026-W31-황인성\scenecapture_vs_realrender_color_investigation.md`**
   ← TitanTruck RCWS/UAV/QuadCam 씬캡쳐 화면이 실제 렌더링보다 색이 진하고 어둡게 나오던 문제,
