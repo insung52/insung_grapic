@@ -1,0 +1,11 @@
+{
+  "_comment": "실제 UGV RTSP 서버 연결용 예시. protocol_icd.md §3.3 기준 IP(192.168.10.10)는 확정, 포트/경로(path)는 잠정치(rtsp://192.168.10.10:8554/<stream>) — LIG 참조 모듈 도착 후 실제 값으로 이 파일 자체를 고치거나, streams_config.json의 base_url/path를 이 값으로 바꿔서 사용. 사용법은 README.md '실제 서버 연결 시' 절 참고.",
+  "base_url": "rtsp://192.168.10.10:8554",
+  "streams": [
+    { "name": "front_cctv",  "label": "전면CCTV",  "path": "front_cctv" },
+    { "name": "rear_cctv",   "label": "후면CCTV",  "path": "rear_cctv" },
+    { "name": "left_cctv",   "label": "좌측CCTV",  "path": "left_cctv" },
+    { "name": "right_cctv",  "label": "우측CCTV",  "path": "right_cctv" },
+    { "name": "rcws_viewer", "label": "RCWS뷰어",  "path": "rcws_viewer" }
+  ]
+}

@@ -1,0 +1,48 @@
+2026/08/07 11:05:15 INF MediaMTX v1.20.0, windows, amd64
+2026/08/07 11:05:15 INF configuration loaded from C:\working\insung_grapic\titan\structure\rtsp_viewer_test\tools\mediamtx.yml
+2026/08/07 11:05:15 INF [RTSP] started with listeners on :8564 (TCP/RTSP)
+2026/08/07 11:05:18 INF [RTSP] [conn 127.0.0.1:50761] opened
+2026/08/07 11:05:18 INF [RTSP] [session 71c6741b] created by 127.0.0.1:50761
+2026/08/07 11:05:19 INF [path front_cctv] stream is available and online, 1 track (H264)
+2026/08/07 11:05:19 INF [RTSP] [session 71c6741b] is publishing to path 'front_cctv'
+2026/08/07 11:05:20 INF [RTSP] [conn 127.0.0.1:50768] opened
+2026/08/07 11:05:20 INF [RTSP] [session d6223bef] created by 127.0.0.1:50768
+2026/08/07 11:05:21 INF [path rear_cctv] stream is available and online, 1 track (H264)
+2026/08/07 11:05:21 INF [RTSP] [session d6223bef] is publishing to path 'rear_cctv'
+2026/08/07 11:05:23 INF [RTSP] [conn 127.0.0.1:50774] opened
+2026/08/07 11:05:23 INF [RTSP] [session 5dc6bf15] created by 127.0.0.1:50774
+2026/08/07 11:05:24 INF [path left_cctv] stream is available and online, 1 track (H264)
+2026/08/07 11:05:24 INF [RTSP] [session 5dc6bf15] is publishing to path 'left_cctv'
+2026/08/07 11:05:26 INF [RTSP] [conn 127.0.0.1:50781] opened
+2026/08/07 11:05:26 INF [RTSP] [session 6515d2e1] created by 127.0.0.1:50781
+2026/08/07 11:05:27 INF [path right_cctv] stream is available and online, 1 track (H264)
+2026/08/07 11:05:27 INF [RTSP] [session 6515d2e1] is publishing to path 'right_cctv'
+2026/08/07 11:05:28 INF [RTSP] [conn 127.0.0.1:50788] opened
+2026/08/07 11:05:28 INF [RTSP] [session dcfada2c] created by 127.0.0.1:50788
+2026/08/07 11:05:29 INF [path rcws_viewer] stream is available and online, 1 track (H264)
+2026/08/07 11:05:29 INF [RTSP] [session dcfada2c] is publishing to path 'rcws_viewer'
+2026/08/07 11:05:33 INF [RTSP] [conn 127.0.0.1:53431] opened
+2026/08/07 11:05:33 INF [RTSP] [session a709e1a9] created by 127.0.0.1:53431
+2026/08/07 11:05:33 INF [RTSP] [session a709e1a9] is reading from path 'front_cctv', with TCP, 1 track (H264)
+2026/08/07 11:05:34 INF [RTSP] [conn 127.0.0.1:53435] opened
+2026/08/07 11:05:34 INF [RTSP] [session f0796bcd] created by 127.0.0.1:53435
+2026/08/07 11:05:34 INF [RTSP] [session f0796bcd] is reading from path 'left_cctv', with TCP, 1 track (H264)
+2026/08/07 11:05:35 INF [RTSP] [conn 127.0.0.1:53438] opened
+2026/08/07 11:05:35 INF [RTSP] [session 3e1caa40] created by 127.0.0.1:53438
+2026/08/07 11:05:35 INF [RTSP] [session 3e1caa40] is reading from path 'rcws_viewer', with TCP, 1 track (H264)
+2026/08/07 11:05:36 INF [RTSP] [conn 127.0.0.1:53443] opened
+2026/08/07 11:05:36 INF [RTSP] [session d0de744a] created by 127.0.0.1:53443
+2026/08/07 11:05:36 INF [RTSP] [session d0de744a] is reading from path 'right_cctv', with TCP, 1 track (H264)
+2026/08/07 11:05:38 INF [RTSP] [conn 127.0.0.1:53446] opened
+2026/08/07 11:05:38 INF [RTSP] [session 34fb93d9] created by 127.0.0.1:53446
+2026/08/07 11:05:38 INF [RTSP] [session 34fb93d9] is reading from path 'rear_cctv', with TCP, 1 track (H264)
+2026/08/07 11:05:41 INF [RTSP] [session a709e1a9] destroyed: torn down by 127.0.0.1:53431
+2026/08/07 11:05:41 INF [RTSP] [conn 127.0.0.1:53431] closed: read tcp 127.0.0.1:8564->127.0.0.1:53431: wsarecv: An existing connection was forcibly closed by the remote host.
+2026/08/07 11:05:41 INF [RTSP] [session 3e1caa40] destroyed: torn down by 127.0.0.1:53438
+2026/08/07 11:05:41 INF [RTSP] [conn 127.0.0.1:53438] closed: read tcp 127.0.0.1:8564->127.0.0.1:53438: wsarecv: An existing connection was forcibly closed by the remote host.
+2026/08/07 11:05:41 INF [RTSP] [session f0796bcd] destroyed: torn down by 127.0.0.1:53435
+2026/08/07 11:05:41 INF [RTSP] [conn 127.0.0.1:53435] closed: read tcp 127.0.0.1:8564->127.0.0.1:53435: wsarecv: An existing connection was forcibly closed by the remote host.
+2026/08/07 11:05:41 INF [RTSP] [session 34fb93d9] destroyed: torn down by 127.0.0.1:53446
+2026/08/07 11:05:41 INF [RTSP] [conn 127.0.0.1:53446] closed: read tcp 127.0.0.1:8564->127.0.0.1:53446: wsarecv: An existing connection was forcibly closed by the remote host.
+2026/08/07 11:05:41 INF [RTSP] [session d0de744a] destroyed: torn down by 127.0.0.1:53443
+2026/08/07 11:05:41 INF [RTSP] [conn 127.0.0.1:53443] closed: read tcp 127.0.0.1:8564->127.0.0.1:53443: wsarecv: An existing connection was forcibly closed by the remote host.

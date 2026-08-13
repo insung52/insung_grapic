@@ -1,0 +1,11 @@
+{
+  "_comment": "UGV축 5스트림(protocol_icd.md §3.3) 테스트용 스트림 목록. base_url만 바꾸면 로컬<->실제 서버 전환됨. path는 실제 UGV RTSP 서버 확정 전까지 추정치 — LIG 참조 모듈 도착 후 수정. 포트 8564는 로컬 테스트 서버 전용(8554 아님) — 이 PC에서 다른 세션이 titan_example의 실제 RTSP PoC를 127.0.0.1:8554로 병행 테스트 중이라 충돌 방지를 위해 분리함(README 참고).",
+  "base_url": "rtsp://127.0.0.1:8564",
+  "streams": [
+    { "name": "front_cctv",  "label": "전면CCTV",  "path": "front_cctv" },
+    { "name": "rear_cctv",   "label": "후면CCTV",  "path": "rear_cctv" },
+    { "name": "left_cctv",   "label": "좌측CCTV",  "path": "left_cctv" },
+    { "name": "right_cctv",  "label": "우측CCTV",  "path": "right_cctv" },
+    { "name": "rcws_viewer", "label": "RCWS뷰어",  "path": "rcws_viewer" }
+  ]
+}

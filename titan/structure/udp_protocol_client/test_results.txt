@@ -1,0 +1,60 @@
+test_event_normal_roundtrip (test_roundtrip.RoundtripTestCase.test_event_normal_roundtrip) ... 2026-08-07 10:15:36,460 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=1/4 -> ('127.0.0.1', 19001)
+2026-08-07 10:15:36,460 INFO mock_ugv_server: [MOCK] ACK cmd=ManualFire -> ('127.0.0.1', 19003)
+2026-08-07 10:15:36,461 INFO udp_protocol_client: [ACK] cmd=ManualFire received on attempt 1/4
+[32mok[0m
+test_event_retry_exhausted (test_roundtrip.RoundtripTestCase.test_event_retry_exhausted)
+완전 유실: 스펙 명시대로 3회까지 재시도(총 4회 전송) 후 ProtocolTimeoutError. ... 2026-08-07 10:15:36,668 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=1/4 -> ('127.0.0.1', 19011)
+2026-08-07 10:15:36,668 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 19013) (simulated loss)
+2026-08-07 10:15:36,776 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.100s (attempt 1/4)
+2026-08-07 10:15:36,776 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=2/4 -> ('127.0.0.1', 19011)
+2026-08-07 10:15:36,776 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 19013) (simulated loss)
+2026-08-07 10:15:36,883 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.100s (attempt 2/4)
+2026-08-07 10:15:36,884 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=3/4 -> ('127.0.0.1', 19011)
+2026-08-07 10:15:36,884 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 19013) (simulated loss)
+2026-08-07 10:15:36,995 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.100s (attempt 3/4)
+2026-08-07 10:15:36,995 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=4/4 -> ('127.0.0.1', 19011)
+2026-08-07 10:15:36,995 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 19013) (simulated loss)
+2026-08-07 10:15:37,104 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.100s (attempt 4/4)
+[32mok[0m
+test_event_retry_recovers (test_roundtrip.RoundtripTestCase.test_event_retry_recovers) ... 2026-08-07 10:15:37,277 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=1/4 -> ('127.0.0.1', 19021)
+2026-08-07 10:15:37,277 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 19023) (simulated loss)
+2026-08-07 10:15:37,386 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.100s (attempt 1/4)
+2026-08-07 10:15:37,386 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=2/4 -> ('127.0.0.1', 19021)
+2026-08-07 10:15:37,386 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 19023) (simulated loss)
+2026-08-07 10:15:37,497 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.100s (attempt 2/4)
+2026-08-07 10:15:37,497 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=3/4 -> ('127.0.0.1', 19021)
+2026-08-07 10:15:37,498 INFO mock_ugv_server: [MOCK] ACK cmd=ManualFire -> ('127.0.0.1', 19023)
+2026-08-07 10:15:37,498 INFO udp_protocol_client: [ACK] cmd=ManualFire received on attempt 3/4
+[32mok[0m
+test_periodic_normal_roundtrip (test_roundtrip.RoundtripTestCase.test_periodic_normal_roundtrip)
+정상 케이스: 응답이 바로 옴 -> 재시도 0회. ... 2026-08-07 10:15:37,704 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=1/3 -> ('127.0.0.1', 19030)
+2026-08-07 10:15:37,704 INFO mock_ugv_server: [MOCK] Response cmd=PeriodBasicInfo -> ('127.0.0.1', 19032)
+2026-08-07 10:15:37,704 INFO udp_protocol_client: [RESPONSE] cmd=PeriodBasicInfo received on attempt 1/3
+[32mok[0m
+test_periodic_retry_exhausted (test_roundtrip.RoundtripTestCase.test_periodic_retry_exhausted)
+완전 유실 케이스: 최대 재시도(2) 소진 후 ProtocolTimeoutError. ... 2026-08-07 10:15:37,911 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=1/3 -> ('127.0.0.1', 19040)
+2026-08-07 10:15:37,911 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 19042) (simulated loss)
+2026-08-07 10:15:38,066 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.150s (attempt 1/3)
+2026-08-07 10:15:38,066 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=2/3 -> ('127.0.0.1', 19040)
+2026-08-07 10:15:38,066 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 19042) (simulated loss)
+2026-08-07 10:15:38,224 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.150s (attempt 2/3)
+2026-08-07 10:15:38,224 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=3/3 -> ('127.0.0.1', 19040)
+2026-08-07 10:15:38,225 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 19042) (simulated loss)
+2026-08-07 10:15:38,381 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.150s (attempt 3/3)
+[32mok[0m
+test_periodic_retry_recovers (test_roundtrip.RoundtripTestCase.test_periodic_retry_recovers)
+비정상->정상 케이스: 첫 2번 유실, 3번째 시도에서 응답 -> 재시도 로직이 ... 2026-08-07 10:15:38,525 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=1/3 -> ('127.0.0.1', 19050)
+2026-08-07 10:15:38,525 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 19052) (simulated loss)
+2026-08-07 10:15:38,682 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.150s (attempt 1/3)
+2026-08-07 10:15:38,682 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=2/3 -> ('127.0.0.1', 19050)
+2026-08-07 10:15:38,682 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 19052) (simulated loss)
+2026-08-07 10:15:38,837 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.150s (attempt 2/3)
+2026-08-07 10:15:38,837 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=3/3 -> ('127.0.0.1', 19050)
+2026-08-07 10:15:38,838 INFO udp_protocol_client: [RESPONSE] cmd=PeriodBasicInfo received on attempt 3/3
+2026-08-07 10:15:38,838 INFO mock_ugv_server: [MOCK] Response cmd=PeriodBasicInfo -> ('127.0.0.1', 19052)
+[32mok[0m
+
+----------------------------------------------------------------------
+Ran 6 tests in 2.472s
+
+[32mOK[0m

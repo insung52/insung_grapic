@@ -1,0 +1,62 @@
+2026-08-07 10:16:55,388 INFO demo: === 데모 1: 주기성 메시지 정상 왕복 (PeriodBasicInfo) ===
+2026-08-07 10:16:55,389 INFO demo: [WIRE Request] 78 bytes -> '{"cmd": "PeriodBasicInfo", "src": 20, "recv": 14, "data": {"query": "status"}}'
+2026-08-07 10:16:55,389 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=1/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:55,389 INFO mock_ugv_server: [MOCK] Response cmd=PeriodBasicInfo -> ('127.0.0.1', 8010)
+2026-08-07 10:16:55,389 INFO udp_protocol_client: [RESPONSE] cmd=PeriodBasicInfo received on attempt 1/4
+2026-08-07 10:16:55,389 INFO demo: Response.data = {'echo': {'query': 'status'}, 'servedCmd': 'PeriodBasicInfo'}
+2026-08-07 10:16:55,390 INFO demo: === 데모 2: 주기성 메시지 유실 2회 후 재시도로 성공 ===
+2026-08-07 10:16:55,390 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=1/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:55,391 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 8010) (simulated loss)
+2026-08-07 10:16:55,695 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.300s (attempt 1/4)
+2026-08-07 10:16:55,695 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=2/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:55,695 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 8010) (simulated loss)
+2026-08-07 10:16:56,007 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.300s (attempt 2/4)
+2026-08-07 10:16:56,008 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=3/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:56,008 INFO mock_ugv_server: [MOCK] Response cmd=PeriodBasicInfo -> ('127.0.0.1', 8010)
+2026-08-07 10:16:56,008 INFO udp_protocol_client: [RESPONSE] cmd=PeriodBasicInfo received on attempt 3/4
+2026-08-07 10:16:56,008 INFO demo: 성공(재시도 뒤 회복). Response.data = {'echo': {'query': 'status'}, 'servedCmd': 'PeriodBasicInfo'}, server.requests_received=4
+2026-08-07 10:16:56,008 INFO demo: === 데모 3: 주기성 메시지 완전 유실 -> 최대 재시도 소진 ===
+2026-08-07 10:16:56,008 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=1/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:56,008 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 8010) (simulated loss)
+2026-08-07 10:16:56,322 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.300s (attempt 1/4)
+2026-08-07 10:16:56,322 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=2/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:56,322 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 8010) (simulated loss)
+2026-08-07 10:16:56,623 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.300s (attempt 2/4)
+2026-08-07 10:16:56,623 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=3/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:56,623 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 8010) (simulated loss)
+2026-08-07 10:16:56,935 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.300s (attempt 3/4)
+2026-08-07 10:16:56,935 INFO udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo attempt=4/4 -> ('127.0.0.1', 8000)
+2026-08-07 10:16:56,935 INFO mock_ugv_server: [MOCK] DROP Request cmd=PeriodBasicInfo from ('127.0.0.1', 8010) (simulated loss)
+2026-08-07 10:16:57,247 WARNING udp_protocol_client: [REQUEST] cmd=PeriodBasicInfo no response within 0.300s (attempt 4/4)
+2026-08-07 10:16:57,247 INFO demo: 예상대로 ProtocolTimeoutError 발생: Request 'PeriodBasicInfo' timed out after 4 attempt(s) (총 시도 4회)
+2026-08-07 10:16:57,247 INFO demo: === 데모 4: 이벤트 메시지 정상 왕복 (ManualFire) ===
+2026-08-07 10:16:57,248 INFO demo: [WIRE Message] 56 bytes -> '{"cmd": "ManualFire", "src": 20, "recv": 13, "data": {}}'
+2026-08-07 10:16:57,248 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=1/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:57,248 INFO mock_ugv_server: [MOCK] ACK cmd=ManualFire -> ('127.0.0.1', 8011)
+2026-08-07 10:16:57,248 INFO udp_protocol_client: [ACK] cmd=ManualFire received on attempt 1/4
+2026-08-07 10:16:57,248 INFO demo: ACK 수신 완료
+2026-08-07 10:16:57,248 INFO demo: === 데모 5: 이벤트 메시지 유실 2회 후 재시도로 성공 ===
+2026-08-07 10:16:57,248 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=1/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:57,248 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 8011) (simulated loss)
+2026-08-07 10:16:57,562 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.300s (attempt 1/4)
+2026-08-07 10:16:57,562 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=2/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:57,562 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 8011) (simulated loss)
+2026-08-07 10:16:57,877 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.300s (attempt 2/4)
+2026-08-07 10:16:57,877 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=3/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:57,877 INFO mock_ugv_server: [MOCK] ACK cmd=ManualFire -> ('127.0.0.1', 8011)
+2026-08-07 10:16:57,877 INFO udp_protocol_client: [ACK] cmd=ManualFire received on attempt 3/4
+2026-08-07 10:16:57,877 INFO demo: 성공(재시도 뒤 회복). server.events_received=4
+2026-08-07 10:16:57,877 INFO demo: === 데모 6: 이벤트 메시지 완전 유실 -> 3회 재시도(총 4회) 소진 ===
+2026-08-07 10:16:57,877 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=1/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:57,877 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 8011) (simulated loss)
+2026-08-07 10:16:58,190 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.300s (attempt 1/4)
+2026-08-07 10:16:58,190 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=2/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:58,190 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 8011) (simulated loss)
+2026-08-07 10:16:58,504 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.300s (attempt 2/4)
+2026-08-07 10:16:58,504 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=3/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:58,504 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 8011) (simulated loss)
+2026-08-07 10:16:58,805 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.300s (attempt 3/4)
+2026-08-07 10:16:58,805 INFO udp_protocol_client: [MESSAGE] cmd=ManualFire attempt=4/4 -> ('127.0.0.1', 8001)
+2026-08-07 10:16:58,805 INFO mock_ugv_server: [MOCK] DROP Message cmd=ManualFire from ('127.0.0.1', 8011) (simulated loss)
+2026-08-07 10:16:59,118 WARNING udp_protocol_client: [MESSAGE] cmd=ManualFire no ACK within 0.300s (attempt 4/4)
+2026-08-07 10:16:59,119 INFO demo: 예상대로 ProtocolTimeoutError 발생: Message 'ManualFire' timed out after 4 attempt(s) (총 시도 4회)
