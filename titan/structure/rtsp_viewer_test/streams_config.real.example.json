@@ -1,11 +1,11 @@
 {
-  "_comment": "실제 UGV RTSP 서버 연결용 예시. protocol_icd.md §3.3 기준 IP(192.168.10.10)는 확정, 포트/경로(path)는 잠정치(rtsp://192.168.10.10:8554/<stream>) — LIG 참조 모듈 도착 후 실제 값으로 이 파일 자체를 고치거나, streams_config.json의 base_url/path를 이 값으로 바꿔서 사용. 사용법은 README.md '실제 서버 연결 시' 절 참고.",
+  "_comment": "실제 UGV RTSP 서버 연결용 예시. protocol_icd.md §3.3 기준 IP(192.168.10.10)/포트(8554) 확정. path는 2026-08-17 RTSP 연결 세션에서 실제 URtspStreamComponent::MountPath 값으로 확정됨(<axis>/<stream> 패턴, VehicleRtspBridgeComponent::MountPrefix=\"ugv/\") — 예전 예시(front_cctv 등 flat path)에서 갱신. 사용법은 README.md '실제 서버 연결 시' 절 참고.",
   "base_url": "rtsp://192.168.10.10:8554",
   "streams": [
-    { "name": "front_cctv",  "label": "전면CCTV",  "path": "front_cctv" },
-    { "name": "rear_cctv",   "label": "후면CCTV",  "path": "rear_cctv" },
-    { "name": "left_cctv",   "label": "좌측CCTV",  "path": "left_cctv" },
-    { "name": "right_cctv",  "label": "우측CCTV",  "path": "right_cctv" },
-    { "name": "rcws_viewer", "label": "RCWS뷰어",  "path": "rcws_viewer" }
+    { "name": "front_cctv",  "label": "전면CCTV",  "path": "ugv/front_cctv" },
+    { "name": "rear_cctv",   "label": "후면CCTV",  "path": "ugv/rear_cctv" },
+    { "name": "left_cctv",   "label": "좌측CCTV",  "path": "ugv/left_cctv" },
+    { "name": "right_cctv",  "label": "우측CCTV",  "path": "ugv/right_cctv" },
+    { "name": "rcws_viewer", "label": "RCWS뷰어",  "path": "ugv/rcws" }
   ]
 }

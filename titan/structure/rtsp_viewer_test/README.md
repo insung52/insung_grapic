@@ -1,10 +1,13 @@
-# RTSP 뷰어/테스트 클라이언트 (UGV축 5스트림 검증용)
+# RTSP 뷰어/테스트 클라이언트 (UGV축 5스트림 + 자체방호축 7스트림 검증용)
 
 titan(KADEX UGV/자체방호 시뮬레이터) 프로젝트의 순수 영상 스트리밍 테스트 서브태스크
-산출물. **UE(언리얼) 작업은 전혀 포함되지 않음** — `protocol_icd.md` §3.3에 정의된
-UGV축 RTSP 인터페이스(UGV 시뮬레이션 SW가 RTSP 서버가 되어 5개 카메라 영상을 원격통제기로
-내보내는 구조)를 검증하기 위한 **수신 클라이언트**와, 그 클라이언트를 실제 UGV 서버 없이도
-개발/검증할 수 있게 해주는 **로컬 테스트용 가짜 RTSP 서버**로 구성됨.
+산출물. **UE(언리얼) 작업은 전혀 포함되지 않음** — `protocol_icd.md` §3.3/§4.1에 정의된
+UGV축/자체방호축 RTSP 인터페이스(각 축 SW가 RTSP 서버가 되어 카메라 영상(UGV 5개/자체방호
+7개)을 내보내는 구조)를 검증하기 위한 **수신 클라이언트**와, 그 클라이언트를 실제 서버 없이도
+개발/검증할 수 있게 해주는 **로컬 테스트용 가짜 RTSP 서버**로 구성됨. 원래 UGV축 5스트림만
+다뤘으나(초기 산출물), 2026-08-17 RTSP 연결 세션에서 `streams_config.selfdefense.example.json`을
+추가해 자체방호축도 같은 클라이언트로 검증 가능해짐 — 코드(`rtsp_test_client.py`) 변경 없음,
+config 파일만 추가.
 
 실제 UGV RTSP 서버(UE에서 NVENC+GStreamer로 인코딩해서 송출하는 쪽)는 이 폴더와 무관하게
 **다른 세션이 `titan_example` UE 프로젝트에서 별도로 구현 중**이다 (진행상황:
@@ -177,11 +180,13 @@ LIG 참조 모듈 도착 후 확인 필요)
 고쳐서 정식 설정으로 승격시켜도 됨.
 
 **주의할 점**:
-- `path`(`front_cctv`, `rear_cctv`, `left_cctv`, `right_cctv`, `rcws_viewer`)는 **우리 쪽
-  추정 명명**이다. `protocol_icd.md` §3.3에 "정확한 포트/경로 규칙은 LIG 참조 모듈 또는
-  PoC 이후 확정"이라고 명시돼 있으므로, 실제 서버가 다른 path 이름/구조(예:
-  `/ugv/front`, `/cam0` 등)를 쓴다면 `streams_config.json`의 `path` 필드만 실제 값으로
-  고치면 된다 — 코드 변경 불필요.
+- `path`는 이제 **실제 값으로 확정됨**(2026-08-17, `protocol_icd.md` §3.3/§4.1 갱신 —
+  UGV축 `ugv/front_cctv` 등, 자체방호축 `selfdefense/front_cctv` 등, `<axis>/<stream>` 패턴).
+  `streams_config.real.example.json`이 이미 이 값으로 갱신돼 있음 — UGV축 실제 서버가 뜨면
+  그대로 `--config streams_config.real.example.json`으로 붙이면 됨.
+- **자체방호축(7스트림) 설정은 `streams_config.selfdefense.example.json`에 별도로 있음**
+  (이전엔 이 폴더가 UGV축 5스트림만 다뤘음 — 2026-08-17에 추가). `base_url`의
+  `<selfdefense-pc-ip>`만 실제 IP로 바꾸면 됨(고정 IP 여부 미확정 — `protocol_icd.md` §6).
 - 로컬 테스트 서버(`start_local_test_server.ps1`)는 실제 서버가 준비되면 더 이상 필요
   없다. 그냥 안 띄우고 클라이언트만 실제 서버 URL로 실행하면 됨.
 - 실제 UGV 서버는 NVENC 하드웨어 인코딩이라 §3에서 관찰된 것 같은 소프트웨어 인코딩발

@@ -1,0 +1,13 @@
+{
+  "_comment": "실제 자체방호축 RTSP 서버 연결용 예시(2026-08-17 RTSP 연결 세션 신규 작성). protocol_icd.md §4.1 기준 — IP는 자체방호 통제기 SW가 뜬 PC 주소로 교체(고정 IP 여부 미확정, §6). 포트 8554는 UGV축과 동일한 RtspServerSubsystem 기본값. path는 ATitanTruck::SetupRtspStreams()/AUAVPawn::BeginPlay()가 실제로 등록하는 URtspStreamComponent::MountPath 값과 동일.",
+  "base_url": "rtsp://<selfdefense-pc-ip>:8554",
+  "streams": [
+    { "name": "env_camera",  "label": "환경카메라", "path": "selfdefense/env_camera" },
+    { "name": "front_cctv",  "label": "전면CCTV",   "path": "selfdefense/front_cctv" },
+    { "name": "rear_cctv",   "label": "후면CCTV",   "path": "selfdefense/rear_cctv" },
+    { "name": "left_cctv",   "label": "좌측CCTV",   "path": "selfdefense/left_cctv" },
+    { "name": "right_cctv",  "label": "우측CCTV",   "path": "selfdefense/right_cctv" },
+    { "name": "rcws_viewer", "label": "RCWS뷰어",   "path": "selfdefense/rcws" },
+    { "name": "uav_gimbal",  "label": "UAV드론뷰",  "path": "selfdefense/uav_gimbal" }
+  ]
+}

@@ -7,7 +7,7 @@
   상당 부분 옛날 얘기임 — 실제 구현 현황은 §8을 우선 참고.**
 - 참고 설계 문서: `architecture_decisions.md` §1(Layer C), 특히 §1.3 리플리케이션 대상 목록.
 
-## 0-1. 2026-08-13 기준 현황 요약 (§8 체크박스 상세는 아래 참고)
+## 0-1. 2026-08-14 기준 현황 요약 (§8 체크박스 상세는 아래 참고)
 
 리슨서버 멀티플레이(UGV PC=호스트, SelfDefense PC=클라이언트) 전환이 사실상 완료됨:
 
@@ -15,15 +15,19 @@
   상태·조작권한·발사 이펙트 리플리케이션, 아군/적군 45명 전투 컴포넌트 Tick 서버 전용화 +
   Blueprint 자세/애니메이션 변수 리플리케이션, 시나리오 진행 상태(GameState) + 시나리오 트리거
   Server RPC 전환, **투사체 명중 판정 서버 권위화(데미지 + 명중 이펙트/사운드 전부 서버가 확정해서
-  위치 기반 Multicast로 재생, RCWS/아군/적군 공통)**.
+  위치 기반 Multicast로 재생, RCWS/아군/적군 공통)**, **UAV(`AUAVPawn`) 미션 물리 + 짐벌/줌
+  리플리케이션**, **UGV 구동(`AUGVAIController::Tick` 서버 전용화 + `UUGVStatusComponent`
+  대시보드 데이터 리플리케이션 + 수동조작 입력 서버 권위 게이팅, §8 UGV 섹션 참고)**.
 - **의도적으로 안 한 것(정석 검토 후 현재 방식이 낫다고 판단)**: 투사체 궤적 자체의 액터
   리플리케이션 — 빠른 소형 오브젝트라 표준 위치 리플리케이션 특유의 끊김이 오히려 더 눈에 띌
   위험이 있어서, 지금처럼 "각 프로세스가 결정론적으로 로컬 재생 + 판정만 서버 권위" 방식을 유지.
   히트스캔 전환도 동일한 이유로 보류(사용자 확정, 2026-08-13).
-- **아직 안 한 것**: UGV 구동 로직(`UGVAIController::UpdateChaosPursuit` 등) `HasAuthority()` 게이팅
-  미착수(UGV PC가 항상 서버라 당장 체감 버그는 없지만 설계상 구멍으로 남음), UAV 리플리케이션
-  미착수, RCWS pan/tilt 클라이언트 예측(지금은 서버 왕복 RPC 방식), 아군 `CurrentEnemy` 오브젝트
-  레퍼런스 리플리케이션 자체의 원인 불명 버그(우회만 함, §8 RCWS/발사 섹션 참고).
+- **아직 안 한 것 / 미해결**: `physicsReplicationMode` 조회/설정 실패(정확한 프로퍼티 이름을 MCP로
+  못 찾음 — 기본값 `Default`로 방치, 클라이언트 화면에서 UGV 움직임 끊김이 체감되면 에디터에서
+  직접 확인 필요), RCWS pan/tilt 클라이언트 예측(지금은 서버 왕복 RPC 방식), 아군 `CurrentEnemy` 오브젝트
+  레퍼런스 리플리케이션 자체의 원인 불명 버그(우회만 함, §8 RCWS/발사 섹션 참고), **UAV 카메라 줌
+  버튼(`SelfDefenseDashboardWidget` 추정)의 Server RPC 라우팅 미확인 — 클라이언트에서 이 버튼이
+  조용히 안 먹을 가능성 있음, 실기 테스트로 확인 필요(§8 UAV 섹션 참고)**.
 
 ## 0. 한눈에 보기 (TL;DR, 2026-08-06 최초 조사 당시 스냅샷 — 지금은 대부분 해소됨, §0-1/§8 참고)
 
@@ -462,14 +466,38 @@ Q1/Q4/Q5/Q6 답변 반영(2026-08-06, `architecture_decisions.md` §1.4 참고).
       - 부수 작업: 원인 확정 전까지 남겨뒀던 진단용 `UE_LOG`(`AllyFormationComponent`/
         `EnemyCombatComponent`의 발사멀티캐스트 로그, `LogFireMulticastDiagnostic` 헬퍼) 제거.
 
-**UGV / 차량**
-- [ ] `AUGVAIController`의 `UpdateChaosPursuit`/`UpdateRoadBoundary`/`UpdateOffRoadSpeedDecay`
-      등 매 틱 로직 `HasAuthority()` 게이팅.
-- [ ] `DriveMode`/`CurrentGear` 등 UI 노출 상태 `Replicated`+`OnRep`로 전환.
-- [ ] Chaos Vehicle `physicsReplicationMode`를 `Default`에서 프로젝트 요구(초저지연보다 시각적
-      안정성)에 맞는 값(`PredictiveInterpolation`/`Resimulation`)으로 검토·설정.
+**UGV / 차량 (2026-08-14 구현 완료)**
+- [x] `AUGVAIController::Tick()` 전체(`UpdateChaosPursuit`/`UpdateOffRoadSpeedDecay`/
+      `UpdateRoadBoundary`/`UpdateTankUGVStatusData`)를 `HasAuthority()`로 서버 전용화 —
+      아군/적군 컴포넌트와 동일하게 통째로 게이팅. **조사 결과 이 컨트롤러는 애초에 클라이언트에서
+      존재조차 안 함**(헤드리스 봇, `AutoPossessAI`로 스폰되는 컨트롤러는 엔진 자체가
+      `APawn::SpawnDefaultController()`에서 `NetMode==NM_Client`면 얼리리턴 — 즉 이 게이팅은
+      이론상 이미 안전했던 것을 명시적으로 강제한 방어 조치에 가까움). 위치/회전은 표준
+      `AWheeledVehiclePawn`/`ChaosVehicleMovementComponent` 이동 리플리케이션이 처리.
+- [x] `UUGVStatusComponent::CurrentData`(대시보드 속도/기어/배터리 등)를 `Replicated`(RCWS의
+      `CurrentData`와 동일 패턴, 빈 스텁 `OnRep`)로 전환 — 컨트롤러가 클라이언트에 없다는 건
+      `UpdateTankUGVStatusData`가 클라이언트에선 한 번도 안 불린다는 뜻이라, 이거 없이는
+      클라이언트 UGV 대시보드가 영원히 `bUseDummyData`의 가짜 값만 보여주고 있었음(실제 버그,
+      추정이 아니라 코드로 확인됨). `TickComponent`의 `GenerateDummyData` 호출도 `HasAuthority()`로
+      막아서 클라이언트가 리플리케이트된 값을 자기 로컬 더미 생성으로 덮어쓰지 못하게 함.
+- [x] `Atitan_examplePlayerController::DoUGVFromTankMove`/`DoUGVFromTankMoveCompleted`/
+      `DoUGVFromTankBrakeStarted`/`DoUGVFromTankBrakeCompleted`/`SetUGVFromTankMode`/
+      `MoveUGVFromTankTo`(콘솔 커맨드) 전부 `HasAuthority()` 가드 추가 — 이 함수들이
+      `AUGVAIController::DispatchSetManualControl`을 서버 체크 없이 직접 호출하고 있었음(위
+      "컨트롤러가 클라이언트에 없음" 덕에 우연히 무해했겠지만, "UGV는 host에서만 조종 가능"이라는
+      사용자 확정 요구사항을 코드로 명시적으로 강제).
+- [x] `BP_UGV_Vehicle`의 자체 `EventTick`(궤도/트랙 시각 효과 — track sag/tautness/wheel 회전) 확인
+      — `ChaosWheeledVehicleMovementComponent::GetForwardSpeed()`/메시 월드 회전만 읽는 순수 로컬
+      코스메틱이라 게이팅 불필요(이미 리플리케이트되는 물리 상태를 그대로 반영하는 구조). 아군/적군
+      때와 달리 이번엔 블루프린트 쪽에 숨은 위험 로직이 없었음.
+- [ ] `physicsReplicationMode`(Chaos 물리 리플리케이션 모드, `VehicleMesh` 컴포넌트 추정)를
+      MCP로 조회/설정 시도했으나 정확한 프로퍼티 이름을 못 찾아 실패 — 기본값(`Default`) 그대로
+      둠. 클라이언트 화면에서 UGV 움직임이 끊겨 보이면 에디터에서 직접
+      `VehicleMesh`(SkeletalMeshComponent)의 Physics/Replication 카테고리를 확인해서
+      `Predictive Interpolation`으로 바꿔볼 것.
 - [ ] `BP_UGV_Vehicle`이 `DispatchSetManualControl`이 찾는 `SetManualControl(float,float)`을
-      실제로 구현하는지 블루프린트 그래프에서 확인(Q2 잔여).
+      실제로 구현하는지 확인(Q2) — **2026-08-14 확인: 구현돼 있음** — `SetManualControl`/
+      `SetBraking` 함수 그래프가 실제로 존재(list_graphs로 확인). Q2 완전 해소.
 
 **시나리오 시스템**
 - [x] (2026-08, 저위험 1차) `Atitan_exampleGameState`에 `EScenarioPhase`(Idle/FormingUp/Advancing/
@@ -554,9 +582,34 @@ Q1/Q4/Q5/Q6 답변 반영(2026-08-06, `architecture_decisions.md` §1.4 참고).
 - FiringPose/CoverPose(양쪽 다)는 안 건드림 — 마커 없으면 항상 Prone 폴백으로 안전하게 동작.
   더 정교한 엄폐 연출이 필요해지면 그때 타깃포인트로 채우면 됨.
 
-**UAV**
-- [ ] `BP_UAV_C_1`의 `bReplicates`/조작 방식 확인 후 리플리케이션 대상으로 정식 편입(Q6 확정 —
-      포함하는 걸로 결정됨, §1.4).
+**UAV (2026-08-13 구현 완료)**
+- [x] `AUAVPawn` — 위치/회전은 `APawn` 기본 리플리케이션(변경 없이 그대로 작동). 미션 물리 전체
+      (`TickAscending`/`TickHovering`/`TickCruising`/`UpdateTerrainAvoidanceAccel`)와 짐벌 자동정찰
+      (`UpdateGimbalRecon` 및 하위 4개 함수)를 `Tick()` 안에서 `HasAuthority()`로 서버 전용화 —
+      아군/적군 컴포넌트와 동일하게 통째로 게이팅(RCWS처럼 따로 뺄 UI 계산이 없음).
+- [x] `MissionState`/`GimbalYawDeg`/`GimbalPitchDeg`/`ZoomLevel`/`CurrentPropSpinRateDegPerSec`/
+      `PropSpinAngleDeg`/`CurrentBodyTiltPitchDeg`를 `Replicated`(+필요한 것만 `OnRep`)로 전환.
+      `GimbalYawDeg`/`PitchDeg`/`ZoomLevel`은 ABP_UAV/`SyncLensFromCineCamera`가 매 프레임 직접
+      읽어 쓰므로 OnRep 불필요. `MissionState`는 RCWS의 `CurrentMode`와 동일하게 빈 스텁 OnRep.
+      `CurrentBodyTiltPitchDeg`는 예외적으로 실제 동작하는 `OnRep_CurrentBodyTiltPitchDeg` 필요 —
+      `UpdateBodyTilt`가 `BodyMesh->SetRelativeRotation`을 C++에서 직접 호출하는데 그 함수 자체가
+      서버 전용 Tick 안에 깊이 물려있어서(TickAscending/Hovering/Cruising 내부), 클라이언트에선
+      대신 OnRep이 동일한 적용을 반복.
+      `CurrentPropSpinRateDegPerSec`/`PropSpinAngleDeg`도 같은 이유(`UpdatePropSpin`이 그 세 함수
+      내부에서만 호출됨)로 함수 자체를 안 건드리고 결과값만 리플리케이트 — 프로펠러 회전이 클라
+      이언트에서 60Hz 로컬 보간만큼 매끄럽진 않을 수 있으나 순수 코스메틱이라 무방하다고 판단.
+- [x] `AddGimbalPanTiltInput`/`SetZoomLevel`/`BeginManualZoomTransition`/`BeginMissionToTarget`에
+      `HasAuthority()` 가드 추가. 짐벌 pan/tilt와 미션 시작(`BeginMissionToTarget`)은 이미
+      `Atitan_examplePlayerController`의 `Server_ApplyUAVGimbalPanTiltInput`/
+      `Server_BeginUAVMissionToTarget`(이번에 신설, `BeginAllyFormUpAndAdvance`와 동일 패턴)로
+      트리거 경로가 서버로 묶여있어서 가드가 실질적으로 무해함.
+      **⚠️ 미해결 — `SetZoomLevel`/`BeginManualZoomTransition`(UAV 카메라 줌)은 대응하는 Server RPC가
+      없음.** `ManualZoomTransitionDurationSeconds`의 기존 헤더 코멘트에 "SelfDefenseDashboardWidget"
+      전용이라고 명시돼 있어 그 줌 버튼이 클라이언트(SelfDefense PC) 쪽 위젯에서 직접
+      `BeginManualZoomTransition`을 호출하고 있을 가능성이 있음 — 그렇다면 이번 HasAuthority
+      가드로 그 버튼이 클라이언트에서 조용히 no-op됨(회귀). 위젯이 실제로 어디서/어떻게 이 함수를
+      호출하는지 확인 후, 필요하면 RCWS의 `Server_AddManualZoomStep`과 동일한 패턴으로 RPC를 추가
+      배선해야 함 — 이번 라운드에서 WBP 그래프까지는 안 열어봄(범위 밖으로 판단, 사용자 확인 필요).
 
 **추가 조사 필요 (구현 아님)**
 - [ ] Q3: `IsLocalController()`를 실제로 참조하는 Chaos 서브시스템 엔진 소스 확인(네트워크 모드

@@ -12,6 +12,24 @@ D3D12/NVENC RHI 크래시, RTSP 재연결 레이스, 키프레임 타이밍, 프
 RTSP URL 스킴/포트 확정, 실제 UGV/자체방호축 카메라 연결)로, 우선순위는 사용자와 상의
 후 진행.
 
+**추가 트랙(2026-08-14~): 크로스플랫폼(Windows+Linux) 지원 — §10 참고.** WSL2로 NVENC/
+GStreamer 레이어는 Phase 0에서 검증 완료. **Phase 1(빌드 시스템 크로스플랫폼화)도 완료
+및 검증됨** — Build.cs/uplugin/모듈 크로스컴파일 지원을 작성한 뒤, 실제 컴파일 에러
+2라운드(D3D12 전용 파일이 Linux 빌드에도 끼어들던 문제, 벤더 코드의 초기화 순서 버그,
+파일 이동 후 self-include 경로 누락)를 거쳐 **Windows 빌드 + Linux 패키징(플러그인
+포함 확인됨) 둘 다 성공**(2026-08-14, §10.2.1). **Phase 2(렌더-인코더 Vulkan/CUDA
+재구현)도 작성 완료**(2026-08-14, §10.3) — `IRtspFrameEncoder` 인터페이스 도입,
+`FNvencVulkanEncoder`(NvEncoderCuda + Vulkan `VK_KHR_external_memory` 브릿지) 신규 구현,
+`RtspFrameEncoderFactory`로 런타임 RHI 분기. **컴파일은 두 플랫폼 다 통과 확인됨**
+(2026-08-15, §10.3.1 — Windows 빌드/Linux 패키징 둘 다 성공, 몇 라운드의 실제
+컴파일 에러 수정 거침: Build.cs 스코프 실수, **UE의 Vulkan 헤더가 `VK_NO_PROTOTYPES`라
+core 함수를 정적 링크로 못 씀**을 뒤늦게 발견해서 전부 동적 로드로 교체, CUDA 13.3의
+`cuCtxCreate_v4` 시그니처 변경 등). **런타임 동작은 여전히 전혀 검증 안 됨** — 확장
+등록 타이밍, SceneCapture의 실제 Vulkan 레이아웃 등 실제 하드웨어 없이는 확인
+불가능한 가정들이 여러 개 그대로 남아있음(§10.3에 나열, 컴파일 성공이 이걸 검증해주진
+않음). Vulkan RHI 렌더링 자체의 검증도 WSL2에서 불가능해서(Phase 0) 원격 우분투 박스
+몫으로 남음(Phase 4) — 다음 단계는 원격 박스에서 실제 스트리밍 확인.
+
 이 세션은 `titan_example`을 빌드하지 않는다는 스탠딩 룰(사용자가 직접 빌드) 때문에
 UBT/Build.bat를 실행하지 않았습니다. 아래는 실제로 작성된 플러그인 코드와, 그동안 겪고
 해결한 이슈들의 기록입니다.
@@ -876,3 +894,501 @@ VLC 7개를 각각 `poc/stream0`~`poc/stream6`에 연결(VLC는 명령줄로 일
 남은 건 §8(프로덕션 패키징 시 남는 일)에 정리된 항목들 — GStreamer DLL 배포 패키징,
 RTSP URL 스킴/포트 확정, 실제 UGV/자체방호축 카메라(QuadCamModule 등)에
 `URtspStreamComponent` 연결 — 로, 이건 사용자와 우선순위 상의 후 진행.
+
+이후 회사 쪽 요청으로 **크로스플랫폼(Windows+Linux) 지원**이 새 트랙으로 결정됨 — §10 참고.
+
+---
+
+## 10. 크로스플랫폼(Linux) 지원 — 진행 현황
+
+### 10.1. Phase 0 — WSL2로 로컬 사전검증 (2026-08-14)
+
+리눅스 테스트 컴퓨터가 회사 다른 곳에 있어서 자주 테스트를 못 하는 제약 때문에, 원격
+접속 없이 이 Windows 개발 머신의 WSL2(Ubuntu 24.04, 타겟 우분투 버전과 일치)로 최대한
+사전검증부터 함. 결과:
+
+| 레이어 | 결과 |
+|---|---|
+| NVENC 하드웨어 (SDK `NvEncoder` 직접 호출, P1-P7 프리셋 — 우리가 실제 쓰는 방식) | ✅ WSL2 GPU 패스스루로 정상 동작 확인 |
+| GStreamer + gst-rtsp-server 서빙 (appsrc→h264parse→rtph264pay, 우리 파이프라인과 동일 구조) | ✅ Windows↔WSL2 네트워크 경계 넘어 정상 스트리밍 확인 |
+| UE Vulkan RHI 렌더링 | ❌ WSL2 불가 확정 — Vulkan ICD가 `dzn`(Mesa의 D3D12 변환 레이어, 스스로 "non-conformant, testing use only"라고 명시)뿐이고, 네이티브 NVIDIA Vulkan ICD(`nvidia_icd.json`은 파일상 존재)로 강제해봐도 "Failed to detect any valid GPUs"로 실패. 원격 우분투 박스(진짜 드라이버) 몫으로 확정. |
+
+검증 방법 메모:
+- 처음에 GStreamer 자체의 `nvh264enc`(gst-plugins-bad의 `nvcodec`) 엘리먼트로 NVENC를
+  찔러봤다가 "Selected preset not supported"로 실패 — 이건 NVIDIA가 R550+ 드라이버부터
+  구형 프리셋 GUID 지원을 끊은 것과 관련된, **GStreamer의 그 엘리먼트 자체에 국한된
+  별개 버그**([GStreamer Discourse](https://discourse.gstreamer.org/t/nvcodec-nvenc-nvidia-deprecates-support-for-old-videocodec-sdk-h-264-hevc-encoder-presets-with-driver-r550-in-q124/182))로
+  확인됨 — 우리 플러그인은 이 엘리먼트를 안 쓰므로 무관. 깨끗한 새 WSL 배포판에서도
+  재현되어(환경 오염 아님) 이 결론을 재확인.
+- 진짜 판단 기준은 NVIDIA Video Codec SDK의 `AppEncCuda` 샘플을 WSL 안에 CUDA 툴킷 설치
+  후 직접 빌드해서, 우리 Windows 코드와 동일한 옵션(`-preset p3 -tuninginfo lowlatency
+  -rc cbr`, `NV_ENC_PRESET_P3_GUID`+`NV_ENC_TUNING_INFO_LOW_LATENCY`와 동일)으로 돌려본
+  것 — 30프레임 전부 정상 인코딩, ffprobe로 디코딩까지 확인.
+- RTSP 서빙은 그 결과물을 실제 우리 launch 문자열 그대로 쓰는 작은 C 테스트 서버
+  (`test_rtsp_appsrc.c`)를 WSL 안에서 컴파일+실행해서, Windows의 ffprobe로
+  `rtsp://127.0.0.1:8555/...`에 접속해 확인(WSL2 localhost 포워딩으로 접속 잘 됨).
+
+### 10.2. Phase 1 — 빌드 시스템 크로스플랫폼화 (2026-08-14)
+
+**중요한 발견**: 이 프로젝트의 리눅스 패키징은 실제 우분투 머신에서 빌드하는 게
+아니라, 이 Windows 컴퓨터에서 UE가 번들 제공하는 크로스컴파일 툴체인
+(`LINUX_MULTIARCH_ROOT=C:\UnrealToolchains\v26_clang-20.1.8-rockylinux8\`, RockyLinux8
+기반 sysroot, glibc 2.28)으로 빌드한 뒤 옮겨서 테스트하는 방식임(사용자 확인). 이
+sysroot엔 당연히 GStreamer가 없고, **Build.cs가 실행되는 시점(=이 Windows 컴퓨터)엔
+진짜 리눅스 `pkg-config`를 실행할 방법이 없음** — Phase 0에서 WSL로 검증했던
+`pkg-config` 방식은 이 크로스컴파일 워크플로우엔 그대로 못 씀.
+
+**해결 방식**: Windows가 이미 쓰고 있는 패턴(로컬에 GStreamer를 설치해두고 Build.cs가
+그 경로의 헤더/lib를 직접 참조, env var로 오버라이드 가능)을 리눅스에도 그대로 적용 —
+pkg-config 라이브 조회 대신 **로컬에 vendoring된 GStreamer Linux 헤더+`.so` 번들**을
+씀. 이 번들은 Phase 0에서 쓴 WSL Ubuntu 24.04(GStreamer 1.24.2, 실제 타겟 우분투
+버전과 일치)에서 뽑아냄:
+
+- 번들 위치: `C:\SDK\gstreamer-1.24.2-linux-x86_64\`(env var
+  `GSTREAMER_1_0_ROOT_LINUX_X86_64`로 오버라이드 가능 — Windows의
+  `GSTREAMER_1_0_ROOT_MSVC_X86_64`와 같은 패턴).
+- 내용: `include/{gstreamer-1.0, glib-2.0, glib-2.0-arch, gio-unix-2.0}` +
+  `lib/libgst{reamer,base,app,rtsp,rtspserver,sdp,net}-1.0.so` +
+  `lib/lib{glib,gobject,gio,gmodule}-2.0.so`(전부 심볼릭 링크 체인을 `cp -L`로
+  dereference해서 실제 파일로 뽑음 — NTFS/WSL↔Windows tar 전송 경계에서 다단계
+  symlink가 깨지는 문제가 있었음).
+- 재현 스크립트: `C:\SDK\gstreamer-1.24.2-linux-x86_64\make_bundle.sh` (WSL Ubuntu
+  안에서 실행하면 같은 번들을 다시 만들 수 있음 — 버전 올릴 때나 다른 배포판 기준으로
+  다시 뽑을 때 참고).
+- **주의**: 이 번들은 **크로스컴파일 시점의 링커를 만족시키기 위한 것**이지, 실제
+  타겟 리눅스 머신에 배포되는 게 아님. 최종 바이너리는 `libgstreamer-1.0.so.0` 같은
+  SONAME으로 링크되고, 실제 실행 시점엔 타겟 머신에 진짜 설치된(apt 등) GStreamer가
+  그걸 채워줌 — 그래서 타겟 머신의 GStreamer가 이 번들과 호환되는 버전이어야 함(지금은
+  둘 다 Ubuntu 24.04/GStreamer 1.24.2 기준으로 맞춰둠).
+
+**수정한 파일**:
+- `RtspEncoder.uplugin`: `PlatformAllowList`에 `"Linux"` 추가.
+- `RtspEncoder.Build.cs`: `Target.Platform == UnrealTargetPlatform.Linux` 분기 추가 —
+  위 번들 경로 확인 후 헤더/lib 연결, `RTSPENCODER_HAS_GSTREAMER=1` /
+  `RTSPENCODER_HAS_NVENC=0`(NVENC는 아직 — 아래 Phase 2 참고). Windows처럼
+  `PublicDelayLoadDLLs`를 쓰지 않고 그냥 일반 링크(`PublicAdditionalLibraries`)로
+  처리 — delay-load는 PE(Windows) 전용 개념이라 리눅스에선 필요도 없고 해당도 안 됨.
+- `RtspEncoderModule.cpp`: `StartupModule()`의 Windows 전용 DLL 검색 경로/GST_PLUGIN_PATH
+  설정 로직을 `#if PLATFORM_WINDOWS`/`#elif PLATFORM_LINUX`로 분리. 리눅스 쪽은 **아무
+  것도 안 함**(진짜 타겟 머신에 정상 설치된 GStreamer라면 `gst_init_check()`가 시스템
+  기본 플러그인 스캔 경로에서 알아서 다 찾음 — Phase 0에서 WSL로 이미 확인된 사실).
+  빌드 시점 번들 경로(`RTSPENCODER_GST_ROOT_DIR`)를 런타임 플러그인 경로로 착각해서
+  쓰면 안 됨 — 그 경로는 "이 바이너리를 빌드한 Windows 머신"의 경로지 "이 바이너리가
+  실행되는 리눅스 머신"의 경로가 아니므로 완전히 의미 없는 값이 됨(코드 주석으로 남겨둠).
+- `RtspStreamComponent.cpp`/`NvencD3D12Encoder.*`는 이미 `#if RTSPENCODER_HAS_NVENC`로
+  깔끔하게 게이팅돼 있어서 수정 불필요 — 리눅스에선 자동으로 "이 플랫폼에서 NVENC 지원
+  안 함" 에러 로그 경로를 탐(기존에 있던 else 분기 그대로 재사용).
+
+**아직 안 한 것 / 검증 안 된 것**:
+- 이 세션은 UBT/Build.bat를 실행하지 않는다는 스탠딩 룰 때문에 **실제 크로스컴파일을
+  돌려보지 않았음** — 사용자가 평소 하던 "Linux로 패키징" 절차로 직접 컴파일해서 에러
+  나오면 알려줘야 함.
+- NVIDIA SDK 쪽 헤더(`ThirdParty/NvCodec/Interface`, `Utils`)가 이 크로스컴파일
+  툴체인(clang, glibc 2.28)에서 별문제 없이 파싱되는지도 미검증 — Windows 전용으로
+  작성된 부분(`NvEncoderD3D12.h` 등)은 `RTSPENCODER_HAS_NVENC=0`이라 애초에 컴파일
+  대상에서 빠지므로 문제 없어야 하지만, 확인은 필요.
+
+### 10.2.1. 첫 실제 크로스컴파일 시도 — `RTSPENCODER_HAS_NVENC=0`만으로는 부족했음 (2026-08-14)
+
+사용자가 `titan_example.uproject`에서 `RtspEncoder`를 `Enabled: true`로 켜고(잠깐
+`false`였던 걸 되돌림) 실제 "Linux로 패키징"을 돌려봄 — 결과: GStreamer 쪽 파일들
+(`RtspEncoderModule.cpp`, `RtspServerSubsystem.cpp`, `RtspStreamComponent.cpp`,
+`RtspPocTestActor.cpp`, `RtspPocCommands.cpp`)은 **전부 정상 컴파일** — Phase 1의
+GStreamer 번들/Build.cs 분기가 실제로 동작함을 처음으로 확인. 하지만 두 가지 에러로
+전체 빌드는 실패:
+
+1. **`NvEncoderD3D12.cpp`가 리눅스에서도 컴파일 시도됨** → `fatal error: 'windows.h'
+   file not found`. 원인: `RTSPENCODER_HAS_NVENC=0`은 **매크로**라서 코드 안에서
+   `#if`로 걸러내는 것만 되지, UBT 자체는 이 매크로를 모르고 `Source/` 밑의 `.cpp`
+   파일을 전부 무조건 컴파일 시도함 — `NvencD3D12Encoder.cpp`도 `RtspStreamComponent.h`가
+   무조건(`#if` 없이) `#include "NvencD3D12Encoder.h"` 하고 있어서 같이 걸림.
+2. **`NvEncoder.cpp`(플랫폼 무관 베이스 클래스)의 실제 버그** — 생성자 초기화 리스트
+   순서가 멤버 선언 순서와 안 맞아서 `-Werror=reorder` 에러. MSVC는 기본적으로 이걸
+   경고조차 안 띄워서 지금까지 Windows에서는 드러난 적이 없었음 — clang(리눅스
+   툴체인)이 더 엄격해서 처음 걸림.
+
+**수정**:
+- UBT의 "경로에 `Windows`/`Linux`/`Mac` 같은 세그먼트가 있으면 해당 플랫폼 아닌 빌드는
+  자동으로 그 파일을 제외" 규칙을 이용 — `p4 move`로 다음 파일들을 `Windows/`
+  서브폴더로 이동:
+  - `Private/NvencD3D12Encoder.cpp` → `Private/Windows/NvencD3D12Encoder.cpp`
+  - `Public/NvencD3D12Encoder.h` → `Public/Windows/NvencD3D12Encoder.h`
+  - `ThirdParty/NvCodec/NvEncoder/NvEncoderD3D12.{cpp,h}` →
+    `ThirdParty/NvCodec/NvEncoder/Windows/NvEncoderD3D12.{cpp,h}`
+  - `RtspEncoder.Build.cs`의 Win64 분기에 `PrivateIncludePaths.Add(...NvEncoder/Windows)`
+    추가(이동한 `NvEncoderD3D12.h`를 `NvencD3D12Encoder.cpp`가 계속 찾을 수 있도록).
+- `RtspStreamComponent.h`의 `#include "NvencD3D12Encoder.h"`와
+  `TSharedPtr<FNvencD3D12Encoder> Encoder;` 멤버를 `#if RTSPENCODER_HAS_NVENC`로 감쌈
+  (이동한 헤더 경로도 `"Windows/NvencD3D12Encoder.h"`로 갱신). `RtspStreamComponent.cpp`의
+  `EndPlay()`에서 그때까지 게이팅 안 돼 있던 `Encoder` 참조 4줄도 같이 감쌈(다른
+  두 군데, `SetupEncoderAndStream()`/`TickComponent()`는 이미 게이팅돼 있었음).
+- `NvEncoder.cpp`의 생성자 초기화 리스트를 `NvEncoder.h`의 실제 멤버 선언 순서와
+  똑같이 재배열 — 텍스트 순서만 바뀌는 거라(멤버는 항상 선언 순서대로 초기화되므로)
+  동작은 그대로, MSVC/clang 둘 다에서 경고/에러 없이 컴파일되게 함.
+
+**교훈**: UE 플러그인에서 `RTSPENCODER_HAS_NVENC` 같은 자체 매크로로 플랫폼별 코드를
+껐다고 해서 그 파일이 다른 플랫폼에서 컴파일 자체가 안 되는 건 아님 — UBT는 매크로를
+모르고 `Source/` 전체를 훑어서 발견되는 `.cpp`를 전부 컴파일 시도함. 진짜로 파일을
+빼려면 `Windows/`류 이름의 서브폴더에 넣는 자동 제외 규칙을 써야 함. 헤더 쪽도
+"매크로로 감싼 `#include`"가 아니라 "무조건 `#include`"로 돼 있으면 같은 문제가
+전파되니, 플랫폼 전용 타입을 멤버로 쓰는 헤더는 그 멤버 선언 자체도 매크로로 감싸야 함.
+
+**검증 결과**: 재시도에서 `NvencD3D12Encoder.cpp`(이동한 파일 자신)의
+`#include "NvencD3D12Encoder.h"`가 새 경로로 안 고쳐진 채 남아있던 실수 하나가 더
+있었음(`Windows/NvencD3D12Encoder.h`로 수정) — 그 외 이동한 파일들의 include는 전부
+재확인해서 문제없음 확인. 이후 **Windows 빌드 성공 확인 → Linux 패키징도 성공 확인**
+(`kadex_new_0814_2`, 2026-08-14 23:32) — 매니페스트에 `RtspEncoder.uplugin`이 실제로
+포함되어 있고 바이너리 안에도 `RtspEncoder` 문자열이 존재함을 확인, §10.2 초반의
+"Enabled: false라서 사실은 테스트 안 됐던" 가짜 성공과 달리 이번엔 플러그인이 진짜
+포함된 채로 성공. **Phase 1(빌드 시스템 크로스플랫폼화) 완료.**
+
+### 10.3. Phase 2 — 렌더-인코더 연동 재구현 (2026-08-14 작성, 2026-08-15 컴파일 성공 — §10.3.1)
+
+**출발점에서 바뀐 것**: SDK에 `NvEncoderVulkan`은 없음(확인 완료) — 있는 건
+`NvEncoderCuda`뿐이라, 실제 아키텍처는 "Vulkan 렌더 → CUDA 인코드"를 잇는 브릿지.
+SDK의 `Samples/AppEncode/AppMotionEstimationVkCuda` 샘플이 정확히 이 패턴(Vulkan
+`VK_KHR_external_memory`로 이미지를 export → CUDA가 `cuImportExternalMemory`로
+import)을 보여줘서 그대로 참고함.
+
+**UE 쪽 연동점**: `IVulkanDynamicRHI.h`(D3D12 때 `ID3D12DynamicRHI.h`에 대응)에 필요한
+게 다 있음 — `RHIGetVkImage(Texture)`(=`RHIGetResource`), `RHIGetVkDevice()`/
+`RHIGetVkPhysicalDevice()`, `RHIGetVkCommandBuffer(ExecutingCmdList)`(=
+`RHIGetGraphicsCommandList`). **단, `RHISignalManualFence`에 대응하는 게 없음** — 대신
+`RHIRunOnQueue(QueueType, TFunction<void(VkQueue)>, bWaitForSubmission)`이라는, 플러그인이
+자기 커맨드버퍼를 직접 만들어 큐에 제출하는 훅이 있어서 이걸로 동기화 설계를 다시 함.
+
+**아키텍처(매 프레임)**:
+1. UE SceneCapture 렌더타겟(평범한 VkImage, export 불가) → **우리가 직접 만든 export
+   가능 VkImage**로 `vkCmdCopyImage` — `RHIRunOnQueue(..., bWaitForSubmission=true)`로
+   완전히 별도의, 우리가 직접 submit/fence-wait까지 하는 자체 커맨드버퍼를 씀. UE의
+   공유 커맨드버퍼(EnqueueLambda 방식)에 얹지 않은 이유: 거기 얹으면 D3D12의
+   `RHISignalManualFence` 같은 "이 지점에서 GPU가 신호를 보낸다"에 대응하는 게 없어서
+   "언제 다 됐는지" 알 방법이 없음. `RHIRunOnQueue`+블로킹 대기로 크로스 API 세마포어
+   없이 단순하고 확실하게 처리 — 렌더 스레드가 매 프레임 잠깐 멈추는 대가.
+2. 그 export 이미지의 메모리를 CUDA가 `CUarray`로 매핑해서 보고 있음(Initialize
+   시점에 1회 import).
+3. `cuMemcpy2D`로 그 `CUarray` → `NvEncoderCuda`가 자체 할당한 선형 버퍼(`GetNextInputFrame()`).
+4. 이후는 D3D12 코드와 100% 동일(`Encoder->EncodeFrame(...)`, 강제 키프레임 discard 로직 등).
+
+**진짜 미검증/리스크가 큰 지점 (실제 리눅스 박스에서 확인 전까지는 추측)**:
+- **확장 등록 타이밍**: `VK_KHR_external_memory_win32`/`_fd`는 VkDevice가 만들어지기
+  *전에* `IVulkanDynamicRHI::AddEnabledDeviceExtensionsAndLayers()`로 요청해둬야 함.
+  플러그인의 `LoadingPhase`를 기존 `Default`에서 `PostConfigInit`("매우 low-level
+  hook용"이라고 엔진 주석에 명시)으로 바꾸고 `RtspEncoderModule::StartupModule()`에서
+  호출하도록 했는데, 이게 실제로 VulkanRHI의 디바이스 생성보다 먼저 실행되는지는
+  검증 못 함 — 안 되면 더 이른 phase(`EarliestPossible`)가 필요할 수 있음.
+- **SceneCapture 렌더타겟의 실제 Vulkan 레이아웃**: `RHIRunOnQueue`로 UE의 커맨드
+  추적을 벗어난 별도 커맨드버퍼에서 직접 다루기 때문에, D3D12 때처럼 `ERHIAccess::Unknown`
+  같은 "UE가 알아서 처리" 옵션이 없음. `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`을
+  직전 레이아웃으로 가정하고 배리어를 짬 — 틀렸으면 validation layer 에러나 색/화면
+  깨짐으로 나타날 가능성이 높은, 가장 먼저 의심해볼 지점.
+- **VkFormat 가정**: `PF_B8G8R8A8`가 실제로 `VK_FORMAT_B8G8R8A8_UNORM`으로 만들어지는지
+  (SRGB 변형이나 다른 스위즐이 아닌지) 미확인.
+- CUDA 디바이스 선택은 D3D12 때(`RHIGetDevice(0)`)와 같은 수준으로 단순화 — 멀티 GPU
+  환경에서 Vulkan physical device와 CUDA device가 다를 수 있는 상황은 처리 안 함(UUID
+  매칭 필요, 지금은 항상 디바이스 0).
+
+**만든/수정한 파일**:
+- `Public/IRtspFrameEncoder.h` (신규) — `Initialize()`는 인터페이스에 없음(각 구현체가
+  다른 네이티브 디바이스 핸들을 받으므로) — 대신 `RtspFrameEncoderFactory`가 활성 RHI를
+  보고 알맞은 구현체를 만들어서 이미 초기화된 채로 반환.
+- `Public/RtspFrameEncoderFactory.h` / `Private/RtspFrameEncoderFactory.cpp` (신규) —
+  `IsRHID3D12()`면 `FNvencD3D12Encoder`, Vulkan이면 `FNvencVulkanEncoder`. D3D12 분기는
+  `#if PLATFORM_WINDOWS`로 감쌈(그 심볼 자체가 리눅스엔 없음).
+- `Public/FNvencVulkanEncoder.h` / `Private/FNvencVulkanEncoder.cpp` (신규) — 위 아키텍처
+  구현. Windows/Linux 둘 다에서 컴파일됨(D3D12와 달리 `Windows/` 서브폴더에 안 넣음 —
+  Linux도 이 인코더를 씀).
+- `ThirdParty/NvCodec/NvEncoder/Cuda/NvEncoderCuda.{h,cpp}` (신규, SDK에서 vendoring).
+- `Windows/NvencD3D12Encoder.{h,cpp}`: `IRtspFrameEncoder` 구현하도록 최소 수정
+  (virtual/override 추가, 로직은 그대로).
+- `RtspStreamComponent.{h,cpp}`: `TSharedPtr<FNvencD3D12Encoder>` →
+  `TSharedPtr<IRtspFrameEncoder>`로 교체, D3D12 관련 include/분기 전부 제거 — 이제 이
+  파일은 어느 인코더를 쓰는지 전혀 모름(Factory가 알아서 함). `#if RTSPENCODER_HAS_NVENC`
+  게이팅도 다 제거됨(인터페이스 자체가 플랫폼 무관이라 필요 없어짐).
+- `RtspEncoderModule.h/.cpp`: `LoadingPhase: PostConfigInit`으로 변경, `StartupModule()`에
+  Vulkan 확장 등록 추가.
+- `RtspEncoder.Build.cs`: CUDA 헤더/lib 연결(Windows는 로컬 CUDA Toolkit 13.3 설치 경로,
+  Linux는 WSL에서 뽑은 `C:\SDK\cuda-13.3-linux-x86_64\` 번들 — GStreamer 때와 동일한
+  패턴, env var `CUDA_LINUX_X86_64_DIR`로 오버라이드), `VulkanRHI` 모듈 의존성 추가
+  (양쪽 플랫폼 다), 리눅스 쪽 `libnvidia-encode.so` 스텁 링크 추가. 리눅스
+  `RTSPENCODER_HAS_NVENC`를 `1`로 전환.
+
+**아직 안 한 것**: 실제 컴파일도, 리눅스/원격 박스 실행도 전혀 안 해봄 — 다음은
+사용자가 Windows 빌드부터 돌려서(D3D12 경로는 코드가 안 바뀌었으니 회귀 없어야 함,
+`IRtspFrameEncoder`/Factory 리팩터만 제대로 컴파일되는지가 관건) 확인, 그 다음 Linux
+패키징으로 최소 컴파일 확인, 최종적으로는 원격 우분투 박스에서 실제 스트리밍까지
+확인 필요.
+
+### 10.3.1. 첫 컴파일 시도 — 실제 에러들 (2026-08-15)
+
+Windows 빌드(`-projectfiles`)를 실행해보니 예상대로 여러 라운드의 에러가 남:
+
+1. **Build.cs C# 컴파일 에러**: `VideoCodecSdkDir`가 Win64 `if` 블록 안에서만 선언된
+   지역 변수인데 Linux 블록에서도 참조하고 있었음(스코프 실수) — Linux 블록에도 같은
+   env var 기반 선언을 추가해서 해결.
+2. **`vkCreateImage`/`vkCmdCopyImage` 등 전부 "식별자를 찾을 수 없음" (C3861)**: 진짜
+   중요한 발견 — UE의 `VulkanThirdParty.h`가 `#define VK_NO_PROTOTYPES` 후
+   `<vulkan.h>`를 include함. 즉 **UE는 core Vulkan 함수를 정적 심볼로 전혀 노출 안
+   하고, 전부 동적 로드**하는 구조(내부 로더는 `VulkanRHI/Private/VulkanLoader.h` —
+   플러그인에서 접근 불가). `vkCreateImage` 같은 함수를 직접 호출하는 코드는 애초에
+   컴파일이 안 됨. **수정**: 필요한 core Vulkan 함수 19개를 전부
+   `IVulkanDynamicRHI::RHIGetVkInstanceProcAddr`/`RHIGetVkDeviceProcAddr`로 `Initialize()`
+   시점에 한 번 로드해서 멤버 함수 포인터(`Fp` 접두사)로 저장해두고, 모든 호출부를 그
+   포인터를 통하도록 교체. (기존에 win32/fd 핸들 export 확장 함수 두 개만 이 방식으로
+   로드했었는데, 사실 **core 함수도 전부 똑같이 해야 했음** — 처음엔 몰랐던 부분.)
+3. **`cuCtxCreate_v4`: 인자 개수 안 맞음**: 벤더링한 CUDA 13.3의 `cuda.h`가
+   `cuCtxCreate`를 `cuCtxCreate_v4`(4-인자, `CUctxCreateParams*` 추가됨)로 매크로
+   치환 — 이전 3-인자 시그니처는 구버전 API. `nullptr`을 그 자리에 넘겨서 해결(기본
+   동작 요청).
+4. **`RtspFrameEncoderFactory.cpp`의 `TEXT("none")` 삼항연산자 타입 에러**:
+   `FDynamicRHI::GetName()`이 이미 `const TCHAR*`를 반환하는데 `*`로 역참조해서 단일
+   문자 타입이 돼버린 실수 — `*` 제거.
+
+**교훈**: UE의 Vulkan 헤더가 `VK_NO_PROTOTYPES`라는 걸 미리 확인하지 않고 D3D12(정적
+링크되는 COM 인터페이스라 그냥 호출 가능)와 같은 방식으로 코드를 짰던 게 이번 라운드
+에러의 대부분을 차지함 — 다음에 비슷한 크로스 API 작업할 때는 헤더의 매크로 전제부터
+먼저 확인할 것.
+
+**검증 결과**: 재컴파일 결과 **Windows 빌드 + Linux 패키징 둘 다 성공**(2026-08-15).
+Windows `UnrealEditor-RtspEncoder.dll` 재빌드 확인, Linux 바이너리는 매니페스트에
+`RtspEncoder.uplugin` 포함 + 바이너리 안에 `FNvencVulkanEncoder` 심볼 존재까지 확인
+(§10.2 앞부분에서 "Enabled: false라 사실 테스트 안 됐던" 가짜 성공 사례가 있었어서
+이번엔 심볼까지 직접 확인). **Phase 2 코드가 두 플랫폼 모두에서 컴파일 자체는 통과.**
+
+**중요— "컴파일된다"과 "동작한다"는 다른 얘기**: 이건 어디까지나 컴파일 통과일 뿐,
+런타임 동작(특히 Vulkan/CUDA 인터롭 자체가 실제로 되는지)은 전혀 검증 안 됨.
+- Windows는 `DefaultGraphicsRHI_DX12`가 기본이라 평소 플레이로는 `FNvencD3D12Encoder`
+  경로만 타고, `FNvencVulkanEncoder`는 `-vulkan` 옵션으로 강제하지 않는 이상 실행 자체가
+  안 됨(그래도 컴파일이 깨지지 않는다는 건 확인됨).
+- §10.3에 나열해둔 미검증 리스크들(Vulkan 확장 등록 타이밍, SceneCapture 렌더타겟의
+  실제 레이아웃 가정, VkFormat 가정 등)은 전부 그대로 남아있음 — 컴파일 성공은 이런
+  런타임 가정들을 전혀 검증해주지 않음.
+- 진짜 검증은 Phase 4(원격 우분투 박스, 진짜 Vulkan 드라이버)에서 실제로 스트리밍이
+  되는지 확인해야 끝남.
+
+### 10.3.2. SDK 없는 PC에서 빌드가 통째로 막히는 문제 → soft-fail로 전환 (2026-08-18)
+
+다른 PC(NVIDIA Video Codec SDK 미설치)에서 titan_example을 빌드하니 `RtspEncoder.Build.cs`의
+`BuildException`이 떠서 **RTSP랑 전혀 상관없는 작업을 하려는 사람의 빌드까지 프로젝트
+전체가 막히는** 문제가 드러남. 플러그인을 `Enabled: false`로 꺼도 재현됐다고 함(원격
+PC라 직접 디버깅은 못 했음 — P4 동기화 안 됐거나 다른 원인일 수 있음, 확인 필요하면
+그 PC에서 정확히 어떤 에러가 뜨는지 다시 받아볼 것).
+
+**근본 수정**: SDK/CUDA/GStreamer가 없어도 `BuildException`으로 전체 빌드를 막는 대신,
+`Log.TraceWarning`만 찍고 그 기능만 꺼진 채(`RTSPENCODER_HAS_NVENC=0` /
+`RTSPENCODER_HAS_GSTREAMER=0`) 나머지는 정상 컴파일되도록 `RtspEncoder.Build.cs`를
+전면 재구성:
+- 각 외부 의존성(Windows NVENC+Vulkan/CUDA, Linux NVENC+Vulkan/CUDA, Windows GStreamer,
+  Linux GStreamer) 셋업을 `TrySetupXxx()` 형태의 private 메서드로 분리 — 못 찾으면 경고
+  찍고 `false` 리턴, 찾으면 실제로 헤더/lib 연결하고 `true` 리턴.
+- **벤더 파일들이 원래 매크로 게이팅이 전혀 안 돼 있었다는 게 진짜 문제였음** —
+  `RTSPENCODER_HAS_NVENC=0`으로 lib만 안 붙이면 컴파일은 되지만 **링크 에러**
+  (`NvEncodeAPICreateInstance` 등 unresolved external symbol)로 바뀔 뿐이었음.
+  `NvEncoder.h/.cpp`, `NvEncoderD3D12.h/.cpp`, `NvEncoderCuda.h/.cpp` 6개 벤더 파일
+  전체를 `#if RTSPENCODER_HAS_NVENC ... #endif`로 감싸서, SDK 없으면 이 파일들이
+  전부 빈 translation unit으로 컴파일되게 함(우리 자신의 wrapper 파일들은 이미
+  Phase 2에서 이렇게 돼 있었음 — 벤더 파일만 빠져있었던 것).
+- `RtspServerSubsystem.cpp`(GStreamer)는 이미 전체가 `#if RTSPENCODER_HAS_GSTREAMER`로
+  게이팅돼 있어서 추가 수정 불필요했음.
+
+**결과**: 이제 어떤 PC든 SDK가 있든 없든 titan_example 빌드 자체는 항상 성공. RTSP
+기능만 그 SDK 유무에 따라 켜지거나 꺼짐 — 런타임 쪽은 이미 Phase 1부터
+`RtspStreamComponent::SetupEncoderAndStream()`이 인코더 생성 실패 시 로그만 남기고
+조용히 스트리밍을 끄는 방식이었으므로(에디터 크래시나 게임 진행 방해 없음) 그대로 잘
+맞아떨어짐. **아직 재컴파일로 검증 안 됨** — 다음에 Windows/Linux 양쪽 다시 빌드해서
+확인 필요.
+
+### 10.3.3. `LoadingPhase: PostConfigInit`이 모듈 로드 자체를 깨뜨림 → `Default`로 되돌림 (2026-08-18)
+
+빌드는 성공했는데 에디터 실행 시 `"The game module 'titan_example' could not be loaded"`
+에러 발생. 원인으로 가장 유력한 건 §10.3(Phase 2)에서 Vulkan 확장(`VK_KHR_external_memory_win32`/
+`_fd`) 등록 타이밍을 맞추려고 `RtspEncoder.uplugin`의 `LoadingPhase`를 `Default`에서
+`PostConfigInit`(엔진 초기화 극초반)으로 앞당겼던 것 — 이 시점엔 우리 모듈이 의존하는
+`D3D12RHI`/`VulkanRHI` 같은 다른 모듈들 자체가 아직 로드될 준비가 안 됐을 가능성이 높음.
+
+**수정**: `LoadingPhase`를 `Default`로 되돌림. 이건 **원래 문제(확장 등록 타이밍)를 고친
+게 아니라 그냥 되돌린 것** — `IVulkanDynamicRHI::AddEnabledDeviceExtensionsAndLayers()`
+호출 자체는 코드에 남아있지만, 이제 다시 `Default` 페이즈(Vulkan 디바이스가 이미 만들어진
+한참 뒤)에서 실행되므로 **사실상 아무 효과 없는 코드**가 됨 — VK_KHR_external_memory
+계열 확장이 실제로 활성화되는지는 여전히 미해결 상태. `FNvencVulkanEncoder`를 실제
+Vulkan RHI에서 테스트하다가 "확장을 못 찾음" 에러가 나면 바로 이 부분임 — 그때는
+LoadingPhase가 아니라 진짜 엔진 프리인잇 훅(플러그인 모듈의 StartupModule 말고, 예를
+들어 커스텀 `IEngineLoop` 훅이나 `FCoreDelegates` 계열의 아주 이른 델리게이트) 같은
+다른 메커니즘을 찾아봐야 함.
+
+**교훈**: 이번 것도 그렇고 아까 Build.cs 스코프 에러도 그렇고, Phase 2 이후로는 매
+수정마다 실제로 사용자 PC에서 재현/재검증을 거치고 있음 — 이 기능(Vulkan/CUDA 인터롭
+전체)은 여전히 실제 하드웨어 검증이 하나도 안 끝난 상태라, 당분간 이런 라운드가 더
+나올 걸로 예상.
+
+### 10.3.4. `LoadingPhase`를 `Default`로 되돌려도 여전히 크래시 → 진짜 원인은 `checkf` (2026-08-18)
+
+§10.3.3에서 `LoadingPhase`를 `Default`로 되돌렸는데도 사용자 PC에서 똑같이
+`"The game module 'titan_example' could not be loaded"` 재현됨 — 진단이 틀렸던 것.
+
+`IVulkanDynamicRHI::AddEnabledDeviceExtensionsAndLayers()`의 실제 구현
+(`VulkanLayers.cpp`)을 열어보니:
+```cpp
+checkf(!GVulkanRHI, TEXT("AddEnabledDeviceExtensionsAndLayers should be called before the VulkanRHI has been created"));
+```
+`checkf`는 조건이 거짓이면 **즉시 fatal 크래시**임 — 조용히 무시되는 게 아니었음. 이
+프로젝트는 `DefaultGraphicsRHI_DX12`라 Vulkan이 활성 RHI는 아니지만, `LoadingPhase`가
+`Default`든 `PostConfigInit`이든 우리 모듈의 `StartupModule()`이 실행되는 시점엔 이미
+`GVulkanRHI`가 어떤 형태로든 설정돼 있어서(정확한 메커니즘까지는 추적 안 함) 이
+`checkf`가 매번 걸렸던 것으로 보임 — 즉 `LoadingPhase`를 아무리 조정해도 이 접근 자체가
+성립할 수 없는 방식이었음.
+
+**수정**: `RtspEncoderModule.cpp`의 `StartupModule()`에서 이 호출을 **완전히 제거**.
+`LoadingPhase`도 `Default`로 유지(이제 이 값을 바꿀 이유 자체가 없어짐). Vulkan
+`VK_KHR_external_memory` 확장 등록은 여전히 미해결 상태로 남겨둠 — `FNvencVulkanEncoder`의
+`LoadVulkanFunctionPointers()`가 이미 관련 함수를 못 찾으면 크래시 없이 로그만 남기고
+안전하게 실패하도록 돼 있어서(Phase 2에서 이미 그렇게 설계함), 최소한 "동작 안 함"이
+"에디터 전체가 안 뜸"으로 번지는 일은 없어짐.
+
+**교훈**: `checkf`/`check`류 UE 매크로를 쓰는 엔진 API를 호출할 때는, "실패하면 그냥
+아무 효과 없겠지"라고 넘겨짚지 말고 실제 구현을 먼저 열어봐야 함 — 이번에 그 가정이
+완전히 틀렸었고, 그것 때문에 원인 파악에 한 라운드를 더 씀.
+
+### 10.3.5. "game module could not be loaded"의 진짜 원인 — checkf도 LoadingPhase도 아니었음
+
+§10.3.3/10.3.4에서 두 번 수정(LoadingPhase 되돌리기, checkf 유발 호출 제거)했는데도 동일한
+"The game module 'titan_example' could not be loaded" 에러가 그대로 재현됐음. 급하게 P4
+제출해야 하는 상황이라 일단 `titan_example.Build.cs`에서 `"RtspEncoder"` 의존성 자체를
+빼고(`TITAN_RTSP_ENABLED=0`, Vehicles/*.cpp 3개 파일의 `URtspStreamComponent` 사용부를
+`#if TITAN_RTSP_ENABLED`로 감싸서 스텁 처리) 플러그인을 코드 레벨에서 완전히 분리했는데도
+**같은 에러가 또 재현**됨 — 이때 처음으로 `Saved/Logs/titan_example.log`를 직접 열어서
+"could not be loaded" 다이얼로그 줄(1759) 근처가 아니라 그 훨씬 앞, 실제
+`InternalLoadLibrary` 시퀀스 부분을 봤음:
+
+```
+LogModuleManager: InternalLoadLibrary: 'titan_example' ('.../UnrealEditor-titan_example.dll')
+LogWindows: Failed to load '.../UnrealEditor-titan_example.dll' (GetLastError=126)
+LogWindows:   Missing import: UnrealEditor-RtspEncoder.dll
+```
+
+`GetLastError=126` = `ERROR_MOD_NOT_FOUND` — DLL 자체가 아니라 **그 DLL이 임포트하는
+다른 DLL**을 못 찾았다는 뜻. `Build.cs`에서 의존성을 뺐는데도 `titan_example.dll`의 PE
+임포트 테이블엔 여전히 `UnrealEditor-RtspEncoder.dll`이 박혀 있었음 — 즉 소스 수정은
+맞았는데 **그 수정을 반영해서 다시 링크된 바이너리가 아니었음**. 원인은 Live Coding:
+Binaries 폴더에 `.patch_0.exe`/`.patch_1.exe`가 있었던 걸로 봐서 Live Coding을 쓰고
+있었는데, Live Coding은 함수 본문 핫패치만 하지 "이 DLL 의존성을 더 이상 안 쓴다" 같은
+**링크 구조 변경은 절대 반영 못 함**.
+
+**수정**: Binaries/Intermediate(titan_example + RtspEncoder 양쪽) 삭제 → 프로젝트 파일
+재생성 → Live Coding이 아닌 일반 빌드(Rebuild)로 다시 링크 → 정상 로드 확인됨.
+
+**교훈**:
+- "빌드는 되는데 실행이 안 됨" 계열 에러를 다이얼로그 텍스트만 보고 재현/추측으로 접근하지
+  말고, **`Saved/Logs/*.log`에서 `InternalLoadLibrary`/`GetLastError` 주변을 직접 읽는 게
+  가장 빠름** — 이번에도 그렇게 하자마자 한 번에 진짜 원인이 나왔음. `checkf`/`LoadingPhase`
+  두 라운드는 로그를 안 보고 소스 코드만 보고 추측한 결과였고, 둘 다 틀렸음.
+- **Build.cs의 모듈 의존성 목록을 바꿨을 때는 Live Coding으로 확인하면 안 됨** — 반드시
+  풀 빌드(또는 최소한 일반 링크가 도는 빌드)로 확인해야 함. 이 프로젝트는 평소 Live
+  Coding을 습관적으로 쓰는 듯하니, 앞으로 플러그인 의존성/`.uplugin`/Build.cs를 건드린
+  뒤에는 매번 "이거 Live Coding 아니라 진짜 재빌드했나?"부터 확인할 것.
+
+### 10.3.6. SDK 미설치 시 소프트-페일 체인 전수 감사 (2026-08-18)
+
+RTSP 재활성화하면서 "SDK 없어도 경고만 뜨고 빌드/실행은 되게" 요구사항이 실제로 전
+구간에서 지켜지는지 코드 레벨로 재확인함 (이전 세션에서 구현한 걸 다시 검증):
+
+- **`RtspEncoder.Build.cs`**: `TrySetupNvencWindows`/`TrySetupNvencLinux`/
+  `TrySetupGStreamerWindows`/`TrySetupGStreamerLinux` 전부 SDK/디렉토리/라이브러리 파일
+  하나라도 없으면 `Log.TraceWarning` + `return false`만 하고 `BuildException`은 절대 안
+  던짐. 결과는 `RTSPENCODER_HAS_NVENC`/`RTSPENCODER_HAS_GSTREAMER` 매크로(0/1)로 전달.
+- **벤더 NVENC 파일 6개** (`ThirdParty/NvCodec/**`): 전체가 `#if RTSPENCODER_HAS_NVENC`로
+  감싸져 있어서 0일 때 빈 파일처럼 컴파일됨 — 링크 에러 없음.
+- **`NvencD3D12Encoder.cpp`**: 전체 구현이 `#if RTSPENCODER_HAS_NVENC`로 감싸짐. 헤더
+  (`NvencD3D12Encoder.h`)는 가드 없이 항상 컴파일되지만 멤버 함수 선언만 있고 정의가
+  없어도 문제없음 — 실제로 그 함수들을 호출하는 코드(Factory)도 똑같이 매크로로 가려져
+  있어서 참조 자체가 안 생김.
+- **`RtspFrameEncoderFactory.cpp`**: `#if RTSPENCODER_HAS_NVENC`로 `CreateRtspFrameEncoder`
+  전체가 두 가지 버전으로 나뉨 — 0일 때는 그냥 에러 로그 찍고 `nullptr` 리턴하는 버전으로
+  컴파일됨.
+- **`RtspStreamComponent.cpp::SetupEncoderAndStream()`**: `CreateRtspFrameEncoder`가
+  `nullptr`이면 에러 로그 찍고 `false` 리턴 — 스트리밍만 조용히 안 됨, 크래시 없음.
+  `URtspServerSubsystem`이 안 돌고 있어도(GStreamer 없음) 마찬가지로 그냥 에러 로그 +
+  `false`.
+- **`RtspServerSubsystem.cpp`**: 전체가 `#if RTSPENCODER_HAS_GSTREAMER`로 감싸져 있고,
+  `FRtspEncoderModule::IsGStreamerReady()`도 체크함.
+- **`RtspEncoderModule.cpp::StartupModule()`**: GStreamer bin 디렉토리가 없으면(런타임
+  체크, 빌드 타임과 별개) 에러 로그 찍고 그냥 `return` — 모듈 자체는 정상 로드됨.
+
+**결론**: 이 체인은 감사 당시엔 전 구간 soft-fail로 보였으나, 실제로 SDK 없는 팀원 PC에서
+빌드해보니 구멍이 하나 있었음(아래 §10.3.7) — 정적 감사만으로는 못 잡았고, 실제 그 환경에서
+빌드해봐야 확실히 검증된다는 교훈.
+
+### 10.3.7. `FNvencVulkanEncoder.h` — SDK 없는 PC에서 C1083
+
+팀원 PC(NVIDIA Video Codec SDK 미설치, `RTSPENCODER_HAS_NVENC=0`)에서 실제 빌드 시:
+
+```
+C1083: 포함 파일을 열 수 없습니다. 'IVulkanDynamicRHI.h'
+  FNvencVulkanEncoder.h(41)
+```
+
+원인: `FNvencVulkanEncoder.h`가 `#include "IVulkanDynamicRHI.h"`/`<cuda.h>`를 **아무 매크로
+가드 없이** 최상단에서 include하고 있었음. 이 헤더는 `FNvencVulkanEncoder.cpp`가
+(`#include "FNvencVulkanEncoder.h"`를 자기 자신의 `#if RTSPENCODER_HAS_NVENC` 가드보다
+**앞에서** — 즉 가드 밖에서 — include) 매번 무조건 include하는데, `IVulkanDynamicRHI.h`가
+실제로 include 경로에 잡히는 건 `RtspEncoder.Build.cs`가 `"VulkanRHI"` 모듈 의존성을 추가한
+경우뿐이고, 그건 NVENC SDK + CUDA Toolkit이 둘 다 있어야만(`TrySetupNvencWindows`/
+`TrySetupNvencLinux`가 `true`를 리턴해야만) 일어남. 벤더 NVENC 파일 6개나
+`NvencD3D12Encoder.cpp`/`RtspFrameEncoderFactory.cpp`는 전부 이 패턴을 정확히 지켰는데
+이 파일 하나만 헤더 자체가 안 가려져 있었음.
+
+**수정**: `FNvencVulkanEncoder.h`의 `#include "IVulkanDynamicRHI.h"` / `<cuda.h>` 및
+클래스 선언 전체를 `#if RTSPENCODER_HAS_NVENC ... #endif`로 감쌈 (`CoreMinimal.h`/
+`IRtspFrameEncoder.h`만 가드 밖에 남김 — 둘 다 항상 안전). `.cpp` 쪽은 안 건드림 — 헤더
+자체가 이제 SDK 없을 때 빈 파일처럼 컴파일되므로, `.cpp`의 무가드 include가 안전해짐.
+
+**교훈**: §10.3.6 감사는 "매크로로 감싸져 있는지" 코드를 눈으로 훑는 정적 점검이었는데, 이
+파일 하나를 놓쳤음 — 실제로 SDK 없는 머신에서 빌드해보기 전까진 100% 확신할 수 없었음.
+비슷한 소프트-페일 가드를 또 추가할 일이 있으면, **`.h`/`.cpp` 양쪽 다 최상단부터 확인** —
+특히 "이 .cpp는 가드돼 있으니 안전하다"고 넘겨짚지 말고 그 .cpp가 include하는 헤더 자체도
+가드돼 있는지 따로 확인할 것.
+
+### 10.3.8. `NvencD3D12Encoder.h` — 클린 리빌드로도 안 없어지는 LNK2001/2019
+
+§10.3.7 고치고 다시 그 PC에서 폴더 싹 지우고 클린 리빌드까지 했는데도 **같은 계열의 또
+다른 에러**가 남:
+
+```
+LNK2001: FNvencD3D12Encoder::Shutdown, FNvencD3D12Encoder::EncodeFrame
+LNK2019: FNvencD3D12Encoder 소멸자 + vector deleting destructor
+(전부 NvencD3D12Encoder.cpp.obj 자기 자신이 참조하는 것으로 표시됨)
+```
+
+C1083(못 찾는 헤더)가 아니라 LNK라서 처음엔 스테일 빌드 의심했는데, 클린 리빌드로도
+재현되는 걸 보고 진짜 코드 문제라고 판단. 원인은 `FNvencVulkanEncoder.h`(§10.3.7)와
+근본적으로 같은 "가드 안 된 헤더" 계열이지만 증상이 다르게 나타난 케이스:
+
+`NvencD3D12Encoder.h`는 클래스 선언 자체엔 매크로 가드가 없었고, 그 안에
+`IsInitialized()` 하나가 **인라인**으로 정의돼 있었음(`{ return Encoder != nullptr; }`).
+클래스가 `RTSPENCODER_API`(dllexport)라서, `RTSPENCODER_HAS_NVENC=0`인 머신에서
+`NvencD3D12Encoder.cpp`을 컴파일하면 생성자/소멸자/`Shutdown`/`EncodeFrame`(전부 .cpp에서
+`#if RTSPENCODER_HAS_NVENC`로 가드된 아웃오브라인 정의)은 빠지는데, 헤더의 인라인
+`IsInitialized()`는 매크로와 무관하게 이 TU에서 그대로 컴파일됨. dllexport 클래스가 어떤
+TU에서든 가상함수 정의(인라인 포함)를 하나라도 가지면 MSVC는 그 TU에서 vtable 전체를
+export해야 하고, vtable을 채우려면 나머지 가상함수(Shutdown/EncodeFrame/소멸자) 주소도
+필요한데 이 TU엔 없음 — 그래서 정확히 이 세 개만(인라인이 아닌 것들만) unresolved
+external로 뜬 것. `GetWidth`/`GetHeight`도 인라인이라 문제없었던 것도 이 설명과 일치.
+
+**수정**: `NvencD3D12Encoder.h`도 `FNvencVulkanEncoder.h`와 동일하게 클래스 선언 전체를
+`#if RTSPENCODER_HAS_NVENC ... #endif`로 감쌈 (`CoreMinimal.h`/`IRtspFrameEncoder.h`만
+가드 밖).
+
+**교훈**: dllexport(`XXX_API`) 클래스에 인라인 가상함수가 하나라도 있으면, 그 클래스
+선언 전체가 매크로로 가드 안 돼 있는 한 "이 .cpp의 나머지 정의만 가드하면 충분하다"는
+가정이 깨짐 — 헤더에 인라인 정의가 하나라도 있으면 .cpp가 아무리 잘 가드돼 있어도
+소용없음. `FNvencVulkanEncoder.h`는 애초에 인라인 가상함수가 없어서 이 문제가 없었고
+(그래서 그쪽은 C1083, 이쪽은 LNK로 다르게 터짐) — SDK-optional 가드가 필요한
+`XXX_API` 클래스는 앞으로 **무조건 클래스 선언 전체를 매크로로 감싸는 걸 기본값**으로
+할 것, 인라인 함수 유무를 개별 판단하지 말고.
+
+### 10.4. 남은 Phase
+
+- **Phase 3 — Windows 전용 접착 코드 정리**: Phase 1~2에서 이미 대부분 진행됨.
+- **Phase 4 — 리눅스 실빌드/실테스트**: 사용자가 실제 "Linux로 패키징" 절차 실행 →
+  옮겨서 실제 우분투 박스에서 컴파일 에러/런타임 확인. Vulkan RHI 렌더링 자체가 되는지,
+  §10.3에서 나열한 미검증 리스크들이 실제로 문제가 되는지가 여기서 처음 검증됨.

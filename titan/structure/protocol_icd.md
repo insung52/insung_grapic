@@ -54,44 +54,40 @@ UGV축은 무조건 (a). Layer A가 실제로 생기면 (a)와 같은 패턴을 
 
 ## 2. 공통 타입 · 단위 표준 (양쪽 다 적용)
 
-**좌표계 재검토 중 (2026-08-07)** — 원래 위경도(WGS84)로 확정했었으나, LIG 참조구현
-(`udp_test`)에서 `East`/`North`/`Zone`/`Letter` 필드 패턴이 일관되게 발견돼 **UTM일 가능성이
-높아짐** — LIG 답변 대기(`lig_questions_0807_draft.md` §1).
+**좌표계 확정 (2026-08-14): UTM.** 정식 ICD(`lig_icd_ugv_rc_full.md`, `UGV_RC_ICD.xlsx`
+복호화 확보)로 최종 확인됨 — `East`(8자리)/`North`(10자리)/`Zone`/`Letter` 정수·문자열 필드,
+WGS84 lat/lon 아님. `lig_questions_0807_draft.md`의 좌표계 질문은 해소, 삭제.
 
-**대응 방침: 와이어 포맷은 LIG 답 기다리되, 내부 `Coord` 타입은 처음부터 양쪽 다 지원.**
-WGS84 lat/lon ↔ UTM은 결정론적으로 상호 변환 가능(UTM 자체가 위경도+타원체 투영)하므로,
-**내부 canonical 저장은 lat/lon 하나로 하고, UTM이 필요한 시점(와이어 직렬화 등)에 변환
-함수로 계산**하는 구조로 간다 — lat/lon과 UTM을 각각 따로 저장하면 sync 어긋나는 버그가
-생길 수 있어서 피함. 이러면 LIG 답이 뭐로 오든 코드 변경 없이 직렬화 시점의 출력 포맷만
-바꾸면 됨(원칙 5: 되돌리기 싼 결정은 미루되, 양쪽 다 되게 만들어 미루는 비용 자체를 없앰).
-UTM Zone은 카덱스 시연 장소가 고정 지역이라 사실상 고정값일 가능성 높음(경도로 자동
-계산하는 표준 공식도 있음) — 정확한 Zone/Datum은 `lig_questions_0807_draft.md`에서 확인
-중. 변환 로직은 `GeoCoordinateUtils.h`에 추가(기존엔 씬 스케일↔위경도만 지원, UTM 변환
-함수 추가 필요 — Track4/5 몫).
+**대응 방침(그대로 유효)**: 내부 canonical 저장은 lat/lon, 와이어(UTM)로 낼 때 변환 함수로
+계산 — UTM이 최종 확정됐어도 내부적으로 lat/lon을 쓰는 이유는 그대로 유효(계산/다른 좌표계
+소비처와의 호환성). 변환 로직은 `GeoCoordinateUtils.h`에 UTM 변환 함수 추가 필요(Track4/5
+몫). Zone/Datum 정확한 값은 ICD에 안 나와 있어 여전히 확인 필요(카덱스 시연 장소가 고정
+지역이라 Zone은 사실상 고정값 — 경도로 자동 계산하는 표준 공식으로 임시 결정 후 실측 대조).
 
 ```
 Coord      { "lat": double, "lon": double, "alt": float }
-             // lat/lon: WGS84 십진수 도(°), double — 소수점 7자리는 있어야 cm급 정밀도. 이게 canonical 내부 표현.
-             // alt: 미터, AGL — 지상 유닛은 0 고정
-             // 와이어로 UTM이 필요하면 이 값에서 East/North/Zone/Letter로 변환해서 내보냄(§7 예시 필드명 참고)
-BBox       { "x": float, "y": float, "w": float, "h": float }  // 화면 UV 0~1 — 우리가 생성하는 데이터라 이 형태 유지 가능(§6)
-Detection  { "id": string, "type": "Person"|"Vehicle", "bbox": BBox, "coord": Coord|null, "confidence": float }
+             // 내부 canonical 표현. 와이어(UTM)로 낼 때: East(Int,8자리)/North(Int,10자리)/Zone(Int)/Letter(String)로 변환
+BBox       { "leftTopX": int, "leftTopY": int, "rightBottomX": int, "rightBottomY": int }
+             // 확정(ICD): 0~65535 정수 스케일링, 결과값 = 픽셀좌표 * 65535 / 영상 가로|세로 크기
+             // 기존 {x,y,w,h} 0~1 UV 타입은 폐기 — ICD가 좌상단/우하단 절대좌표쌍+스케일링 방식으로 못박음
+Detection  { "objectID": int(1~65535), "objectClass": "Human"|"Car", "bbox": BBox,
+             "east": int, "north": int, "zone": int, "letter": string, "velocity": int, "altitude": int }
+             // 필드명은 ICD 원문 그대로(대소문자 등) — `lig_icd_ugv_rc_full.md` 시트2 참고
 ```
 
-**단위 표준**: 거리/반경/고도 = 미터(m), 속도 = m/s, 각도 = 도(°), 배터리 = 0~1 소수,
-시간 = ms.
+**단위 표준**: 거리/반경/고도 = 미터(m), 속도 = m/s, 각도 = 도(°), 배터리 = 0~1 소수(단,
+ICD 원문은 0~100 Int% — §3.2 참고, 필드별로 ICD 값 우선), 시간 = ms.
 
-**LIG의 `data` 필드 내부 key/value가 이 타입들과 정확히 어떻게 맞물리는지는 아직 미확인**
-— LIG가 예고한 "cmd 코드 목록/데이터 송수신 참조 모듈"(§6) 도착 시 재확인 필요. 좌표를
-lat/lon으로 주는지, 우리가 가정한 필드명을 그대로 쓰는지 등은 우리 추정.
+**§3.2 전체가 이제 ICD 확정값** — 아래 표 그대로 구현 대상. `data` 필드 key/value는
+`lig_icd_ugv_rc_full.md`가 원문 그대로(오타 포함) 기록.
 
 ---
 
-## 3. UGV축 — UGV 시뮬레이션 SW ↔ 원격통제기 — **외부 확정 스펙 (LIG, 2026-08-06)**
+## 3. UGV축 — UGV 시뮬레이션 SW ↔ 원격통제기 — **외부 확정 스펙, ICD 원문 확보 완료 (2026-08-14)**
 
 **우리가 설계한 게 아니라 LIG가 이미 구현한 원격통제기에 맞춰서 우리가 구현해야 하는
-인터페이스.** 아래 IP/포트/신뢰성 메커니즘은 확정, cmd 값 목록/data 필드 상세는 LIG 참조
-모듈 도착 전까지 우리 추정치(원본 PDF p.11 + 이번 답변 종합).
+인터페이스.** IP/포트/신뢰성 메커니즘/cmd 목록/data 필드 전부 **정식 ICD로 확정**
+(`lig_icd_ugv_rc_full.md`, `UGV_RC_ICD.xlsx`) — 더 이상 추정치 아님.
 
 ### 3.1 전송/네트워크
 
@@ -107,33 +103,68 @@ lat/lon으로 주는지, 우리가 가정한 필드명을 그대로 쓰는지 �
   - **이벤트 메시지** (Message/ACK): 송신→Message, 수신→ACK. `( )msec` 내 ACK 없으면
     **3회까지** Message 재시도(원본에 3회로 명시됨, 타임아웃 msec 값만 미기재).
 
-### 3.2 메시지 (우리 추정 — LIG 실제 cmd 코드로 교체 예정)
+### 3.2 메시지 — **ICD 확정 (전체 원문은 `lig_icd_ugv_rc_full.md`)**
 
-원래 §3.2~3.3에 있던 명령 목록을 LIG 봉투 형식(`cmd`/`src`/`recv`/`data`)으로 재매핑.
-`src`/`recv`는 `RC`(원격통제기, 20) / `UGV`(14) / `UGV_RCWS`(13) / `UGV_ADU`(12) 중 하나.
+`src`/`recv`는 `RC`(원격통제기,20) / `UGV`(14) / `UGV_RCWS`(13) / `UGV_ADU`(12).
 
-| cmd(추정) | src→recv | data | 매핑 |
+**UGV→RC (우리가 보냄)**:
+
+| cmd | src | 주기 | data 핵심 필드 |
 |---|---|---|---|
-| `SetUGVMode` | RC→UGV | `{ mode: Idle\|Manual\|Auto }` | `SetUGVMode` |
-| `ManualDrive` | RC→UGV | `{ forward, turn: [-1,1] }` | `SetManualControl()`, Manual만 |
-| `MissionWaypoint` | RC→UGV | `{ target: Coord, radius(m) }` | Auto 모드 목적지 |
-| `SetRCWSMode` | RC→UGV_RCWS | `{ mode: 4단계 }` | `SetRCWSMode` |
-| `Movement` | RC→UGV_RCWS | `{ pan, tilt }` | RCWS 조준, Remote만 |
-| `ManualFire` | RC→UGV_RCWS | `{}` | 발사 |
-| `PeriodBasicInfo` | UGV→RC | `{ pos: Coord, speed, battery, driveMode, odometer }` | 주기 |
-| `PeriodObjectDetectionResult` | UGV_ADU→RC | `{ targets: Detection[] }` | 주기 |
-| `PeriodNavigationInfo` | UGV_ADU→RC | `{ waypoint: Coord, distanceRemaining }` | 주기 |
-| `PeriodRCWSStatus` | UGV_RCWS→RC | `{ mode, aimPan, aimTilt, loaded, fireReady, zoom }` | 주기 |
+| `UGV_Response_Connection` | UGV/UGV_ADU | 비주기 | `ResponseDevice` |
+| `UGV_Period_Basicinfo` | UGV | **10Hz** | `OperationMode`(Stay/Remote/FAD/HAD/5/6/Emergency), `ConrtrolRight`(원문 오타), `Speed`(0~100), `Gear`(Front/Back/Turn), `Batterry`(원문 오타, 0~100%) |
+| `UGV_Response_BIT` | UGV | 비주기 | `StatusVMU`, `CountValue` |
+| `UGV_RCWS_Status` | UGV_RCWS | **20Hz** | `RCWSStatus`(ON/OFF) |
+| `UGV_Period_ObjectDetectionResult` | UGV_RCWS 또는 UGV_ADU(동일 cmd, src로 구분) | — | `TotalObject`, `Objects[]`(BBox+UTM+속도+고도, §2) |
+| `UGV_Response_BIT_ADU` | UGV_ADU | 비주기 | `StatusADU`/`StatusVMU`/`StatusNavigation`/`Status3DLidar`/`StatusRadar`/`StatusOCS` |
+| `UGV_Period_BasicInformation` | UGV_ADU | — | `Odometer`(m) |
+| `UGV_Period_NavigationInformation` | UGV_ADU | — | `East`/`North`/`Zone`/`Letter`, `Velocity`, `Heading`, `Altitude` |
 
-**주의: 위 cmd 이름/필드명은 우리 쪽 추정치다.** 실제 값은 LIG가 "내일 중 전달"하기로 한
-데이터 송수신 참조 모듈에서 확정됨 — 도착 즉시 이 표를 그걸로 교체.
+**RC→UGV (우리가 받아서 처리, 예전에 비어있던 부분 전부 확정됨)**:
+
+| cmd | 주기 | data 핵심 필드 | 매핑 |
+|---|---|---|---|
+| `RC_Connection` | 비주기(1Hz 재연결) | `RequestDevice`(0/1) | 연결 핸드셰이크 |
+| `RC_Request_BIT` | 1Hz | `RequestBit` | BIT 응답 트리거 |
+| `RC_Control_Right` | 비주기 | `ControlRight`(0/1) | 제어권 설정(p.11 상태도의 "제어권 설정?") |
+| **`RC_RemoteDriving`** | **20Hz** | `Acceleration`(0~100), `Brake`(-0~-100), `Steering`(-100~100), `Gear`(FRONT/BACK) | `SetManualControl()` 계열 — **필드 그대로 매핑 가능** |
+| `RC_EmergencyStop` / `RC_EmergencyStopRelease` | 비주기 | `CommandDevice`(1==동작) | **우리 쪽에 대응 상태 없음, 신규 필요**(§ 아래 참고) |
+| **`RC_OperationMode`** | 비주기 | `OperationMode`(STAY/REMOTE/EMERGENCY) | **`EUGVDriveMode`와 재정의 필요**(§ 아래) |
+| `RC_SelectCamera` | 비주기 | `SelectCameraButton`(RELEASE=EO/PRESSED=IR) | EO/IR 전환 |
+| `RC_FireMode` | 비주기 | `FireMode`(SINGLE/BRUST/CONTINUS, 원문 오타) | `SetFireMode` |
+| `RC_ChargeWeapon` | 비주기 | `ChargeSwitch`(OFF/ON) | 장전 |
+| **`RC_FireWeapon`** | 비주기 | `FireButton`(RELEASE=대기/PRESSED=사격) | `ManualFireAction` |
+| `RC_MotionMode` | 비주기 | `MotionMode`(RELEASE=활성/PRESSED=비활성) | |
+| `RC_Movement` | 비주기 | `BrakeButton`, `XAxis`(12bit,-100~100), `YAxis`(12bit,-100~100) | RCWS pan/tilt+브레이크, 우리 추정 `{pan,tilt}`보다 필드 많음 |
+| `RC_ActivateFire` / `RC_ActivateMovement` | 비주기 | `*Toggle`(RELEASE=활성/PRESSED=비활성) | |
+| `RC_Connection_ADU` / `RC_Request_BIT_ADU` | 비주기/1Hz | `RequestDevice`/`CountValue` | ADU측 핸드셰이크(자율축, 원문 주석: 실제 ADU는 현대로템 제품, 우리는 시뮬레이터가 이 응답을 대신 함) |
+
+**설계 재검토 필요 — `RC_OperationMode`(STAY/REMOTE/EMERGENCY)**: `replication_audit.md`/
+`architecture_decisions.md`에서 "STAY/EMERGENCY는 Idle이 커버하니 폐기"라고 결정했었는데,
+**실제 ICD엔 이게 별도의 명시적 커맨드로 존재함** — `EUGVDriveMode(Idle/Manual/Auto)`와
+`RC_OperationMode(STAY/REMOTE/EMERGENCY)`+`RC_Control_Right`+`RC_EmergencyStop`의 관계를
+다시 정의해야 함(예: `REMOTE`+제어권 있음→`Manual`, `STAY`→`Idle`, `EMERGENCY`→우리 쪽에
+없는 새 상태 필요할 수 있음). Track4/5 착수 시 확인.
 
 ### 3.3 RTSP — UGV축 (5스트림)
 
 `전면CCTV`, `후면CCTV`, `좌측CCTV`, `우측CCTV`, `RCWS뷰어`. Q&A 원문: *"시뮬레이션이 RTSP
 서버가 되어 필요한 곳에서 스트리밍"* — 즉 **UGV 시뮬레이션 SW(192.168.10.10)가 RTSP 서버**.
-URL 잠정: `rtsp://192.168.10.10:8554/<stream>` — 정확한 포트/경로 규칙은 LIG 참조 모듈
-또는 PoC 이후 확정. 인코딩 방식은 §7.
+
+**Mount 이름 확정(2026-08-17, `rtsp_integration_status_0817.md` 후속 세션)** —
+`<axis>/<stream>` 패턴으로 확정, `URtspStreamComponent::MountPath`에 그대로 반영됨
+(`BP_UGV_Vehicle`에 추가한 `UVehicleRtspBridgeComponent`가 배선, `MountPrefix="ugv/"`):
+
+| 스트림 | Mount | 소스 컴포넌트 |
+|---|---|---|
+| 전면CCTV | `ugv/front_cctv` | `QuadCam->GetFrontCamera()` |
+| 후면CCTV | `ugv/rear_cctv` | `QuadCam->GetRearCamera()` |
+| 좌측CCTV | `ugv/left_cctv` | `QuadCam->GetLeftCamera()` |
+| 우측CCTV | `ugv/right_cctv` | `QuadCam->GetRightCamera()` |
+| RCWS뷰어 | `ugv/rcws` | `RCWS->GetSightCamera()` |
+
+URL: `rtsp://192.168.10.10:8554/ugv/<stream>` — 포트(8554)는 `RtspServerSubsystem` 기본값
+그대로 유지. 인코딩 방식은 §7.
 
 ---
 
@@ -150,8 +181,24 @@ UGV축 대응 함수와 개념적으로 동일한 것들을 로컬로 부르면 
 ### 4.1 RTSP — 자체방호축 (7스트림) — 유일하게 남는 외부 인터페이스
 
 `환경카메라`, `전면CCTV`, `후면CCTV`, `좌측CCTV`, `우측CCTV`, `RCWS뷰어`, `UAV드론뷰`.
-자체방호 통제기 SW가 RTSP 서버. URL 잠정: `rtsp://<selfdefense-pc-ip>:8554/<stream>` —
-실제 IP는 미확정(UGV처럼 고정 IP를 LIG가 지정했는지 확인 필요, §6).
+자체방호 통제기 SW가 RTSP 서버.
+
+**Mount 이름 확정(2026-08-17, `rtsp_integration_status_0817.md` 후속 세션)** — UGV축(§3.3)과
+동일한 `<axis>/<stream>` 패턴, `ATitanTruck::SetupRtspStreams()`/`AUAVPawn::BeginPlay()`가 배선:
+
+| 스트림 | Mount | 소스 컴포넌트 |
+|---|---|---|
+| 환경카메라 | `selfdefense/env_camera` | `ATitanTruck::BattlefieldCapture` |
+| 전면CCTV | `selfdefense/front_cctv` | `QuadCam->GetFrontCamera()` |
+| 후면CCTV | `selfdefense/rear_cctv` | `QuadCam->GetRearCamera()` |
+| 좌측CCTV | `selfdefense/left_cctv` | `QuadCam->GetLeftCamera()` |
+| 우측CCTV | `selfdefense/right_cctv` | `QuadCam->GetRightCamera()` |
+| RCWS뷰어 | `selfdefense/rcws` | `RCWS->GetSightCamera()` |
+| UAV드론뷰 | `selfdefense/uav_gimbal` | `AUAVPawn::GetGimbalCamera()`(별도 액터) |
+
+URL: `rtsp://<selfdefense-pc-ip>:8554/selfdefense/<stream>` — 포트(8554)는 UGV축과 동일한
+`RtspServerSubsystem` 기본값. 실제 IP는 여전히 미확정(UGV처럼 고정 IP를 LIG가 지정했는지
+확인 필요, §6) — mount 이름/포트만 이번에 확정됨.
 
 ---
 
@@ -186,41 +233,32 @@ ICD 정의는 안되어있고, 향후 추가 여부도 LIG 검토중에 있습�
 
 ---
 
-## 6. 결정된 것 / 남은 미확정 (2026-08-07 재갱신)
+## 6. 결정된 것 / 남은 미확정 (2026-08-14 재갱신 — 정식 ICD 확보로 대부분 해소)
 
-**결정됨**:
-- **UGV축 전송/IP/포트**: LIG 확정(§3.1).
-- **UGV축 신뢰성 메커니즘**: 앱레벨 ACK+재시도(§3.1), NATS/JetStream 아님.
-- **자체방호축엔 Layer B 자체가 없음**: 단일 프로그램(§4). 단, **RTSP는 여전히 필요** —
-  에뮬레이터↔콘솔 간 RTSP는 통합으로 불필요해졌지만, **자체방호통제기SW→상위체계로 가는
-  RTSP는 별개 링크로 계속 필요**(LIG 시스템 구성도에도 명시).
-- **JSON 페이로드**: 이건 어차피 LIG도 JSON이라 자연스럽게 일치.
-- **UGV/자체방호축 배틀필드 공유**: 자체 결정, LIG 확인 불필요 — 계획대로 리플리케이션 유지.
-- **RC→UGV 제어 명령(RC_RemoteDriving 등) 구현 주체**: 참조구현(§7 하단)에 없어도 우리가
-  ICD 기준으로 직접 구현.
+**결정됨(ICD로 확정)**:
+- **UGV축 전송/IP/포트/신뢰성 메커니즘**: LIG 확정(§3.1).
+- **cmd 목록/data 필드 전체**: `lig_icd_ugv_rc_full.md` — RC→UGV 방향(그동안 비어있던 부분)
+  포함 전부 확정. 더 이상 추정 아님.
+- **좌표계 = UTM**(East/North/Zone/Letter) — WGS84 lat/lon 아님, §2 확정.
+- **BBox = 0~65535 정수 스케일링**(좌상단/우하단 절대좌표쌍) — 우리가 짰던 `{x,y,w,h}` UV
+  타입 폐기.
+- **device 코드(RC=20/UGV=14/UGV_RCWS=13/UGV_ADU=12) 실사용** — ICD 원문에 명시, 확정.
+- **자체방호축엔 Layer B 자체가 없음**: 단일 프로그램(§4). RTSP는 상위체계행으로 계속 필요.
+- **UGV/자체방호축 배틀필드 공유**: 자체 결정, LIG 확인 불필요.
 - **재시도 횟수/ACK 타임아웃**: 자체 결정 + 설정 가능하게 노출(`udp_protocol_client/`의
-  `RetryConfig` 패턴) — LIG 확정값 안 기다림.
-- **요청↔응답 상관관계**: 봉투에 seq/request-id가 없어서(§7 참고) 완벽한 해법은 없음 —
-  **"같은 cmd는 이전 응답을 받은 뒤에만 다음 요청, 서로 다른 cmd끼리는 동시 요청 허용"**
-  방식으로 확정(전면 동기보다 나은 절충안, `udp_protocol_client/` 코드 업데이트 필요).
-- **Bounding Box 좌표 기준**: `UGV_Period_ObjectDetectionResult`는 우리가 생성하는 데이터라
-  우리가 설계 — 카메라별로 명확히 구분되게 필드 설계, LIG 확인 대상 아님.
-- **`UGV_Response_Connection`/`BIT`/`BIT_ADU` 정확한 의미**: 추측해서 구현, 필요시 나중에
-  LIG와 맞춤.
+  `RetryConfig` 패턴).
+- **요청↔응답 상관관계**: ICD에도 seq/request-id 없음(확정 사실, 추정 아니게 됨) —
+  "같은 cmd는 순차, 다른 cmd는 동시 허용" 방식 유지.
 
-**아직 미확정 (LIG 답변 대기, `lig_questions_0807_draft.md` 발송 예정)**:
-- **좌표계가 위경도(WGS84)인지 UTM(Easting/Northing/Zone/Letter)인지** (2026-08-07,
-  `udp_test_findings.md`에서 UTM류 필드 패턴 발견 — **§2의 "WGS84 확정"이 틀렸을 가능성
-  높음, 미확정으로 되돌림**). 답 오기 전까지는 UTM 가능성 열어두고 설계.
-- **LIG cmd 코드 목록/data 필드 상세** — 참조구현(`udp_test`)에서 실제 cmd 이름 다수
-  확인됐으나(§7 하단, `udp_test_findings.md`), RC→UGV 방향 명령이 통째로 없고 값도 대부분
-  더미라 신뢰도 낮음 — 진짜 최종본 대기.
-- **device 코드(RC=20/UGV=14/UGV_RCWS=13/UGV_ADU=12) 실사용 여부** — 참조구현에서 `src`/
-  `recv`가 전부 리터럴 `"device"`라 확인 안 됨.
-- **참조구현의 IP(192.168.0.84)/포트(7777/7778 단일쌍)가 개발용 임시값인지**.
-- **UGV축 RTSP 정확한 URL/포트**(우리가 정해서 통보 예정, LIG는 임의 URL 접속 가능 여부만
-  확인).
-- **자체방호축 PC의 고정 IP 여부**(상위체계행 RTSP 서버 주소용).
+**아직 미확정**:
+- **`RC_OperationMode`(STAY/REMOTE/EMERGENCY) ↔ 우리 `EUGVDriveMode` 재정의** — §3.2 하단
+  참고, Track4/5 착수 시 확정 필요(LIG 확인 불필요, 우리 내부 설계 문제).
+- ~~**UGV축 RTSP 정확한 URL/포트**~~ — 확정됨(2026-08-17, §3.3): `rtsp://192.168.10.10:8554/ugv/<stream>`, mount 이름 5종. LIG 통보는 아직 별도로 필요.
+- **자체방호축 PC의 고정 IP 여부** — 상위체계행 RTSP 서버 주소용, LIG 확인 필요.
+- **UTM Zone/Datum 정확한 값** — ICD에 필드는 있으나 시연 장소의 실제 Zone 번호는 미기재,
+  확인 필요.
+- **참조구현(`udp_test`)의 IP(192.168.0.84)/포트(7777/7778)가 개발용 임시값인지** — 정식
+  ICD의 192.168.10.x:8000번대와 다름, 참조구현 자체가 스텁이라 우선순위 낮음.
 
 **UDP 테스트 도구**: Postman 등 HTTP 중심 도구로는 raw UDP 테스트 불가. 전략은
 `architecture_decisions.md` §8 참고(자체 Python UDP 스크립트가 1순위, Wireshark로 와이어

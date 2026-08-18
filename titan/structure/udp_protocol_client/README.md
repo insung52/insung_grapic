@@ -1,3 +1,12 @@
+> **2026-08-15 갱신**: 아래 `protocol.py`/`client.py`/`mock_server.py`/`run_demo.py`/
+> `tests/`는 정식 ICD(`lig_icd_ugv_rc_full.md`) 확보 **이전**(2026-08-07)에 우리 추정 cmd로
+> 짠 것이라 지금은 obsolete — cmd 이름도 실제와 다르고 애초에 "UGV 역할" 목업이라 방향도 반대
+> (지금 필요한 건 titan_example 프로젝트가 UGV를 구현했으니 그 반대인 "RC 역할" 목업). 정식
+> ICD 기준 실제 테스트는 **`rc_mock_client.py`**(독립 파일, 아래 나머지와 무관) 사용 —
+> `titan_example`의 `Network/UGVRemoteControlSubsystem.*`(UE, C++) 구현체를 상대로 실제 cmd
+> 이름/필드로 왕복 확인. 이 파일들은 "Postman 대신 자체 스크립트로 UDP 테스트"라는 방법론
+> 자체는 여전히 유효해서 참고용으로만 남겨둠.
+
 # udp_protocol_client — UGV축 UDP+JSON 프로토콜 클라이언트 + 목업 서버
 
 **범위**: 순수 Python/네트워크 서브태스크. 언리얼/UE 작업 없음, 이 컴퓨터에 `titan_example`
