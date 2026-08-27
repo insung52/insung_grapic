@@ -547,6 +547,39 @@ launch 문자열의 `do-timestamp=true`는 파이프라인 최초 생성 시점�
 
 ---
 
+## 1.23. UGV축 RC 목업 GUI(ugv_rc_gui) 연동 중 — RTSP 재생 지연 0.5초, 클라이언트 캐시로도
+안 줄어드는 바닥 발견 (2026-08-18)
+
+트랙5(UGV RC 프로토콜) 세션에서 `ugv_rc_gui`(파이썬 RC 목업 GUI, UDP+JSON 명령 + RTSP 영상
+확인)를 만들어 실제로 테스트하던 중, RTSP 재생 지연이 로컬호스트/Tailscale/다른 PC 어디서든
+동일하게 ~0.5초 존재한다는 리포트. 조사 순서:
+
+1. 클라이언트를 OpenCV(`cv2.VideoCapture`)에서 python-vlc로 교체 — **변화 없음**. 두
+   구현체가 완전히 다른데도 동일한 지연이라는 게 "클라이언트가 원인이 아니다"의 강한 증거.
+2. Editor Preferences → "Use Less CPU when in Background"(§1.14가 경고했던 바로 그 설정)
+   끄고 재시도 — **변화 없음**. 다른 PC에서도 동일 — 네트워크/백그라운드 스로틀링 배제.
+3. VLC의 `network-caching`을 1000ms(기본값) → 100ms → 1ms로 낮춰봄 — 낮출수록 줄어들다가
+   **~0.5초에서 더 이상 안 내려가는 바닥**이 있음을 확인. 캐시 크기로 통제되는 지연이 아니라,
+   클라이언트가 손댈 수 없는 무언가가 고정으로 깔려있다는 뜻.
+4. `nExtraOutputDelay=0`(NVENC 출력 버퍼링 제거)은 §1.18에서 이미 시도→에디터 데드락으로
+   되돌려진 이력이 있어 재시도 안 함(현재 SDK 기본값 3, ~100ms @ 30fps 고정 비용으로 감수 중).
+5. **진짜 원인으로 보이는 것 발견**: `RegisterStream()`이 `gst_rtsp_media_factory_set_launch()`/
+   `set_shared()`는 호출하면서 `gst_rtsp_media_factory_set_latency()`는 **한 번도 호출한 적이
+   없었음** — GStreamer 기본값(200ms)이 그대로 적용 중이었던 것으로 추정. 이건 appsrc 자체의
+   `latency=0,0`(`gst_app_src_set_latency`, `OnMediaConfigure`에 있음)과는 완전히 별개로,
+   `GstRTSPMedia`가 내부적으로 관리하는 RTP 세션(rtpbin) 페이싱용 지터버퍼 크기이며, 클라이언트
+   쪽 caching 설정과 무관하게 서버가 일방적으로 깔고 가는 지연이라 위 3번 증상과 정확히 맞음.
+
+**수정**: `RegisterStream()`의 `gst_rtsp_media_factory_set_launch(...)` 직후에
+`gst_rtsp_media_factory_set_latency(Factory, 0);` 추가(`RtspServerSubsystem.cpp`). appsrc가
+이미 `is-live=true`+수동 PTS 관리(§1.20/§1.22)로 타이밍을 직접 통제하고 있어서 이 지터버퍼가
+추가로 필요 없다는 전제. `nExtraOutputDelay=0`과 달리 렌더스레드 블로킹과 무관한 설정이라
+데드락 위험 없음(다만 실제 효과는 재빌드 후 검증 필요 — 아직 미검증).
+
+**검증 결과**: 대기 중(재빌드 필요, 사용자가 직접 빌드).
+
+---
+
 ## 1.9. 드라이버 업데이트 후 — 큰 레벨에서 RHI 파이프라인 크래시
 
 드라이버 업데이트로 NVENC 세션 오픈까지는 성공(§1.8까지의 조치가 유효했다는 뜻). 그런데

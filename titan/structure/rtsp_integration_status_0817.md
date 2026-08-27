@@ -1,5 +1,11 @@
 # RTSP 통합 현황 종합 (2026-08-17)
 
+**[2026-08-19] 이 문서가 지적한 갭은 전부 해소됨 — 기록용으로만 남김.** 카메라 연결은
+`rtsp_integration_complete_0817.md`(같은 날 후속 세션)로 끝났고, 이후 지연 최적화
+(`rtsp/rtsp_latency_investigation.md`, 441ms→68ms)와 Linux 크로스플랫폼 프레임 폭락 수정
+(`linux_wayland_x11_present_bottleneck.md`)까지 마무리됨. 현재 상태 요약은
+`protocol_icd.md` §3.3/§4.1/§6 참고.
+
 세 세션(Track1 인코더, UGV축, 자체방호축)이 서로 결과물을 공유 안 하고 각자 진행돼서 생긴
 간극을 확인하기 위해 `rtsp_poc_findings.md`(Track1)/`ugv_rc_feature_gap_analysis.md`(UGV축)/
 `selfdefense_rc_feature_gap_analysis.md`(자체방호축) 세 문서를 대조.

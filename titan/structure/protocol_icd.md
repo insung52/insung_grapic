@@ -166,6 +166,13 @@ ICD 원문은 0~100 Int% — §3.2 참고, 필드별로 ICD 값 우선), 시간 
 URL: `rtsp://192.168.10.10:8554/ugv/<stream>` — 포트(8554)는 `RtspServerSubsystem` 기본값
 그대로 유지. 인코딩 방식은 §7.
 
+**전송/지연(2026-08-19 확정)** — RTP는 **TCP interleaved만 지원(UDP 미지원)**, gst-rtsp-server
+설정상 그렇게 고정됨(§0의 "영상=RTSP" 전송계층 표에 이 세부가 빠져있었는데 실측으로 확정).
+종단(glass-to-glass) 지연은 최초 441~484ms에서 서버(NVENC 버퍼 최소화)+수신측(GStreamer
+저지연 옵션) 튜닝으로 **68ms(30~100ms 변동)**까지 개선됨 — 수신 구현 가이드/실측 수치는
+`rtsp/rtsp_client_reception_guide.md`, 조사 전체 기록은 `rtsp/rtsp_latency_investigation.md`
+참고.
+
 ---
 
 ## 4. 자체방호축 — Layer B 없음 (2026-08-07, 단일 프로그램으로 확정)
@@ -199,6 +206,12 @@ UGV축 대응 함수와 개념적으로 동일한 것들을 로컬로 부르면 
 URL: `rtsp://<selfdefense-pc-ip>:8554/selfdefense/<stream>` — 포트(8554)는 UGV축과 동일한
 `RtspServerSubsystem` 기본값. 실제 IP는 여전히 미확정(UGV처럼 고정 IP를 LIG가 지정했는지
 확인 필요, §6) — mount 이름/포트만 이번에 확정됨.
+
+**검증 상태(2026-08-19)**: 인코더/서버 코드가 UGV축과 완전히 공유되는 구조라 전송 방식(TCP
+interleaved만, UDP 미지원)과 저지연 튜닝(§3.3 참고)은 동일하게 적용됨. 6개 마운트(환경카메라
+제외 — 상위체계로는 부가 스트림) 전부 GStreamer+NVDEC 파이프라인으로 접속·하드웨어 디코드까지
+확인됨. 단 정밀 지연 재측정(§3.3의 68ms 실측 같은 스크린샷 방식)은 아직 안 함 — UGV축과 동등
+수준으로 기대만 하는 상태, 확정치 아님. 상세는 `rtsp/rtsp_client_reception_guide.md` §1.2.
 
 ---
 
@@ -250,10 +263,19 @@ ICD 정의는 안되어있고, 향후 추가 여부도 LIG 검토중에 있습�
 - **요청↔응답 상관관계**: ICD에도 seq/request-id 없음(확정 사실, 추정 아니게 됨) —
   "같은 cmd는 순차, 다른 cmd는 동시 허용" 방식 유지.
 
+**추가로 해소됨(2026-08-17~19)**:
+- **RTSP 실제 카메라 연결** — UGV 5스트림 + 자체방호 7스트림(부가 1개 포함) 전부
+  `URtspStreamComponent`를 실 카메라에 연결 완료, mount 이름 확정(§3.3/§4.1). 상세:
+  `rtsp_integration_complete_0817.md`.
+- **RTSP 종단 지연 최적화** — 441~484ms → 68ms(30~100ms 변동)로 개선(수신측 GStreamer+NVDEC
+  채택). 상세: `rtsp/rtsp_latency_investigation.md`, `rtsp/rtsp_client_reception_guide.md`.
+- **Linux 패키지 빌드 풀스크린 프레임 폭락(11fps)** — RTSP와 무관, SDL2가 Wayland 세션에서도
+  Xwayland 경유 X11을 골라 소프트웨어 Present 카피를 하던 것이 원인으로 확정, `LinuxEngine.ini`
+  `VideoDriver=wayland` 기본값 설정으로 해결(200fps+ 회복). 상세: `linux_wayland_x11_present_bottleneck.md`.
+
 **아직 미확정**:
 - **`RC_OperationMode`(STAY/REMOTE/EMERGENCY) ↔ 우리 `EUGVDriveMode` 재정의** — §3.2 하단
   참고, Track4/5 착수 시 확정 필요(LIG 확인 불필요, 우리 내부 설계 문제).
-- ~~**UGV축 RTSP 정확한 URL/포트**~~ — 확정됨(2026-08-17, §3.3): `rtsp://192.168.10.10:8554/ugv/<stream>`, mount 이름 5종. LIG 통보는 아직 별도로 필요.
 - **자체방호축 PC의 고정 IP 여부** — 상위체계행 RTSP 서버 주소용, LIG 확인 필요.
 - **UTM Zone/Datum 정확한 값** — ICD에 필드는 있으나 시연 장소의 실제 Zone 번호는 미기재,
   확인 필요.

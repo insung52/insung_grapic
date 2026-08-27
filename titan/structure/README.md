@@ -28,11 +28,14 @@ LIG 제작으로 확정되면서 트랙 5~7이 상당히 바뀜(구 트랙 7 삭
 ## 의존관계 한눈에
 
 ```
-[진행 상황 — 2026-08-07]
-  1. RTSP PoC — 진행 중 (titan_example, 언리얼)
-  2. UDP 프로토콜 클라이언트(구 NATS 인프라) — 완료 (udp_protocol_client/)
+[진행 상황 — 2026-08-19 갱신]
+  1. RTSP PoC → 실 카메라 연결 → 지연 최적화 → Linux 크로스플랫폼 — 전부 완료
+     (`rtsp_poc_findings.md` → `rtsp_integration_complete_0817.md` →
+     `rtsp/rtsp_latency_investigation.md`(441ms→68ms) → `linux_wayland_x11_present_bottleneck.md`)
+  2. UDP 프로토콜 클라이언트(구 NATS 인프라) — 완료 (udp_protocol_client/, 이후 ugv_rc_gui로 발전)
   3. RTSP 뷰어 테스트 클라이언트(구 상위체계 스텁) — 완료 (rtsp_viewer_test/)
-  6. UGV축 최소 레퍼런스 클라이언트 — 완료 (2+3의 산출물이 곧 트랙6, 별도 작업 불필요)
+  6. UGV축 최소 레퍼런스 클라이언트 — 완료, `C:\working\works\kadex\ugv_rc_gui`(Python/PyQt6)로
+     통합 발전 — 조이스틱 없이 마우스로 무장/카메라 제어 가능, RTSP 저지연 수신 포함
 
 [다음 — titan_example 코드베이스, UGV/자체방호 공용. 트랙1이 쓰는 동안은 착수 보류]
   4. Layer C 리플리케이션  ──┐
@@ -45,16 +48,22 @@ LIG 제작으로 확정되면서 트랙 5~7이 상당히 바뀜(구 트랙 7 삭
 
 ---
 
-## 트랙 1 — RTSP PoC
+## 트랙 1 — RTSP (완료, 2026-08-19)
 
-- **범위**: UE NVENC(zero-copy) 인코딩 + GStreamer `gst-rtsp-server`(appsrc) 서빙 배관 검증.
-  고정 텍스처 하나 스트리밍부터, 이후 5/7스트림 동시 성능 측정.
-- **읽을 문서**: `protocol_icd.md` §7(구현 방식), §0(전송 계층)
-- **의존성**: 없음. 다른 트랙 완성 전에도 독립 실행 가능.
-- **완료 기준**: PoC 결과로 §7의 "PoC 1~2일/안정화 1~2주" 추정치 검증, RTSP URL 스킴(§6 미확정)
-  확정.
-- **시작 프롬프트 예시**: "`protocol_icd.md` §7 기준으로 UE NVENC → gst-rtsp-server RTSP 송출
-  PoC만 진행해줘. 다른 트랙은 안 건드림."
+- **범위**: UE NVENC(zero-copy) 인코딩 + GStreamer `gst-rtsp-server`(appsrc) 서빙 → 실제
+  UGV 5스트림/자체방호 7스트림 카메라 연결 → 종단 지연 최적화 → Linux 크로스플랫폼 지원까지
+  전부 완료.
+- **완료 기준 달성**: mount 이름/URL 확정(`protocol_icd.md` §3.3/§4.1), 실 카메라 연결 및
+  VLC/GStreamer로 영상 수신 확인, 종단 지연 441~484ms → **68ms**로 최적화(수신측 GStreamer+
+  NVDEC 채택, `rtsp/rtsp_client_reception_guide.md`가 LIG 공유용 최종 가이드), Linux 패키지
+  빌드 풀스크린 프레임 폭락(11fps) 원인 규명·해결(`linux_wayland_x11_present_bottleneck.md`).
+- **남은 것(작음)**: 자체방호축 6스트림 정밀 지연 재측정(현재는 UGV축과 동등 수준 기대치만),
+  순수 Xorg(비-Xwayland) 세션 검증, 자체방호축 PC 고정 IP(LIG 확인 필요, `protocol_icd.md` §6).
+- **문서 계보**: `rtsp_poc_findings.md`(PoC) → `rtsp_integration_status_0817.md`(갭 분석,
+  해소됨) → `rtsp_integration_complete_0817.md`(카메라 연결) →
+  `rtsp/rtsp_latency_investigation.md`(지연 조사 전체 기록) →
+  `rtsp/rtsp_client_reception_guide.md`(LIG 공유용 최종 수신 가이드) →
+  `linux_wayland_x11_present_bottleneck.md`(Linux 프레임 폭락).
 
 ## 트랙 2 — NATS/JetStream 인프라 → UDP 프로토콜 클라이언트로 용도 변경, 완료
 
@@ -130,6 +139,17 @@ NATS 아님 — LIG가 이미 그렇게 만들어놨음.
   병행 개발은 가능(둘 다 미완성이어도 목업으로 시작 가능).
 - **완료 기준**: RTSP 스트림 5종 화면에 뜸, UDP/JSON 명령 보내고 응답 받는 것 확인됨,
   재시도/ACK 시퀀스도 의도적으로 패킷 드롭시켜서 검증됨.
+
+---
+
+## 트랙 7 — 인게임 Settings 화면 (Input 탭 완료, Graphics 탭 조사 단계)
+
+- `graphics_settings_analysis.md`(2026-08-21) — Graphics 탭을 채우기 전 전수 조사.
+  Config ini의 그래픽 설정 전부, 메인 뷰포트 렌더 경로, SceneCapture 4종의 설정·캡처 주기
+  (라운드로빈 4종), 런타임 커스텀 가능/불가 분류, 탭 후보 + UI 컨트롤 제안.
+  **핵심 결론**: 하드코딩된 cvar가 우선순위상 런타임 스케일러빌리티 변경을 막는다(§1.8),
+  해상도는 RTSP 고정 해상도와 충돌한다(§2.3), 캡처 주기가 가장 안전한 후보다(§3.3).
+- 다음 단계: 위 문서 §8의 확인 항목(특히 §8-1 cvar 우선순위 실측) 처리 후 위젯 UI 구현.
 
 ---
 

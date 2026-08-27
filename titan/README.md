@@ -7,6 +7,23 @@
 전체 기능 명세/시나리오: `C:\private\titan\all.md` (참고용, 상세 스펙은 `documents/` 폴더의
 PDF/PPTX 원본 참고).
 
+**[2026-08-21] 이 README는 씬/캐릭터/카메라 등 게임플레이 개발 기록(`C:\private\titan\*`,
+`C:\private\2026-W3x-황인성\*`) 위주로 유지되어 왔음 — 그 사이 별도로 진행된 LIG 원격통제기
+프로토콜 연동/RTSP 송출/리플리케이션(멀티플레이)/인게임 설정 화면 작업 전체는
+**`structure/README.md`**(트랙별 세션 분할 가이드, 여기가 그쪽 작업의 진짜 인덱스)와 그 폴더의
+개별 문서들에 있음 — 아래 §3엔 반영 안 돼 있으니 그쪽 작업 관련이면 `structure/`부터 볼 것.
+핵심만 요약하면:
+- **UGV↔원격통제기(LIG) UDP+JSON 프로토콜**: 정식 ICD 확보 후 구현 완료
+  (`structure/lig_icd_ugv_rc_full.md`, `structure/ugv_rc_feature_gap_analysis.md`).
+- **자체방호(이동형지휘소)축 조이스틱 배선**: 완료(`structure/selfdefense_rc_feature_gap_analysis.md`).
+- **RTSP 영상 송출(UGV 5스트림+자체방호 7스트림)**: 카메라 연결·지연 최적화(68ms)·Linux
+  크로스플랫폼까지 완료(`structure/README.md` 트랙1, `structure/rtsp/`).
+- **멀티플레이(리슨서버) 리플리케이션**: 거의 완료, 실기 테스트까지 통과(`structure/replication_audit.md`).
+- **인게임 Settings 위젯**: Input 탭 완료, Graphics 탭 조사 단계
+  (`structure/graphics_settings_analysis.md`).
+- LIG에 확인 필요한 질문 전체는 `structure/lig_questions_0816.md`에 계속 누적 중(아직
+  미발송).
+
 ---
 
 ## 1. 시뮬레이터 구성 — 무엇을 조작하는가
@@ -84,6 +101,20 @@ PDF/PPTX 원본 참고).
   `rcws_lumen_scenecapture_stutter_investigation.md` — 위 종합 문서에 다 흡수됨, 개별 조회 불필요.
 
 ### 주행/AI
+- **`path\ugv_obstacle_avoidance_2026-08-26.md`** ← **UGV가 자율주행 중 나무에 부딪히던 문제
+  해결 기록(2026-08-26).** 원인이 네 겹이었다 — 조향 PI 게인 부족 / 커브 감속의 비물리적 각도
+  매핑 / 뒤쪽 커브까지 세면서 생긴 과감속 / 도로 중앙 당김이 안전 여유를 깨뜨림. 나무 콜리전
+  프록시를 에디터 버튼으로 재생성하는 툴(`ATreeCollisionProxyBuilder`)도 여기 있음.
+- **`path\new_kadex_0811_navmesh_autonomous_driving.md`** ← **새 레벨(`New_kadex_0811`) 자율주행
+  내비메시 작업, 이 주제에서 제일 먼저 읽을 문서 (2026-08-22).** PCG 숲 경계 스플라인으로 흙길을
+  정의하고, 나무 콜리전 프록시 + `SplineNavModifier` 가중치 + 적군 전용 NavArea/쿼리 필터로
+  구성한 3층 구조. 예전 레벨과 지형 구성이 달라 접근법이 통째로 다르니 아래 두 문서를 그대로
+  따라 하면 안 됨.
+- `path\ugv_navmesh_autonomous_driving_dev_guide.md` — (구 레벨 `kadex_demo_0716`) 도로 메시
+  콜리전 생성 + `NavModifierVolume` 253개 스크립트 배치. 콜리전 프로파일 함정 등은 여전히 유효.
+- **`path\ugv_corner_braking_dev_guide.md`** — 커브 선행 감속(제동 곡선, 2026-08-22). 경로 위
+  나무 장애물을 회피 조향으로 지나가려다 부딪히던 문제 해결. 계단식 감속으로 만들었다가 갈아엎은
+  과정과 최종 파라미터 표 포함.
 - `C:\private\titan\path\ugv_driving_dev_guide.md` — UGV 주행 기능 구현 과정.
 - `C:\private\titan\path\path.md` — 경로/이동 관련 메모.
 
@@ -111,6 +142,10 @@ PDF/PPTX 원본 참고).
 - `C:\private\titan\path\real2world.md` — 관련 메모.
 
 ### 차량/물리 (Chaos Vehicle)
+- **`drone\drone_flight_dev_guide.md`** — **드론 비행 구동계 (2026-08-27 신규).** 로터 6개
+  개별 추력 → 믹서 → Chaos 강체로 재구현(기존 `AUAVPawn`의 운동학 근사 폐기, 그쪽 코드는
+  안 건드림). 수동 조종 완성/실기 검증 완료, 자율비행 미구현. 부호 규약·믹서 포화 처리·
+  파라미터 튜닝 순서·테스트 레벨 코스 포함.
 - `C:\private\titan\chaos.md`, `C:\private\titan\M1A2_UGV_Conversion.md` — UGV 물리 모델 관련.
 - `C:\private\chaos\06_ugv_unreal_implementation_journal.md` — BP_UGV_Vehicle 빌드 전체 기록
   (Chaos 세팅, 트랙 처짐 물리 모델, Blender↔Unreal 스케일/회전 버그 및 수정).
@@ -125,6 +160,27 @@ PDF/PPTX 원본 참고).
 ## 4. 알려진 미해결 이슈 (다음 세션에서 참고)
 
 - **UGV 공중에 뜬 바퀴가 계속 회전** — deprioritized, 재조사 보류 요청 상태.
-- QuadCam 4분할 CCTV의 라운드로빈 캡쳐 최적화 — 아이디어만 기록됨, 미착수
-  (`camera_pipeline_overhaul_2026-07.md` 3절 끝).
+- QuadCam 4분할 CCTV의 라운드로빈 캡쳐 — **[2026-08-21 갱신] 착수됨**: `BP_UGV_Vehicle`의
+  `CaptureRoundRobinCount` 프로퍼티로 실제 존재/튜닝된 상태(RTSP 지연 조사 중 2→1로 조정,
+  `structure/rtsp/rtsp_latency_investigation.md` §2 #11) — 인게임 Settings 위젯 Graphics
+  탭 후보로도 재조사됨(`structure/graphics_settings_analysis.md`). 위 "아이디어만 기록됨"은
+  더 이상 최신 상태 아님.
 - `ui_dev_guide.md`는 최신화 안 됨 — WBP 실제 구조와 다를 수 있음, 참고만 하고 실제 코드/에디터로 재확인 권장.
+
+---
+
+## 5. 다음 작업 예정 — 레벨 디자인 / UGV 자율주행 (참고용 시작점)
+
+- 현재 자율주행 진입점: `SetUGVFromTankMode Auto` + `MoveUGVFromTankTo (X=...,Y=...,Z=...)`
+  콘솔 명령(`titan_example/README.md` §2), 내부적으로 `AUGVAIController::MoveToDestination`.
+  LIG 프로토콜에도 같은 경로가 `HQ_MissionMoveToEngage`(우리 임시 확장, 정식 LIG 스펙 아님)로
+  얹혀 있음 — `structure/ugv_rc_feature_gap_analysis.md` §2-1.
+- 주행/AI 관련 기존 기록: `C:\private\titan\path\ugv_driving_dev_guide.md`,
+  `C:\private\titan\path\path.md`, 아군 동반 이동(포메이션/NavMesh 회피/RVO)은
+  `scenario_implementation_status.md`.
+- 자율주행 관련 알려진 갭(착수 전 참고): `RC_OperationMode`(STAY/REMOTE/EMERGENCY) ↔
+  `EUGVDriveMode`(Idle/Manual/Auto) 매핑이 아직 우리 쪽에서도 완전히 정리 안 됨
+  (`structure/protocol_icd.md` §3.2 하단), `Gear=Turn`(제자리선회) 판정 미구현,
+  UGV/차량 쪽 `HasAuthority()` 게이팅·`physicsReplicationMode` 검토가 리플리케이션 작업에서
+  아직 안 끝남(`structure/replication_audit.md`) — 레벨 디자인으로 주행 경로/장애물이 바뀌면
+  이 리플리케이션 상태와 충돌 여부도 같이 점검 권장.
