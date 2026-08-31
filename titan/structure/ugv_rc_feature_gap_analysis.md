@@ -58,7 +58,7 @@ C++) 구현 및 그 아래에 깔린 실제 게임 기능(RCWS/차량/탐지 등
 | `RC_MotionMode` | `MotionMode` | 로그만 찍음 | ❌ 스텁 | ICD 설명("기동 모션 모드 설정")이 짧아 대응 게임 기능 자체를 특정 못 함 |
 | `RC_Movement` | `BrakeButton`/`XAxis`/`YAxis` | `URCWSComponent::AddPanTiltInput` | ✅ 실동작 | 조이스틱 값→각도 변환 감도(`RCWSMovementDegreesPerUnit`)는 우리 임의 설정(ICD에 게인 명시 없음) |
 | `RC_ActivateFire` | `ActivateFireToggle` | `RCWSFireControlComponent::bFireSystemActive`(안전/암 스위치) | ✅ 실동작(2026-08-16 재해석) | RC_FireWeapon(방아쇠)과 별개 커맨드 — RELEASE=안전 해제(암), PRESSED=안전(SAFE). 켜지는 순간 배럴이 미리 아이들 스핀업, 꺼지면 방아쇠 당겨도 무조건 발사 안 됨. 이전엔 "스텁, 의미 불명"으로 기록했었는데 재검토 후 이 용도로 확정 |
-| `RC_ActivateMovement` | `ActivateMovementToggle` | `AUGVAIController::bEngineOn`(시동) | ⚠️ 실동작(2026-08-16, **LIG 미확인 추정 매핑**) | `RC_ActivateFire`와 이름/값 패턴이 대칭이라("구동 상태 설정") 시동/이그니션 마스터스위치로 추정해서 선제 구현 — 꺼지면 엔진 사운드 정지 + `SetDriveMode`가 Manual/Auto를 전부 Idle로 강제 반려. **실제 LIG 의도와 다를 수 있음, 다음 문의 리스트에 포함** |
+| `RC_ActivateMovement` | `ActivateMovementToggle` | RCWS 조향 게이트(`UUGVRemoteControlSubsystem::bRCWSSteeringActivated` -> `Handle_RC_Movement`의 AND 게이트) | ✅ **재매핑 완료(2026-08-31)** | 2026-08-16엔 "구동 상태 설정"이라는 이름만 보고 차량 시동/이그니션(`AUGVAIController::bEngineOn`)으로 추정해 구현했는데, **LIG 확인 결과 실제로는 "RCWS 조향(pan/tilt) 모터 활성화" 커맨드**임 — 차량 엔진과 무관. 2026-08-31에 `bEngineOn` 배선을 제거하고 `bRCWSSteeringActivated` 래치로 재배선, `Handle_RC_Movement`에서 `RC_Movement.BrakeButton`과 **AND**(둘 다 `RELEASE`=활성일 때만 `AddPanTiltInput` 호출)로 묶음. 자체방호축 로컬 조이스틱 경로(`bRCWSMovementBraked`)는 건드리지 않음 — 이 게이트는 네트워크 경유 UGV축 전용. `bEngineOn`은 콘솔/BP 전용 개념으로만 남김(`Atitan_examplePlayerController::SetUGVEngineOn`) — **차량 시동/이그니션에 대응하는 별도 프로토콜 커맨드가 있는지는 여전히 미확인, LIG 재질문 중(`lig_questions_0816.md` 1-신규-2)**. |
 | `RC_Connection_ADU` | `RequestDevice` | ADU 핸드셰이크 응답(형식만) | ✅ (형식만) | ADU 자체 시뮬레이션이 없어서 응답은 항상 고정값 |
 | `RC_Request_BIT_ADU` | `CountValue` | BIT_ADU 응답 트리거 | ✅ (형식만) | 응답 내용은 더미(위 1번 표) |
 
@@ -116,8 +116,16 @@ ICD가 "원격통제기가 수동으로 다 조작한다"는 전제로만 짜여
 안전/암 스위치(`RC_ActivateFire`), IR 카메라(RCWS 뷰어 한정, 야간투시경식 밝기증폭 포함),
 탐지 결과(BBox/Faction/속도), 주행거리(Odometer), 실측 위치/속도/헤딩.
 
-**LIG 미확인 추정 매핑(⚠️, 다음 문의 후 확정 필요)**: 시동(`RC_ActivateMovement`) — `RC_ActivateFire`
-와의 이름/값 대칭성만 근거로 선제 구현, 실제 의도와 다를 수 있음.
+**LIG 답변으로 틀린 것으로 확인됐다가 재작업 완료(✅, 2026-08-31)**: `RC_ActivateMovement` —
+차량 시동이 아니라 RCWS 조향 모터 활성화였음. `bEngineOn` 배선 제거 + `bRCWSSteeringActivated`
+래치를 `RC_Movement.BrakeButton`과 AND로 묶어 `AddPanTiltInput` 게이팅으로 재배선. 위 §2 표 참고.
+
+**의도적으로 구현하지 않음(2026-08-31 결정)**: 통신 두절 워치독(`RELEASE` 유실 시 자동 사격
+중단, 주행/조준 갱신 끊김 시 자동 안전 정지). LIG가 §2 답변에서 "`RELEASE` 신호 유실 시 사격
+상태로 남겨지는 내용은 현재 진행한 사업에서는 고려하지 않고 개발된 것으로 알고 있다"고 확인해준
+사항 — 실장비에 없는 안전 로직을 우리 쪽에만 넣으면 동작이 어긋나는 게 더 큰 문제라, 프로토콜
+동작(`PRESSED`/`RELEASE` 이벤트 상태천이)을 그대로 따르기로 함. 한 번 구현했다가 되돌린 이력이
+있으니 다시 넣지 말 것.
 
 **라벨만 있고 실제 효과 없음(❌, 구현 필요 시 별도 작업)**:
 1. **`RC_MotionMode`** — 의미 자체가 ICD상 불명확해서 여전히 스텁 상태.

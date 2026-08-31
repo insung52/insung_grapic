@@ -112,7 +112,7 @@ ICD 원문은 0~100 Int% — §3.2 참고, 필드별로 ICD 값 우선), 시간 
 | cmd | src | 주기 | data 핵심 필드 |
 |---|---|---|---|
 | `UGV_Response_Connection` | UGV/UGV_ADU | 비주기 | `ResponseDevice` |
-| `UGV_Period_Basicinfo` | UGV | **10Hz** | `OperationMode`(Stay/Remote/FAD/HAD/5/6/Emergency), `ConrtrolRight`(원문 오타), `Speed`(0~100), `Gear`(Front/Back/Turn), `Batterry`(원문 오타, 0~100%) |
+| `UGV_Period_Basicinfo` | UGV | **10Hz** | `OperationMode`(Stay/Remote/FAD/HAD/5/6/Emergency), `ConrtrolRight`(원문 오타), `Speed`(0~100), `Gear`(Front/Back/Turn — **Turn은 LIG 확인상 이번 사업에서 안 보내도 됨, 2026-08-28**), `Batterry`(원문 오타, 0~100%) |
 | `UGV_Response_BIT` | UGV | 비주기 | `StatusVMU`, `CountValue` |
 | `UGV_RCWS_Status` | UGV_RCWS | **20Hz** | `RCWSStatus`(ON/OFF) |
 | `UGV_Period_ObjectDetectionResult` | UGV_RCWS 또는 UGV_ADU(동일 cmd, src로 구분) | — | `TotalObject`, `Objects[]`(BBox+UTM+속도+고도, §2) |
@@ -128,23 +128,28 @@ ICD 원문은 0~100 Int% — §3.2 참고, 필드별로 ICD 값 우선), 시간 
 | `RC_Request_BIT` | 1Hz | `RequestBit` | BIT 응답 트리거 |
 | `RC_Control_Right` | 비주기 | `ControlRight`(0/1) | 제어권 설정(p.11 상태도의 "제어권 설정?") |
 | **`RC_RemoteDriving`** | **20Hz** | `Acceleration`(0~100), `Brake`(-0~-100), `Steering`(-100~100), `Gear`(FRONT/BACK) | `SetManualControl()` 계열 — **필드 그대로 매핑 가능** |
-| `RC_EmergencyStop` / `RC_EmergencyStopRelease` | 비주기 | `CommandDevice`(1==동작) | **우리 쪽에 대응 상태 없음, 신규 필요**(§ 아래 참고) |
-| **`RC_OperationMode`** | 비주기 | `OperationMode`(STAY/REMOTE/EMERGENCY) | **`EUGVDriveMode`와 재정의 필요**(§ 아래) |
+| `RC_EmergencyStop` / `RC_EmergencyStopRelease` | 비주기 | `CommandDevice`(1==동작) | **구현 완료** — `bEmergencyStopActive` 래치 → `DriveMode=Idle`+브레이크(`ugv_rc_feature_gap_analysis.md`) |
+| **`RC_OperationMode`** | 비주기 | `OperationMode`(**STAY/REMOTE만 실제 설정값 — EMERGENCY는 ICD 오기입, 2026-08-28 LIG 확인**) | 구현 완료(`RequestedOperationMode → DriveMode`), 매핑 확정은 아래 참고 |
 | `RC_SelectCamera` | 비주기 | `SelectCameraButton`(RELEASE=EO/PRESSED=IR) | EO/IR 전환 |
-| `RC_FireMode` | 비주기 | `FireMode`(SINGLE/BRUST/CONTINUS, 원문 오타) | `SetFireMode` |
+| `RC_FireMode` | 비주기 | `FireMode`(SINGLE/BRUST/CONTINUS, 원문 오타) | `SetFireMode` — 단발(PRESSED=1발/RELEASE=재격발가능), 점사(PRESSED=3회/RELEASE=재격발가능), 연사(PRESSED=지속/RELEASE=중지+재격발가능) — 2026-08-28 LIG 확인, 우리 구현과 일치 |
 | `RC_ChargeWeapon` | 비주기 | `ChargeSwitch`(OFF/ON) | 장전 |
-| **`RC_FireWeapon`** | 비주기 | `FireButton`(RELEASE=대기/PRESSED=사격) | `ManualFireAction` |
-| `RC_MotionMode` | 비주기 | `MotionMode`(RELEASE=활성/PRESSED=비활성) | |
-| `RC_Movement` | 비주기 | `BrakeButton`, `XAxis`(12bit,-100~100), `YAxis`(12bit,-100~100) | RCWS pan/tilt+브레이크, 우리 추정 `{pan,tilt}`보다 필드 많음 |
-| `RC_ActivateFire` / `RC_ActivateMovement` | 비주기 | `*Toggle`(RELEASE=활성/PRESSED=비활성) | |
+| **`RC_FireWeapon`** | 비주기 | `FireButton`(RELEASE=대기/PRESSED=사격) | `ManualFireAction` — PRESSED/RELEASE는 조이스틱 이벤트 발생 시에만 1회 전송(프레임마다 아님, 2026-08-28 확인). **`RELEASE` 패킷 유실 시 사격 지속 상태로 남는 것에 대한 안전장치가 LIG 쪽에도 없음(확인됨)** — 우리 쪽 워치독 구현 필요(§ 아래 §6 참고) |
+| `RC_MotionMode` | 비주기 | `MotionMode`(RELEASE=활성/PRESSED=비활성) | 용도 불명, LIG도 "차후 논의 대상"(2026-08-28) — 당분간 스텁 유지, 재질문 불필요 |
+| `RC_Movement` | 비주기 | `BrakeButton`, `XAxis`(12bit,-100~100), `YAxis`(12bit,-100~100) | RCWS pan/tilt+브레이크. `BrakeButton`=RELEASE(풀림)→회전 활성 해석이 맞음(2026-08-28 확인) — 단, `RC_ActivateMovement`와 AND 조건(아래) |
+| `RC_ActivateFire` | 비주기 | `ActivateFireToggle`(RELEASE=활성/PRESSED=비활성) | 조정간 안전(사격계통 안전/암 스위치) — 우리 구현과 일치(2026-08-28 확인) |
+| **`RC_ActivateMovement`** | 비주기 | `ActivateMovementToggle`(RELEASE=활성/PRESSED=비활성) | **✅ 재매핑 완료(2026-08-31) — 차량 시동/이그니션이 아니라 "RCWS 조향(pan/tilt) 모터 활성화" 커맨드임.** `RC_Movement.BrakeButton`과 **AND 조건**: `RC_ActivateMovement`=RELEASE(활성) **AND** `BrakeButton`=RELEASE(풀림)일 때만 RCWS 조준 입력이 먹힘. 2026-08-31 재배선 완료 — `UUGVRemoteControlSubsystem::bRCWSSteeringActivated` 래치를 `Handle_RC_Movement`에서 `BrakeButton`과 AND로 묶어 `AddPanTiltInput`을 게이팅. `bEngineOn`(차량 엔진) 배선은 제거됨(콘솔/BP 전용으로만 남음) |
 | `RC_Connection_ADU` / `RC_Request_BIT_ADU` | 비주기/1Hz | `RequestDevice`/`CountValue` | ADU측 핸드셰이크(자율축, 원문 주석: 실제 ADU는 현대로템 제품, 우리는 시뮬레이터가 이 응답을 대신 함) |
 
-**설계 재검토 필요 — `RC_OperationMode`(STAY/REMOTE/EMERGENCY)**: `replication_audit.md`/
-`architecture_decisions.md`에서 "STAY/EMERGENCY는 Idle이 커버하니 폐기"라고 결정했었는데,
-**실제 ICD엔 이게 별도의 명시적 커맨드로 존재함** — `EUGVDriveMode(Idle/Manual/Auto)`와
-`RC_OperationMode(STAY/REMOTE/EMERGENCY)`+`RC_Control_Right`+`RC_EmergencyStop`의 관계를
-다시 정의해야 함(예: `REMOTE`+제어권 있음→`Manual`, `STAY`→`Idle`, `EMERGENCY`→우리 쪽에
-없는 새 상태 필요할 수 있음). Track4/5 착수 시 확인.
+**`RC_OperationMode` ↔ `EUGVDriveMode` 매핑 — 2026-08-28 LIG 답변으로 대부분 해소**:
+`RC_OperationMode`는 실제로 `STAY`/`REMOTE` 두 값만 설정 가능 — ICD에 `EMERGENCY`가 값으로
+적혀있던 건 **오기입**이었고, `UGV_Period_Basicinfo.OperationMode`가 `Emergency`로 바뀌는
+건 오직 `RC_EmergencyStop`/`RC_EmergencyStopRelease`를 통해서만 일어남(LIG 확인). 즉:
+`RC_OperationMode(STAY/REMOTE)` + `RC_Control_Right` → `EUGVDriveMode(Idle/Manual)` 매핑이고,
+`RC_EmergencyStop` 래치는 그 위에 별도로 얹혀서 `OperationMode` 보고값을 강제로 `Emergency`로
+덮어씀(우리 구현은 이미 이 방향으로 되어 있음, `ugv_rc_feature_gap_analysis.md`). **남은
+확인 필요**: 실제 원격통제기 소프트웨어가 이 오기입 때문에 실제로 `RC_OperationMode=EMERGENCY`
+값을 보낼 가능성이 있는지(레거시 동작) — 방어적으로 그 값이 오면 무시하거나 EmergencyStop과
+동일하게 처리하도록 남겨둘 것(`lig_questions_0816.md` 후속 질문 후보).
 
 ### 3.3 RTSP — UGV축 (5스트림)
 
@@ -260,8 +265,11 @@ ICD 정의는 안되어있고, 향후 추가 여부도 LIG 검토중에 있습�
 - **UGV/자체방호축 배틀필드 공유**: 자체 결정, LIG 확인 불필요.
 - **재시도 횟수/ACK 타임아웃**: 자체 결정 + 설정 가능하게 노출(`udp_protocol_client/`의
   `RetryConfig` 패턴).
-- **요청↔응답 상관관계**: ICD에도 seq/request-id 없음(확정 사실, 추정 아니게 됨) —
-  "같은 cmd는 순차, 다른 cmd는 동시 허용" 방식 유지.
+- **요청↔응답 상관관계**: ICD에도 seq/request-id 없음(확정 사실, 추정 아니게 됨). **[2026-08-28
+  갱신]** LIG 확인: 원격통제기는 응답을 기다리지 않고 같은 cmd를 동시에 여러 번 보낼 수 있는
+  구조 — 저희가 예전에 검토했던 "같은 cmd는 순차 처리만" 정책은 **우리가 강제할 필요 없음**,
+  받는 요청마다 그 즉시 개별 응답을 보내주면 됨(상태 없는 즉시 응답 방식). UGV축 수신 처리
+  로직이 동일 cmd의 중첩/연속 요청을 큐잉 없이 매번 즉시 응답하는지 재확인 권장.
 
 **추가로 해소됨(2026-08-17~19)**:
 - **RTSP 실제 카메라 연결** — UGV 5스트림 + 자체방호 7스트림(부가 1개 포함) 전부
@@ -273,9 +281,22 @@ ICD 정의는 안되어있고, 향후 추가 여부도 LIG 검토중에 있습�
   Xwayland 경유 X11을 골라 소프트웨어 Present 카피를 하던 것이 원인으로 확정, `LinuxEngine.ini`
   `VideoDriver=wayland` 기본값 설정으로 해결(200fps+ 회복). 상세: `linux_wayland_x11_present_bottleneck.md`.
 
+**LIG 1차 답변으로 해소됨(2026-08-28, `documents/response_0828.md`)**:
+- `RC_OperationMode`↔`EUGVDriveMode` 매핑 — 대부분 해소(§3.2 하단 참고), 남은 건 레거시
+  EMERGENCY 오기입 값이 실제로 오는지 여부만 후속 확인.
+- `RC_EmergencyStop`/`Release`↔`OperationMode=Emergency` 관계, `RC_Control_Right`/
+  `RC_OperationMode`의 주기 필드 확인 방식, 포트 분류 가정, `RC_FireWeapon` PRESSED/RELEASE
+  이벤트 특성, `RC_ActivateFire` 의미, `Gear=Turn` 불필요 — 전부 확인/확정됨.
+- ~~**`RC_ActivateMovement` 재매핑 필요(코드 수정 대상)**~~ — 차량 시동이 아니라 RCWS 조향 모터
+  활성화였음(§3.2 표 참고). **2026-08-31 재매핑 완료** — `UUGVRemoteControlSubsystem::
+  Handle_RC_ActivateMovement`가 `bEngineOn` 대신 `bRCWSSteeringActivated` 래치를 세우고,
+  `Handle_RC_Movement`가 그 래치와 `BrakeButton`을 AND로 묶어 `AddPanTiltInput`을 게이팅한다.
+  `bEngineOn`은 콘솔/BP 전용(`SetUGVEngineOn`)으로만 남김 — 차량 시동에 해당하는 별도 커맨드
+  존재 여부는 `lig_questions_0816.md` 1-신규-2로 재질문 중.
+- `ObjectClass` 세분화(트럭/UGV/민간차량 구분) — LIG는 선택사항으로 확인(세분화해도 되고
+  `Car`로 통일해도 됨) — 우리 쪽 결정 사항으로 전환.
+
 **아직 미확정**:
-- **`RC_OperationMode`(STAY/REMOTE/EMERGENCY) ↔ 우리 `EUGVDriveMode` 재정의** — §3.2 하단
-  참고, Track4/5 착수 시 확정 필요(LIG 확인 불필요, 우리 내부 설계 문제).
 - **자체방호축 PC의 고정 IP 여부** — 상위체계행 RTSP 서버 주소용, LIG 확인 필요.
 - **UTM Zone/Datum 정확한 값** — ICD에 필드는 있으나 시연 장소의 실제 Zone 번호는 미기재,
   확인 필요.
