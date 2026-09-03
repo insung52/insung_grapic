@@ -1,5 +1,5 @@
 > [보관됨 2026-08-31] 최신 버전: `scenario_implementation_status.md`(그 자체도 보관됨, 최신은
-> `newlevel/scenario_three_stage_combat.md`). 사유: "착수 전 설계 논의" 문서 — 여기서 제안한
+> `level_new_kadex_0811/scenario_three_stage_combat.md`). 사유: "착수 전 설계 논의" 문서 — 여기서 제안한
 > 아군 상태머신/대형/시나리오 DataTable 방향이 실제로 구현됨.
 
 # 아군 BP + 시나리오 관리 시스템 — 설계 논의 (2026-07-28, 착수 전 정리)

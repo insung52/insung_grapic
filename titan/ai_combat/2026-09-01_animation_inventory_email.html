@@ -1,0 +1,141 @@
+<div style="max-width:760px;margin:0 auto;padding:8px 4px;font-family:'Malgun Gothic','맑은 고딕',Apple SD Gothic Neo,sans-serif;font-size:14px;line-height:1.7;color:#222;">
+<p>
+안녕하세요, 황인성 입니다!
+</p>
+<p>
+지난번 요청드린 병사 애니메이션들이 프로젝트에 적용된 이후, <b>현재 아군/적군 병사가 실제로 재생 중인
+애니메이션 현황</b>을 정리해 공유드립니다. 함께 참고하실 수 있도록, 애니메이션 대신 코드로
+처리하고 있는 동작들도 아래에 정리해두었습니다.
+</p>
+
+<hr style="border:none;border-top:1px solid #ddd;margin:22px 0;">
+
+<h2 style="font-size:17px;margin:0 0 8px;color:#1a1a1a;">먼저 참고해주실 사항</h2>
+<ul style="margin:0 0 4px;padding-left:20px;">
+  <li>아군과 적군은 <b>동일한 애니메이션을 공유</b>합니다. 적군 전용은 낙하산 착지 계열뿐입니다.</li>
+  <li>애셋 이름이 직관과 반대인 것이 하나 있습니다 &mdash; <code>AS_RifleAim</code>이 <b>총을 내린</b> 정지 자세,
+      <code>AS_RifleIdle</code>이 <b>조준</b> 정지 자세입니다.</li>
+  <li>캐릭터 이동은 코드가 처리하고 애니메이션은 <b>제자리 사이클</b>만 재생합니다(루트모션 없음).
+      그래서 "몸이 보는 방향"과 "실제 이동 방향"이 서로 다를 수 있고, 그 차이를 방향축이 받아
+      옆걸음·뒷걸음 모션으로 바꿔줍니다.</li>
+</ul>
+
+<hr style="border:none;border-top:1px solid #ddd;margin:22px 0;">
+
+<h2 style="font-size:17px;margin:0 0 10px;color:#1a1a1a;">1. 현재 재생 중인 이동 애니메이션</h2>
+
+<p style="margin:0 0 10px;">
+이동 애니메이션은 <b>속도(0~600)</b>와 <b>방향(-180°~180°)</b>으로 조합되어 재생됩니다.
+<b>속도 300 = 걷기, 600 = 뛰기</b>가 기준점이고 그 사이는 자동 보간됩니다.
+방향은 몸이 도는 것이 아니라 <b>다리가 밟는 방향</b>입니다.
+</p>
+
+<div style="background:#f8f8f8;border:1px solid #e3e3e3;padding:10px 12px;margin:0 0 16px;font-size:13px;">
+<b>폴더 표기</b> &mdash; 사용 중인 애셋이 세 폴더에 나뉘어 있어 아래 기호로 표시했습니다.<br>
+<span style="color:#0a6;font-weight:bold;">A</span> = <code>/Game/Soldiers/AnimationSequences/</code><br>
+<span style="color:#c60;font-weight:bold;">B</span> = <code>/Game/Tutorial/Animation/AnimationSequences/</code><br>
+<span style="color:#a06;font-weight:bold;">C</span> = <code>/Game/Tutorial/Blueprints/Enemy/</code>
+<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #ccc;">
+⚠ <b><code>AS_Crouching</code>은 A와 B 양쪽에 동일한 이름으로 존재합니다.</b>
+실제 사용 중인 것은 <span style="color:#0a6;font-weight:bold;">A</span>(<code>/Game/Soldiers/AnimationSequences/</code>) 쪽입니다.
+</div>
+</div>
+
+<h3 style="font-size:15px;margin:18px 0 6px;">① 서서 이동 (조준 자세)</h3>
+<p style="margin:0 0 6px;font-size:13px;">정지(속도 0): <code>AS_RifleIdle</code> <span style="color:#c60;font-weight:bold;">B</span> &mdash; 전 방향 공통</p>
+<p style="margin:10px 0 4px;font-size:13px;"><b>걷기 (속도 300)</b></p>
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;">
+<tr><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:110px;">방향</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;">애니메이션</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:120px;">폴더</th></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">정면 0°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Fwd_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우대각 45°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Fwd_Right_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우 90°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Right</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우후 135°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Bwd_Right</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">후방 180°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Bwd</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌후 -135°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Bwd_Left</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌 -90°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Left_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌대각 -45°</td><td style="border:1px solid #ddd;"><code>AS_Aim_Walk_Fwd_Left</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+</table>
+<p style="margin:12px 0 4px;font-size:13px;"><b>뛰기 (속도 600)</b></p>
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;">
+<tr><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:110px;">방향</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;">애니메이션</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:120px;">폴더</th></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">정면 0°</td><td style="border:1px solid #ddd;"><code>AS_Jog_Fwd_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우대각 45°</td><td style="border:1px solid #ddd;"><code>AS_Jog_Fwd_Right</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우 90°</td><td style="border:1px solid #ddd;"><code>AS_Jog_Right_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우후 135°</td><td style="border:1px solid #ddd;"><code>AS_Jog_Bwd_Right_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">후방 180°</td><td style="border:1px solid #ddd;"><code>AS_Jog_Bwd_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌후 -135°</td><td style="border:1px solid #ddd;"><code>AS_Jog_Bwd_Left_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌 -90°</td><td style="border:1px solid #ddd;"><code>Run_Left</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌대각 -45°</td><td style="border:1px solid #ddd;"><code>AS_Jog_Fwd_Left</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+</table>
+<h3 style="font-size:15px;margin:22px 0 6px;">② 숙여서 이동</h3>
+<p style="margin:0 0 6px;font-size:13px;">정지(속도 0): <code>AS_Crouching</code> <span style="color:#0a6;font-weight:bold;">A</span> &mdash; 전 방향 공통</p>
+<p style="margin:10px 0 4px;font-size:13px;"><b>걷기 (속도 300)</b></p>
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;">
+<tr><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:110px;">방향</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;">애니메이션</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:120px;">폴더</th></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">정면 0°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Fwd_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우대각 45°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Fwd_Right_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우 90°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Right</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우후 135°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Bwd_Right_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">후방 180°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Bwd</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌후 -135°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Bwd_Left_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌 -90°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Left</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌대각 -45°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Walk_Fwd_Left</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+</table>
+<p style="margin:12px 0 4px;font-size:13px;"><b>뛰기 (속도 600)</b> &mdash; 4방향만 보유, 대각선은 인접 방향으로 보간됩니다</p>
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;">
+<tr><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:110px;">방향</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;">애니메이션</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;" style="width:120px;">폴더</th></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">정면 0°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Run_Forward</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">우 90°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Run_Right_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">좌 -90°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Run_Left_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;white-space:nowrap;">후방 180°</td><td style="border:1px solid #ddd;"><code>AS_Crouch_Aim_Run_Backward_2</code></td><td style="border:1px solid #ddd;white-space:nowrap;"><span style="color:#0a6;">A</span></td></tr>
+</table>
+<h3 style="font-size:15px;margin:22px 0 6px;">③ 총 내리고 이동</h3>
+<p style="margin:0 0 8px;">
+<b>전진 1방향만</b> 보유하고 있어 방향 전환을 표현할 수 없어, 실제로는 <b>①번 조준 자세 세트가
+대신 재생되고 있습니다.</b> 아래 세 개는 현재 사용되지 않습니다.
+</p>
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;">
+<tr><th align="left" style="border:1px solid #ddd;background:#f4f4f4;width:110px;">속도</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;">애니메이션</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;width:120px;">폴더</th></tr>
+<tr><td style="border:1px solid #ddd;">0 (정지)</td><td style="border:1px solid #ddd;"><code>AS_RifleAim</code></td><td style="border:1px solid #ddd;"><span style="color:#c60;font-weight:bold;">B</span></td></tr>
+<tr><td style="border:1px solid #ddd;">300 (걷기)</td><td style="border:1px solid #ddd;"><code>AS_Walking</code></td><td style="border:1px solid #ddd;"><span style="color:#c60;font-weight:bold;">B</span></td></tr>
+<tr><td style="border:1px solid #ddd;">600 (뛰기)</td><td style="border:1px solid #ddd;"><code>AS_Lowered_Run_Fwd</code></td><td style="border:1px solid #ddd;"><span style="color:#0a6;font-weight:bold;">A</span></td></tr>
+</table>
+
+<hr style="border:none;border-top:1px solid #ddd;margin:22px 0;">
+
+<h2 style="font-size:17px;margin:0 0 10px;color:#1a1a1a;">2. 상황별 단발 동작</h2>
+<table cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;">
+<tr><th align="left" style="border:1px solid #ddd;background:#f4f4f4;width:130px;">상황</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;">애니메이션</th><th align="left" style="border:1px solid #ddd;background:#f4f4f4;width:120px;">폴더</th></tr>
+<tr><td style="border:1px solid #ddd;">사격 반동</td><td style="border:1px solid #ddd;"><code>Firing_Rifle_Anim_2</code> <span style="color:#666;">(상체에만 얹힘)</span></td><td style="border:1px solid #ddd;"><span style="color:#0a6;font-weight:bold;">A</span></td></tr>
+<tr><td style="border:1px solid #ddd;">재장전</td><td style="border:1px solid #ddd;"><code>AS_Reloading</code></td><td style="border:1px solid #ddd;"><span style="color:#c60;font-weight:bold;">B</span></td></tr>
+<tr><td style="border:1px solid #ddd;">착지 (적군)</td><td style="border:1px solid #ddd;"><code>AM_Falling_To_Landing</code> / <code>AM_Hard_Landing</code> 중 무작위<br><span style="color:#666;">(각각 <code>AS_Falling_To_Landing</code> / <code>AS_Hard_Landing</code> 포함)</span></td><td style="border:1px solid #ddd;"><span style="color:#a06;font-weight:bold;">C</span></td></tr>
+</table>
+
+<hr style="border:none;border-top:1px solid #ddd;margin:22px 0;">
+
+<h2 style="font-size:17px;margin:0 0 10px;color:#1a1a1a;">3. 애니메이션 없이 코드로 구현한 동작</h2>
+<p style="margin:0 0 10px;">
+아래 항목들은 별도 애니메이션 없이 실시간 계산으로 처리하고 있어 <b>추가 제작이 필요하지 않습니다.</b>
+"이건 왜 요청이 없지?" 싶으실 만한 것들을 정리했습니다.
+</p>
+<table cellpadding="7" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;">
+  <tr style="background:#f4f4f4;">
+    <th align="left" style="border:1px solid #ddd;width:170px;">동작</th>
+    <th align="left" style="border:1px solid #ddd;">처리 방식</th>
+  </tr>
+  <tr><td style="border:1px solid #ddd;">엄폐 시 좌우 기울임</td><td style="border:1px solid #ddd;">척추 본 각도를 코드로 직접 조정</td></tr>
+  <tr><td style="border:1px solid #ddd;">위/아래 조준</td><td style="border:1px solid #ddd;">상체 본을 젖히고 목·머리가 따라옴. 총구가 목표를 정확히 향하도록 몸 각도를 매 프레임 보정</td></tr>
+  <tr><td style="border:1px solid #ddd;"><b>이동 중 주변 경계</b></td><td style="border:1px solid #ddd;">몸이 보는 방향을 이동 방향과 분리해, 지정된 방향을 중심으로 좌우로 천천히 훑음. 그 결과 <b>기존 옆걸음·뒷걸음 시퀀스가 자동 재생</b>되어 "몸은 옆을 경계하고 발은 목적지로 가는" 모습이 됩니다</td></tr>
+  <tr><td style="border:1px solid #ddd;">피격 반응</td><td style="border:1px solid #ddd;">맞은 부위와 총알 방향을 판정해 몸이 움찔하는 반응을 계산으로 생성. 걷는 중이든 엄폐 중이든 자세와 무관하게 동작</td></tr>
+  <tr><td style="border:1px solid #ddd;">사망</td><td style="border:1px solid #ddd;">물리 랙돌로 전환. 이동 관성과 총알 충격이 반영되어 쓰러짐 <b>(사망 모션 제작 불필요)</b></td></tr>
+  <tr><td style="border:1px solid #ddd;">제자리 회전</td><td style="border:1px solid #ddd;">몸을 천천히 회전시키는 방식으로 대체</td></tr>
+  <tr><td style="border:1px solid #ddd;">왼손 무기 파지</td><td style="border:1px solid #ddd;">IK로 손잡이에 붙여, 시퀀스마다 손 위치가 조금 달라도 자동 보정</td></tr>
+</table>
+
+<hr style="border:none;border-top:1px solid #ddd;margin:22px 0;">
+
+<p style="margin:0;">
+확인 부탁드리며, 궁금하신 부분 있으시면 편하게 말씀해주세요. 감사합니다.
+</p>
+
+</div>

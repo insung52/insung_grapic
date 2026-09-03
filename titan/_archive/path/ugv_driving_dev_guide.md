@@ -1,6 +1,6 @@
 > [보관됨 2026-08-31] `kadex_demo` 레벨/`BP_UGV`(구 액터) 기준 문서 — 현재는 `BP_UGV_Vehicle`
-> + `kadex_test`/새 레벨 기준. 최신 자율주행/장애물회피 작업은 `path/ugv_obstacle_avoidance_2026-08-26.md`,
-> `path/ugv_track_lock_implementation_plan.md`, `path/new_kadex_0811_navmesh_autonomous_driving.md`
+> + `kadex_test`/새 레벨 기준. 최신 자율주행/장애물회피 작업은 `vehicle/ugv/ugv_obstacle_avoidance_2026-08-26.md`,
+> `vehicle/ugv/ugv_track_lock_implementation_plan.md`, `vehicle/ugv/new_kadex_0811_navmesh_autonomous_driving.md`
 > 참고. 다만 Pure Pursuit 알고리즘·NavMesh 도로선호·`EUGVDriveMode` 설계 개념 자체는 지금도
 > 유효(사용자 확인, "완전 중요한 게 아니면 아카이브해도 됨"이라 보관만 함, 삭제 아님).
 

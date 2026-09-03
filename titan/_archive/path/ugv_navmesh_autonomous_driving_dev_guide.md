@@ -1,4 +1,4 @@
-> [보관됨 2026-08-31] 최신 버전: `path/new_kadex_0811_navmesh_autonomous_driving.md`. 사유:
+> [보관됨 2026-08-31] 최신 버전: `vehicle/ugv/new_kadex_0811_navmesh_autonomous_driving.md`. 사유:
 > 이 문서는 옛 레벨(`kadex_demo_0716`) 기준 NavMesh 자율주행 구축 기록 — 새 레벨
 > (New_kadex_0811)로 작업이 넘어가면서 도로 콜리전/NavModifierVolume 설정을 그 지형에 맞게
 > 새로 함. 다만 여기서 겪은 콜리전 프로파일/RoadNavMod 관련 함정(§2.6)은 기술적으로 여전히

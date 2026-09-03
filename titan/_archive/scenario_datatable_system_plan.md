@@ -1,5 +1,5 @@
 > [보관됨 2026-08-31] 최신 버전: `scenario_implementation_status.md`(그 자체도 보관됨, 최신은
-> `newlevel/scenario_three_stage_combat.md`). 사유: 여기 제안한 `FScenarioStepRow`/
+> `level_new_kadex_0811/scenario_three_stage_combat.md`). 사유: 여기 제안한 `FScenarioStepRow`/
 > `EScenarioTriggerType`/`EScenarioEffectType` 스키마가 `/Game/Scenario/DT_ScenarioSteps`로
 > 실제 구현됨(`scenario_implementation_status.md` §2).
 
