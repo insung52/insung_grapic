@@ -95,9 +95,37 @@ sudo apt install -y \
 - 서버 파이프라인이 쓰는 요소: `appsrc`(plugins-base), `h264parse`(plugins-bad), `rtph264pay`(plugins-good).
 - 링크는 `libgstreamer-1.0.so.0` 같은 SONAME 기준이라 배포판 버전이 정확히 1.24가 아니어도 되지만
   1.x 계열이어야 한다(빌드 시 참조한 번들은 Ubuntu 24.04 / GStreamer 1.24.2).
-- **NVIDIA 독점 드라이버 필수**(NVENC 인코딩 = `libnvidia-encode.so`). 없으면 게임은 뜨는데
-  RTSP만 조용히 안 뜬다.
 - Vulkan 런타임(`libvulkan1`)도 필요 — UE 리눅스 클라이언트는 Vulkan RHI로 뜬다.
+- glibc 하한은 **2.28**(툴체인 sysroot=RockyLinux8) → **Ubuntu 20.04 이상**이면 됨.
+- 자가 진단: `ldd titan_example/Binaries/Linux/titan_example | grep "not found"`
+
+> ⚠️ **2026-09-03 정정 — GStreamer/NVIDIA는 "없어도 게임은 뜬다"가 아니다.**
+> `RtspEncoder.Build.cs`의 Linux 분기가 `PublicAdditionalLibraries`로 평범한 직접 링크를 하므로
+> 실행 파일에 `DT_NEEDED` 엔트리가 박힌다. 하나라도 없으면 **동적 로더 단계에서 프로세스가
+> 즉시 죽는다**(`error while loading shared libraries: ...`, `Saved/Logs`도 안 생김).
+> 실제 빌드 산출물(`Binaries/Linux/titan_example`)을 `readelf -d`로 확인한 결과:
+>
+> ```
+> libSDL2-2.0.so.0                      ← 패키지 동봉(Binaries/Linux/, RPATH $ORIGIN)
+> libglib-2.0.so.0 / libgobject-2.0.so.0 ← libglib2.0-0
+> libgstreamer-1.0.so.0                 ← libgstreamer1.0-0
+> libgstapp-1.0.so.0                    ← libgstreamer-plugins-base1.0-0
+> libgstrtspserver-1.0.so.0             ← libgstrtspserver-1.0-0
+> libnvidia-encode.so.1                 ← NVIDIA 독점 드라이버
+> libcuda.so.1                          ← NVIDIA 독점 드라이버
+> ```
+>
+> Build.cs가 링크를 거는 .so는 11개지만 실제 `DT_NEEDED`로 남는 건 위 8개뿐이다(나머지는
+> 미사용이라 링커가 뺌 — `libgio`/`libgmodule`/`libgstbase`/`libgstrtsp`/`libgstsdp`/`libgstnet`).
+>
+> **NVIDIA GPU가 없거나 nouveau/Mesa를 쓰는 머신에서는 지금 빌드가 아예 실행되지 않는다.**
+> "Vulkan은 다 설정했다"는 Mesa Vulkan으로도 성립하므로 이 실패와 완벽히 양립한다 — 실행 실패
+> 신고를 받으면 `nvidia-smi`와 `ldconfig -p | grep libnvidia-encode`부터 확인할 것.
+>
+> 런타임 스위치로는 못 피한다(로더 단계라 우리 코드가 실행되기도 전). 근본적으로 없애려면
+> NVENC/GStreamer를 링크 대신 `dlopen`으로 바꿔야 하는데 아직 안 했다 — SDK 없는 PC에서 빌드가
+> 막히던 문제(`rtsp_poc_findings.md` §10.3.2)는 **빌드 타임** soft-fail만 해결한 것이고,
+> **런타임** soft-fail(= 라이브러리 없는 머신에서 RTSP만 꺼진 채 실행)은 별개 미해결 사안이다.
 
 ### 3-2. 세션 종류 (Wayland / X11)
 
@@ -276,6 +304,52 @@ NVIDIA가 있으면 `avdec_h264` 대신 `nvh264dec max-display-delay=0`. VLC로�
 | RTSP는 붙는데 영상이 안 나옴 | 수신측이 UDP 전송을 시도 중 — `protocols=tcp` 필수 |
 | RTSP 마운트 로그가 아예 없음 | 빌드 PC에 NVENC SDK/CUDA/GStreamer가 없어 RTSP가 빠진 채 패키징됨(§2) |
 | UGV가 통제기 명령에 반응 안 함 | 제어권 → REMOTE 순서, 비상정지 래치 확인(§6-5) |
+
+---
+
+## 7-1. 2026-09-04 실측 검증 기록
+
+**검증 완료**: Ubuntu 22.04.5 / RTX 4070 SUPER / NVIDIA Open Kernel Module 610.43.02에서
+**Wayland 세션과 Xorg 세션 양쪽 모두** 시뮬레이터 실행 + 파이썬 통제기 목업 UDP 연동 + RTSP 영상
+수신까지 확인. 자동 판별 스크립트(`run_titan_example.sh`)가 두 세션에서 올바른 드라이버를 고르는
+것도 확인.
+
+### 이번에 잡힌 것 4건
+
+1. **패키지가 GStreamer/NVIDIA .so를 `DT_NEEDED`로 직접 링크** — 없으면 RTSP만 꺼지는 게 아니라
+   프로세스가 로더 단계에서 즉사. §3-1의 정정 블록 참고.
+2. **`VideoDriver=wayland` 강제에 폴백이 없어 X11 전용 머신에서 즉사** — 외부 테스터가 이걸로
+   4회 연속 실패(`Could not initialize SDL: wayland not available`). 대응으로 세션을 자동 판별하는
+   `run_titan_example.sh`를 프로젝트 루트에 신설. 배포본에 같이 복사해야 함(패키징이 자동 포함 안 함).
+3. **Vulkan ICD 없음 → `Failed to load Vulkan Driver`** — `nvidia-smi`가 정상이고
+   `ldconfig -p | grep libvulkan.so.1`도 통과하는데 실행이 막힌다. `libvulkan1`은 로더일 뿐이고
+   드라이버 등록 파일(`/usr/share/vulkan/icd.d/nvidia_icd.json`)이 따로 필요. 검증은
+   `vulkaninfo --summary`로 해야 하며, 라이브러리 존재 확인만으로는 못 잡는다.
+4. **통제기 목업(리눅스)에서 영상이 검은 화면** — `avdec_h264`(I420 출력)와 `ximagesink`(RGB만 수용)
+   사이에 `videoconvert`가 없어서 caps 협상 실패. GStreamer가 이걸
+   `Internal data stream error ... not-negotiated (-4)`로 소스(udpsrc)까지 거슬러 올려 보고해서
+   네트워크 문제로 오해하기 쉬웠다. RTSP 접속·SETUP·PLAY는 전부 성공한 뒤에 터진다.
+
+### 진단이 오래 걸린 구조적 이유 (고침)
+
+- `video_panel.py`가 GStreamer 오류를 **읽지도 않고 버렸다**(`has_error_or_eos()`가 메시지를 pop만
+  하고 폐기, `play()`는 반환값 무시). 그래서 클라이언트 쪽에는 아무 단서가 안 남아 서버 로그와
+  대조해야만 좁힐 수 있었다. 2026-09-04에 실패 경로 전체를 로깅하도록 수정 — 이제 파이썬 로그만
+  보면 원인이 바로 나온다.
+- `RtspStreamComponent::SetupEncoderAndStream()`이 **마운트 등록을 인코더 생성보다 먼저** 한다.
+  인코더가 실패해도 클라이언트는 접속에 성공하므로, "접속은 되는데 영상만 안 나오는" 모양이 된다.
+  판정하려면 `first encoded frame pushed to appsrc` 로그 유무를 봐야 한다.
+
+### 우리 테스트 PC에서만 났던 문제 (배포물과 무관)
+
+Xorg 세션 전환 시 검은 화면으로 멈췄는데, 원인은 **로컬에 남아 있던 깨진 `/etc/X11/xorg.conf`**
+였다(`Parse error on line 43 ... "Monitor" is not a valid keyword` → `no screens found`).
+`nvidia-settings`가 남긴 잔재로 보이며, 파일을 치우니 정상 동작. 배포 대상 PC와는 무관한 사안이다.
+
+> 곁다리로 확인된 것: 이 PC는 **자동 로그인이 켜져 있어** 로그인 화면 자체를 건너뛰고 있었다.
+> "세션 선택 톱니바퀴가 없다"의 원인이 이것이었고, `AutomaticLoginEnable=false`로 바꾸면 나온다.
+> 저널도 volatile이라 `journalctl -b -1`로 이전 부팅 로그를 볼 수 없었다 —
+> `sudo mkdir -p /var/log/journal` 로 영구화해두면 다음 사고 때 유리하다.
 
 ---
 

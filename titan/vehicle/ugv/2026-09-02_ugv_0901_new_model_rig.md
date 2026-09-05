@@ -389,13 +389,22 @@ C++의 UGV 조회는 전부 `Atitan_examplePlayerController::FindUGVFromTankInst
 
 ## 9. 남은 일
 
-**하나만 남았고, 급하지 않다.**
+**없음 — 2026-09-03에 처리 완료.**
 
-- `BP_UGV_0901` 이벤트그래프의 궤도 계산 **고아 노드 ~250개 + 미사용 변수 24개**
+- ~~`BP_UGV_0901` 이벤트그래프의 궤도 계산 **고아 노드 ~250개 + 미사용 변수 24개**
   (`TrackSag*` 15개, `WheelRot*`, `Chassis*`, `HullZRot`, `BasePoints*`, `TrackTautness*`,
-  `TrackWhip*`, `WheelsZOffsets`, `BarrelSpin*`) 정리. Tick/ConstructionScript에서 실행 경로가
-  끊겨 있어 **런타임 비용은 0**이고 컴파일도 통과한다 — 순수 정리 작업이라 나중에 해도 됨
-  (2026-09-02 사용자 판단).
+  `TrackWhip*`, `WheelsZOffsets`, `BarrelSpin*`) 정리.~~
+  → **2026-09-03 완료.** 실제로는 4개 그래프에 걸쳐 고아 노드 **427개** + 변수 **39개**였고
+  (여기 추정보다 많았다 — `UpdateTurretVisuals` 안에도 168개가 있었다), 정리하는 김에 남아
+  있던 BP 로직 4개도 전부 C++(`AUGV0901Pawn`)로 내렸다. BP는 이제 로직이 0줄이고
+  `.uasset`이 1,150KB → 67KB가 됐다. 상세: `2026-09-03_ugv_0901_bp_to_cpp.md`
+  (죽은 노드 판정을 "연결된 노드"로 하면 안 되는 이유, BP float=double 함정 포함).
+
+> **부모 클래스가 바뀌었다** — `BP_UGV_0901`의 부모는 이제
+> `AUGVWheeledVehiclePawn`이 아니라 **`AUGV0901Pawn`**(그 서브클래스)이다. 아래 5절의
+> `UpdateTurretVisuals` / Tick / `SetManualControl` / `SetBraking` 설명은 2026-09-02
+> 시점의 BP 구현 기준이고, 지금은 같은 내용이 C++에 있다. 구형 `BP_UGV_Vehicle_new`는
+> `AUGVWheeledVehiclePawn` 그대로다.
 
 **검토했으나 대응 안 하기로 한 것** (2026-09-02 사용자 확인):
 

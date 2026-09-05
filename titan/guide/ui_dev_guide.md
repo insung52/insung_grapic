@@ -92,6 +92,20 @@ SlateLayoutTransform.h"`를 실제 엔진 경로인 `Rendering/SlateLayoutTransf
   진하게 뭉쳐 보였음. 이제 곡선 높이에 비례해서 알파도 낮아짐(예: 값이 0.1 높이에 있으면
   그 지점 알파도 `FillOpacityAtLine`의 0.1배). 그래프 반투명 회색 배경 박스도 제거함.
 
+**갱신(2026-09-04) — 그래프 곡선 후처리**(상세: `ui/2026-09-04_line_graph_curve_smoothing.md`):
+- `SLineGraph::OnPaint`가 이제 그리기 직전에 **화면 픽셀 2px마다 정점 1개로 버킷 평균 리샘플 →
+  monotone cubic(Fritsch–Carlson) 보간**을 거친다. 히스토리 300점을 90px 폭에 그리면 픽셀당
+  정점이 3~4개가 되는데, `MakeLines`가 세그먼트마다 만드는 두께 쿼드가 서로 겹쳐 알파가 누적돼서
+  구간마다 선 두께가 달라 보였다(데이터를 부드럽게 해도 안 없어지는 렌더 아티팩트). Catmull-Rom
+  대신 monotone을 쓴 건 오버슛이 생기면 곡선이 위젯 밖/바닥 아래로 나가서 그라데이션 채우기에
+  그대로 티가 나기 때문. Details 노브: `bSmoothCurve`/`ResampleBucketPixels`/`CurveStepPixels`.
+- `UStatusHUDComponent`가 히스토리에 쌓기 전 **중앙값 3 + 프레임률 독립 EMA**를 건다
+  (`AltitudeGraphSmoothingTauSeconds=0.3`/`SpeedGraphSmoothingTauSeconds=0.5`,
+  `bGraphSpikeRejection`). 필터는 히스토리 전용 — `CurrentData.AltitudeMeters`/`SpeedKmh`(계기
+  숫자와 그 밖의 소비자가 읽는 값)는 원본 그대로다.
+- 세로축 상한은 아직 고정값(`UAVAltitudeGraphMaxMeters`/`UAVSpeedGraphMaxKmh`). 동적 상한은
+  미구현이고, 설계 결론과 실측 근거는 위 devlog에 정리해 둠.
+
 **갱신(2026-07-10) — 리본 4종 세분화**: 디자인 시안 보니 리본 스타일이 4가지로 갈림. 클래스는
 2개로 정리(완전히 4개로 쪼개진 않음 — EL/ZOOM은 로직이 90% 겹쳐서 플래그로 처리):
 - `ScrollingRulerWidget`(기존 클래스 확장): `bShowMidTicks`로 3단계 눈금(대/중/소, 대→majors만

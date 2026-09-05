@@ -164,10 +164,31 @@ const FTransform ActorTransform = CandidateTarget->GetActorTransform();
 
 API: `AddDetectableFaction()` / `SetDetectableFactions()` / `IsFactionDetectable()`.
 
-드론은 이걸로 **시나리오 진행에 따라 탐지 범위를 넓힌다** — 아군만 → +낙하산(EnemyEvidence)
-→ +적군. `MinScreenSizeFraction`은 0.04를 쓰는데, 너무 먼 거리에서 미리 잡히는 걸 막으면서
-**줌인하면 다시 잡히므로** "줌으로 확인한다"는 절차와도 맞는다. 상세는
-`vehicle/drone/drone_flight_dev_guide.md` 13.1절.
+드론은 진영 필터로 **시나리오 진행에 따라 탐지 범위를 넓힌다** — 아군만 → +낙하산
+(EnemyEvidence) → +적군. 상세는 `vehicle/drone/drone_flight_dev_guide.md` 13.1절.
+
+> ⚠️ **겉보기 크기 필터는 거리가 아니라 화면 점유율 기준이라 화각에 반비례한다**
+> (2026-09-04 실측). 카메라가 줌아웃하면 같은 대상이 화면에서 작아져 필터에 걸리므로,
+> **줌 배율이 곧 AI 탐지 사거리를 바꾼다.** 1.8m 병사·`MinScreenSizeFraction=0.04` 기준:
+>
+> | 가로 화각 | 유효 탐지거리 |
+> |---|---|
+> | 30° | 150 m |
+> | 60° | 72 m |
+> | 88° | 45 m |
+>
+> 드론은 교전 광각에서 화각이 80~90°까지 벌어져 `MaxDetectionRange`(800m)가 통째로 무의미해졌다
+> — 그래서 드론에서는 이 필터를 **끈다**. 조준경(RCWS)은 화각 변동이 작아 문제가 덜하고
+> (트럭: 줌 0.5배에서만 235m로 조여지고 1배 이상이면 400m 상한이 먼저 걸림), "배율을 올려야
+> 멀리 식별한다"가 오히려 물리적으로 맞아서 의도적으로 켜 쓴다.
+>
+> 참고로 2026-09-02에 기준 해상도를 1920×1080으로 **고정**한 것도 같은 계열의 문제였다
+> ("탐지는 관측자와 무관하게 결정적이어야 한다"). 줌 결합은 그 원칙에서 보면 남아 있는
+> 의존성이지만, 현재 값에서는 실질 영향이 최대 광각일 때뿐이라 그대로 두기로 했다.
+>
+> 그리고 **폰/차량 쪽에 이 값의 미러 프로퍼티를 만들어 `BeginPlay`에서 컴포넌트에 써넣지 말 것.**
+> 드론이 그렇게 했다가 BP 컴포넌트에서 끈 설정이 매 플레이마다 되살아나는 함정이 됐다.
+> 이 컴포넌트의 자기 프로퍼티가 유일한 기준이어야 한다.
 
 ## 4. WBP 연동 — UDetectionOverlayWidget
 
@@ -274,3 +295,90 @@ WBP 렌더링 자체가 깨지는 것으로 보임(엔진 내부 메커니즘까
 `LoseConfidenceThreshold=0.25`였어서 0.33 > 0.25라 안 떨어져 나감.
 `VerticalSampleInsetFraction`로 샘플을 안쪽으로 들이고, `LoseConfidenceThreshold`를
 0.5로 올려서(3점 중 2점 이상 필요) 해결.
+
+---
+
+## 8. 시야 차단 볼륨 만들기 (탐지만 막고 이동·총알은 통과)
+
+숲처럼 실제 지오메트리로 시야를 막기 어려운 구역에서 **RCWS 탐지만** 인위적으로 막고 싶을 때.
+
+### 8.1 먼저 알아야 할 것 — 기본 BlockingVolume은 시야를 안 막는다
+
+탐지 차폐 판정은 `ECC_Visibility` 라인트레이스다:
+
+```cpp
+// TargetDetectionComponent.cpp — 차폐 샘플링
+LineTraceSingleByChannel(Hit, CameraLocation, SamplePoint, ECC_Visibility, QueryParams);
+```
+
+그런데 언리얼의 `ABlockingVolume`은 생성자에서 **`InvisibleWall`** 프로파일을 쓴다:
+
+```ini
+; BaseEngine.ini
++Profiles=(Name="InvisibleWall", ObjectTypeName="WorldStatic",
+           CustomResponses=((Channel="Visibility",Response=ECR_Ignore)), ...)
+```
+
+**`Visibility`가 `ECR_Ignore`로 명시돼 있다.** 즉 기본 BlockingVolume은 정확히 반대로 동작한다 —
+**사람·차량 이동은 막고 시야는 안 막는다.** 그냥 갖다 놓으면 탐지는 그대로 뚫리고 대신 UGV가
+투명 벽에 부딪힌다.
+
+`ABlockingVolume`은 `SetCanEverAffectNavigation(true)`도 걸어서 **내비메시까지 파낸다.**
+
+### 8.2 설정 — Custom으로 바꿔서 Visibility만 Block
+
+볼륨의 **Brush Component**(액터가 아니라 컴포넌트를 선택해야 Collision 섹션이 나온다) →
+Collision:
+
+| 항목 | 값 | 이유 |
+|---|---|---|
+| Collision Presets | **Custom...** | InvisibleWall은 Visibility를 Ignore |
+| Collision Enabled | **Query Only (No Physics Collision)** | 물리 충돌 불필요 — 트레이스만 받으면 됨 |
+| Object Type | WorldStatic | (아무거나 무방, 아래 응답이 전부 Ignore라 의미 없음) |
+| **Visibility** | **Block** | ← 이 한 줄이 탐지를 막는 전부 |
+| 나머지 채널 전부 | **Ignore** | 이동·차량·총알이 통과하게 |
+| Can Ever Affect Navigation | **끄기** | `ABlockingVolume` 기본값이 true라 반드시 꺼야 함 |
+
+응답이 Visibility 하나만 Block이므로 **물체 대 물체 충돌은 전부 무효**가 된다(양쪽 응답 중 약한
+쪽이 이김). 보병도 차량도 그냥 통과한다.
+
+### 8.3 재사용할 거면 프리셋으로
+
+여러 개 깔 거면 매번 손으로 채우지 말고 프로젝트 프리셋을 하나 만드는 게 낫다.
+Project Settings → Collision → Preset → New:
+
+```ini
+; Config/DefaultEngine.ini — [/Script/Engine.CollisionProfile] 아래
++Profiles=(Name="SightBlocker",CollisionEnabled=QueryOnly,ObjectTypeName="WorldStatic",
+  CustomResponses=((Channel="WorldStatic",Response=ECR_Ignore),(Channel="WorldDynamic",Response=ECR_Ignore),
+                   (Channel="Pawn",Response=ECR_Ignore),(Channel="PhysicsBody",Response=ECR_Ignore),
+                   (Channel="Vehicle",Response=ECR_Ignore),(Channel="Destructible",Response=ECR_Ignore),
+                   (Channel="Camera",Response=ECR_Ignore),(Channel="Visibility",Response=ECR_Block)),
+  HelpMessage="탐지/시야만 막고 이동·총알은 통과시키는 볼륨용")
+```
+
+현재 이 프로젝트엔 커스텀 프로파일이 하나도 없다(2026-09-02 확인).
+
+### 8.4 부작용 — 반드시 알고 쓸 것
+
+`ECC_Visibility`는 이 프로젝트에서 **네 곳이 공유**한다. 볼륨은 그 넷 모두에 영향을 준다.
+
+| 사용처 | 영향 | 판단 |
+|---|---|---|
+| `UTargetDetectionComponent` 차폐 (`TargetDetectionComponent.cpp:320`) | 탐지 차단 | **의도한 것** |
+| 적군 LOS (`EnemyCombatComponent::HasLineOfSightToTarget`) | 적군도 못 봄 | **의도된 일관성** — 코드 주석이 "RCWS엔 보이는데 보병한텐 안 보이는" 불일치를 막으려고 일부러 같은 채널을 쓴다고 명시 |
+| 아군 LOS (`AllyFormationComponent.cpp:1928`) | 아군도 못 봄 | 위와 같음 |
+| **RCWS 사거리계** (`RCWSComponent.cpp:357`) | **거리 표시가 볼륨 표면까지로 나옴** | ⚠️ **원치 않는 부작용** |
+
+마지막 항목이 진짜 함정이다. 조준경의 거리 표시가 실제 지형이 아니라 보이지 않는 볼륨 표면
+거리를 읽는다. 볼륨이 시야에 걸치는 각도에서 조준하면 사거리 숫자가 튄다.
+
+피하려면 탐지 차폐 전용 트레이스 채널을 새로 파고(`ECC_GameTraceChannel_N`, 예: `SightBlock`)
+`TargetDetectionComponent`·아군/적군 LOS만 그 채널로 옮기면 된다 — 사거리계는 `ECC_Visibility`에
+남겨두고. 지금은 미구현.
+
+### 8.5 그런데 볼륨이 최선인가
+
+숲 차폐 목적이라면 볼륨은 뭉텅이로 막아서 나무 사이 틈으로 보이는 자연스러움이 사라진다.
+동적 대안(수관 밀도 그리드 등) 비교는
+`level_new_kadex_0811/2026-09-01_foliage_occlusion_ideas.md` 참고.
